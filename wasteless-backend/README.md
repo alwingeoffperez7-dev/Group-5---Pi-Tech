@@ -34,7 +34,7 @@ Include `public/js/api.js` and call the functions — no need to write fetch cod
 </script>
 ```
 
-`public/index.html` is only a test page with no design. Replace it with the real screens.
+The page is in the repo root: `index.html`, `script.js`, `style.css` (served at http://localhost:3000). It's only a test page with no design. Replace it with the real screens.
 
 ## API
 
