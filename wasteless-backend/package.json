@@ -1,0 +1,16 @@
+{
+  "name": "wasteless-backend",
+  "version": "1.0.0",
+  "description": "WasteLess vendor page backend (product catalog, my stall, feedback/report)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.0"
+  }
+}

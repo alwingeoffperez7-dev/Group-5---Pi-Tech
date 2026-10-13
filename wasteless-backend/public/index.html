@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WasteLess backend test page</title>
+<!-- BACKEND TEST PAGE ONLY. No design on purpose — the front-end team
+     builds the real screens from the wireframe using /js/api.js. -->
+</head>
+<body>
+<h1>WasteLess — backend test page</h1>
+<p><b>Stall:</b> <span id="stall">loading…</span></p>
+<p id="summary"></p>
+
+<hr>
+<h2>Product Listing</h2>
+<label>Search <input id="q" type="search"></label>
+<label>Category <select id="filterCat"><option>All</option></select></label>
+<button id="refresh">Refresh</button>
+<p>Product Count: <span id="count">0</span></p>
+<table border="1" cellpadding="4">
+  <thead><tr><th>ID</th><th>Stall ID</th><th>Stall Name</th><th>Product</th><th>Category</th><th>Packaging</th><th>Price</th><th>Stock</th><th>Image</th><th>Actions</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<h2 id="formTitle">Add Product</h2>
+<form id="productForm">
+  <input type="hidden" name="product_id">
+  <p><label>Product name <input name="product_name"></label></p>
+  <p><label>Description <textarea name="description"></textarea></label></p>
+  <p><label>Category <select name="category" id="formCat"></select></label></p>
+  <p><label>Packaging
+    <select name="packaging_type"><option>Plastic</option><option>Paper</option><option>Reusable</option></select>
+  </label></p>
+  <p><label>Price (₱) <input name="unit_price"></label></p>
+  <p><label>Stock <input name="stock"></label></p>
+  <p><label>Image <input type="file" name="image" accept="image/*"></label></p>
+  <button type="submit" id="saveBtn">Save Product</button>
+  <button type="button" id="cancelEdit">Cancel</button>
+</form>
+<pre id="productMsg"></pre>
+
+<hr>
+<h2>Feedback / Report</h2>
+<form id="feedbackForm">
+  <p><label>Type
+    <select name="feedback_type">
+      <option>Inquiry</option><option>Report a Problem</option><option>Suggestion</option><option>Stall Info Change</option>
+    </select>
+  </label></p>
+  <p><label>Subject <input name="subject"></label></p>
+  <p><label>Message <textarea name="message"></textarea></label></p>
+  <p><label>Screenshot <input type="file" name="attachment" accept="image/*"></label></p>
+  <button type="submit">Send to Admin</button>
+</form>
+<pre id="feedbackMsg"></pre>
+<h3>My Submissions</h3>
+<ul id="subs"></ul>
+
+<script src="/js/api.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const form = $('productForm');
+
+function show(el, data) { el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2); }
+function showError(el, err) { show(el, 'ERROR: ' + err.message + (Object.keys(err.details || {}).length ? '\n' + JSON.stringify(err.details, null, 2) : '')); }
+
+async function loadStall() {
+  const s = await WasteLessAPI.getStall();
+  $('stall').textContent = `#${s.stall_id} ${s.stall_name}`;
+  $('summary').textContent = `Products listed: ${s.summary.products_listed} | Low-stock: ${s.summary.low_stock_items} | Plastic items sold this week: ${s.summary.plastic_items_sold_this_week}`;
+}
+
+async function loadCategories() {
+  const cats = await WasteLessAPI.getCategories();
+  cats.forEach((c) => {
+    $('filterCat').add(new Option(c.category_name));
+    $('formCat').add(new Option(c.category_name));
+  });
+}
+
+async function loadProducts() {
+  const data = await WasteLessAPI.getProducts({ q: $('q').value, category: $('filterCat').value });
+  $('count').textContent = data.count;
+  $('rows').innerHTML = '';
+  data.products.forEach((p) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p.product_id}</td><td>${p.stall_id}</td><td></td><td></td><td>${p.category_name}</td>
+      <td>${p.packaging_type}</td><td>₱${p.unit_price.toFixed(2)}</td><td>${p.stock}${p.is_low_stock ? ' (low)' : ''}</td>
+      <td>${p.image_url ? `<img src="${p.image_url}" width="40">` : ''}</td>
+      <td><button data-edit>Edit</button> <button data-del>Delete</button></td>`;
+    tr.children[2].textContent = p.stall_name;    // textContent = safe from HTML injection
+    tr.children[3].textContent = p.product_name;
+    tr.querySelector('[data-edit]').onclick = () => startEdit(p.product_id);
+    tr.querySelector('[data-del]').onclick = async () => {
+      if (!confirm(`Delete ${p.product_name}?`)) return;
+      await WasteLessAPI.deleteProduct(p.product_id);
+      loadProducts(); loadStall();
+    };
+    $('rows').appendChild(tr);
+  });
+}
+
+async function startEdit(id) {
+  const p = await WasteLessAPI.getProduct(id);
+  form.product_id.value = p.product_id;
+  form.product_name.value = p.product_name;
+  form.description.value = p.description || '';
+  form.category.value = p.category_name;
+  form.packaging_type.value = p.packaging_type;
+  form.unit_price.value = p.unit_price;
+  form.stock.value = p.stock;
+  $('formTitle').textContent = 'Edit Product';
+  $('saveBtn').textContent = 'Save Changes';
+}
+
+function resetForm() {
+  form.reset();
+  form.product_id.value = '';
+  $('formTitle').textContent = 'Add Product';
+  $('saveBtn').textContent = 'Save Product';
+}
+
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const id = form.product_id.value;
+  const fd = new FormData(form);
+  fd.delete('product_id');
+  if (!fd.get('image') || !fd.get('image').size) fd.delete('image');
+  try {
+    const saved = id ? await WasteLessAPI.editProduct(id, fd) : await WasteLessAPI.addProduct(fd);
+    show($('productMsg'), saved);
+    resetForm();
+    loadProducts(); loadStall();
+  } catch (err) { showError($('productMsg'), err); }
+};
+$('cancelEdit').onclick = resetForm;
+$('refresh').onclick = loadProducts;
+$('q').oninput = loadProducts;
+$('filterCat').onchange = loadProducts;
+
+async function loadSubs() {
+  const data = await WasteLessAPI.getSubmissions();
+  $('subs').innerHTML = '';
+  data.submissions.forEach((m) => {
+    const li = document.createElement('li');
+    li.textContent = `[${m.status}] ${m.feedback_type}: ${m.subject} — ${new Date(m.created_at).toLocaleString()}`;
+    $('subs').appendChild(li);
+  });
+}
+$('feedbackForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  if (!fd.get('attachment') || !fd.get('attachment').size) fd.delete('attachment');
+  try {
+    show($('feedbackMsg'), await WasteLessAPI.sendFeedback(fd));
+    e.target.reset();
+    loadSubs();
+  } catch (err) { showError($('feedbackMsg'), err); }
+};
+
+loadStall(); loadCategories().then(loadProducts); loadSubs();
+</script>
+</body>
+</html>
