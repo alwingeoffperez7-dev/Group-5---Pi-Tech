@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WasteLess</title>
+    <!-- BACKEND TEST PAGE ONLY. No design on purpose — the front-end team
+     builds the real screens from the wireframe using /js/api.js. -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>WasteLess malolopit</h1>
+    <p><b>Stall:</b> <span id="stall">loading…</span></p>
+    <p id="summary"></p>
+
+    <hr />
+    <h2>Product Listing</h2>
+    <label>Search <input id="q" type="search" /></label>
+    <label
+      >Category
+      <select id="filterCat">
+        <option>All</option>
+      </select></label
+    >
+    <button id="refresh">Refresh</button>
+    <p>Product Count: <span id="count">0</span></p>
+    <table border="1" cellpadding="4">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Stall ID</th>
+          <th>Stall Name</th>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Packaging</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Image</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <h2 id="formTitle">Add Product</h2>
+    <form id="productForm">
+      <input type="hidden" name="product_id" />
+      <p>
+        <label>Product name <input name="product_name" /></label>
+      </p>
+      <p>
+        <label>Description <textarea name="description"></textarea></label>
+      </p>
+      <p>
+        <label
+          >Category
+          <select name="category" id="formCat"></select
+        ></label>
+      </p>
+      <p>
+        <label
+          >Packaging
+          <select name="packaging_type">
+            <option>Plastic</option>
+            <option>Paper</option>
+            <option>Reusable</option>
+          </select>
+        </label>
+      </p>
+      <p>
+        <label>Price (₱) <input name="unit_price" /></label>
+      </p>
+      <p>
+        <label>Stock <input name="stock" /></label>
+      </p>
+      <p>
+        <label>Image <input type="file" name="image" accept="image/*" /></label>
+      </p>
+      <button type="submit" id="saveBtn">Save Product</button>
+      <button type="button" id="cancelEdit">Cancel</button>
+    </form>
+    <pre id="productMsg"></pre>
+
+    <hr />
+    <h2>Feedback / Report</h2>
+    <form id="feedbackForm">
+      <p>
+        <label
+          >Type
+          <select name="feedback_type">
+            <option>Inquiry</option>
+            <option>Report a Problem</option>
+            <option>Suggestion</option>
+            <option>Stall Info Change</option>
+          </select>
+        </label>
+      </p>
+      <p>
+        <label>Subject <input name="subject" /></label>
+      </p>
+      <p>
+        <label>Message <textarea name="message"></textarea></label>
+      </p>
+      <p>
+        <label
+          >Screenshot <input type="file" name="attachment" accept="image/*"
+        /></label>
+      </p>
+      <button type="submit">Send to Admin</button>
+    </form>
+    <pre id="feedbackMsg"></pre>
+    <h3>My Submissions</h3>
+    <ul id="subs"></ul>
+
+    <script src="/js/api.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
+>

@@ -8,7 +8,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Front-end files and uploaded images
+// Main page lives in the repo root (index.html, script.js, style.css)
+const root = path.join(__dirname, '..', '..');
+app.get('/', (req, res) => res.sendFile(path.join(root, 'index.html')));
+app.get(['/script.js', '/style.css'], (req, res) => res.sendFile(path.join(root, req.path)));
+
+// Front-end files (js/api.js) and uploaded images
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
