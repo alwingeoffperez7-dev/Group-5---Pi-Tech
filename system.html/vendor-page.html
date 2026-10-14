@@ -9,17 +9,17 @@
   <body>
     <!-- App Layout Wrapper for Sidebar & Main Content -->
     <div class="app-layout">
-      
+
       <!-- Sidebar Navigation -->
       <aside class="vendor-sidebar">
         <div class="sidebar-logo">
-          <span class="logo-icon">🌱</span> <strong>Logo</strong>
+          <span class="logo-icon" aria-hidden="true">🌱</span> <strong>WasteLess</strong>
         </div>
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" aria-label="Vendor pages">
           <ul>
             <li><a href="#dashboard" class="active">Dashboard</a></li>
             <li><a href="#listing">Product Listing</a></li>
-            <li><a href="#feedback">Feedback & Reports</a></li>
+            <li><a href="#feedback">Feedback &amp; Reports</a></li>
           </ul>
         </nav>
         <div class="sidebar-footer">
@@ -29,13 +29,10 @@
 
       <!-- Main Content Wrapper -->
       <div class="main-wrapper">
-        <!-- Header / Brand Section -->
+        <!-- Header: which stall is logged in -->
         <header class="vendor-header">
-          <div class="logo-area">
-            <span class="logo-icon">🌱</span> <strong>Logo</strong>
-          </div>
           <div class="stall-badge">
-            <span id="stallIdLabel">Stall ID #0000</span>
+            <span id="stallIdLabel" class="stall-id">Stall ID #0000</span>
             <h2 id="stall">STALL NAME</h2>
           </div>
         </header>
@@ -43,166 +40,181 @@
         <main class="container">
           <!-- ===== PAGE: Dashboard ===== -->
           <div class="page" id="page-dashboard">
-          <h1 class="page-title">Dashboard</h1>
-          <!-- Dashboard Summary Cards -->
-          <section class="dashboard-stats">
-            <div class="stat-card">
-              <h3>Sales & Revenue</h3>
-              <p class="stat-value">00</p>
-            </div>
-            <div class="stat-card">
-              <h3>Products</h3>
-              <p class="stat-value" id="count">00</p>
-            </div>
-            <div class="stat-card">
-              <h3>Package Category</h3>
-              <p class="stat-value">00</p>
-            </div>
-          </section>
+            <h1 class="page-title">Dashboard</h1>
 
-          <!-- Eco Tip Banner -->
-          <aside class="eco-tip-banner">
-            <strong>EcoTip 101</strong> Category Category Category Category Category
-          </aside>
+            <!-- Dashboard Summary Cards -->
+            <section class="dashboard-stats">
+              <div class="stat-card">
+                <h3>Sales &amp; Revenue</h3>
+                <p class="stat-value">—</p>
+                <p class="stat-note">Coming with Business Analytics</p>
+              </div>
+              <div class="stat-card">
+                <h3>Products</h3>
+                <p class="stat-value" id="count">00</p>
+                <p class="stat-note">Listed in your stall</p>
+              </div>
+              <div class="stat-card">
+                <h3>Low Stock</h3>
+                <p class="stat-value" id="lowStockCount">00</p>
+                <p class="stat-note">At or below reorder level</p>
+              </div>
+              <div class="stat-card">
+                <h3>Package Category</h3>
+                <ul class="package-breakdown" id="packageBreakdown">
+                  <li><span class="badge plastic">Plastic</span> <strong>0</strong></li>
+                  <li><span class="badge paper">Paper</span> <strong>0</strong></li>
+                  <li><span class="badge reusable">Reusable</span> <strong>0</strong></li>
+                </ul>
+              </div>
+            </section>
 
+            <!-- Eco Tip Banner -->
+            <aside class="eco-tip-banner">
+              <strong>EcoTip 101</strong>
+              <span>Switching even one best-seller from plastic to paper or reusable packaging cuts your stall's plastic waste every day.</span>
+            </aside>
           </div>
 
           <!-- ===== PAGE: Product Listing ===== -->
           <div class="page" id="page-listing" hidden>
-          <!-- Product Listing Section -->
-          <section class="card product-section">
-            <div class="section-header">
-              <h2>Product Listing Page</h2>
-              <div class="action-buttons">
-                <button id="downloadReportBtn" class="btn secondary">Download Report</button>
-                <button id="openAddModalBtn" class="btn primary">+ Add Product</button>
-              </div>
-            </div>
-
-            <div class="filter-toolbar">
-              <label>Search <input id="q" type="search" placeholder="Search..." /></label>
-              <label>Category
-                <select id="filterCat">
-                  <option>Category</option>
-                </select>
-              </label>
-              <button id="refresh" class="btn outline">Refresh</button>
-            </div>
-            <p id="listingMsg" class="listing-msg"></p>
-
-            <div class="table-responsive">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Product ID</th>
-                    <th>Product Name</th>
-                    <th>Packaging Category</th>
-                    <th>Price</th>
-                    <th>Category</th>
-                    <th>Action/Edit</th>
-                  </tr>
-                </thead>
-                <tbody id="rows">
-                  <!-- Dynamic rows injected via script.js -->
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- Add / Edit Product Form Modal / Section -->
-          <dialog class="card form-section product-modal" id="productFormContainer">
-            <div class="modal-header-row">
-              <h2 id="formTitle">Edit Product</h2>
-              <button type="button" id="closeModalBtn" class="close-btn">×</button>
-            </div>
-            <p class="modal-subtitle">Stall 000 [Stall Name] [filled in automatically]</p>
-            <form id="productForm">
-              <input type="hidden" name="product_id" />
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Product name <input name="product_name" placeholder="Product 1" required /></label>
-                </div>
-                <div class="form-group">
-                  <label>Category
-                    <select name="category" id="formCat" required>
-                      <option>Meals</option>
-                      <option>Snacks</option>
-                      <option>Drinks</option>
-                      <option>Desserts</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="form-group full-width">
-                  <label>Description <textarea name="description" rows="3" placeholder="(Short description)"></textarea></label>
-                </div>
-                <div class="form-group">
-                  <label>Packaging
-                    <select name="packaging_type">
-                      <option>Plastic</option>
-                      <option>Paper</option>
-                      <option>Reusable</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="form-group">
-                  <label>Price (₱) <input name="unit_price" type="number" step="0.01" placeholder="00.00" required /></label>
-                </div>
-                <div class="form-group">
-                  <label>Stock <input name="stock" type="number" placeholder="00.00" required /></label>
-                </div>
-                <div class="form-group">
-                  <label>Product Image <input type="file" name="image" accept="image/*" /></label>
+            <section class="card product-section">
+              <div class="section-header">
+                <h1 class="page-title">Product Listing</h1>
+                <div class="action-buttons">
+                  <button id="downloadReportBtn" class="btn secondary">Download Report</button>
+                  <button id="openAddModalBtn" class="btn primary">+ Add Product</button>
                 </div>
               </div>
-              <div class="form-actions">
-                <button type="submit" id="saveBtn" class="btn primary">Save Changes</button>
-                <button type="button" id="cancelEdit" class="btn outline">Cancel</button>
-              </div>
-            </form>
-            <pre id="productMsg"></pre>
-          </dialog>
 
+              <div class="filter-toolbar">
+                <label>Search <input id="q" type="search" placeholder="Search products..." /></label>
+                <label>Category
+                  <select id="filterCat">
+                    <option>Category</option>
+                  </select>
+                </label>
+                <button id="refresh" class="btn outline">Refresh</button>
+              </div>
+              <p id="listingMsg" class="listing-msg" role="status"></p>
+
+              <div class="table-responsive">
+                <table border="1">
+                  <thead>
+                    <tr>
+                      <th>Product ID</th>
+                      <th>Product Name</th>
+                      <th>Packaging Category</th>
+                      <th>Price</th>
+                      <th>Stock</th>
+                      <th>Category</th>
+                      <th>Action/Edit</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rows">
+                    <!-- Dynamic rows injected via vendor-page.js -->
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Add / Edit Product pop-up -->
+            <dialog class="product-modal" id="productFormContainer" aria-labelledby="formTitle">
+              <div class="modal-header-row">
+                <h2 id="formTitle">Edit Product</h2>
+                <button type="button" id="closeModalBtn" class="close-btn" aria-label="Close">×</button>
+              </div>
+              <p class="modal-subtitle">Stall 000 [Stall Name]</p>
+              <form id="productForm">
+                <input type="hidden" name="product_id" />
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Product name <input name="product_name" placeholder="e.g. Chicken Adobo" required /></label>
+                  </div>
+                  <div class="form-group">
+                    <label>Category
+                      <select name="category" id="formCat" required>
+                        <option>Meals</option>
+                        <option>Snacks</option>
+                        <option>Drinks</option>
+                        <option>Desserts</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="form-group full-width">
+                    <label>Description <textarea name="description" rows="3" placeholder="Short description"></textarea></label>
+                  </div>
+                  <div class="form-group">
+                    <label>Packaging
+                      <select name="packaging_type">
+                        <option>Plastic</option>
+                        <option>Paper</option>
+                        <option>Reusable</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label>Price (₱) <input name="unit_price" type="number" min="0" step="0.01" placeholder="0.00" required /></label>
+                  </div>
+                  <div class="form-group">
+                    <label>Stock <input name="stock" type="number" min="0" step="1" placeholder="0" required /></label>
+                  </div>
+                  <div class="form-group">
+                    <label>Product Image <input type="file" name="image" id="imageInput" accept="image/*" /></label>
+                    <small class="field-hint">JPG, PNG, WEBP or GIF, up to 2 MB</small>
+                  </div>
+                  <div class="form-group full-width image-preview-row">
+                    <img id="imagePreview" class="image-preview" width="160" alt="Product image preview" hidden />
+                  </div>
+                </div>
+                <pre id="productMsg" class="form-msg"></pre>
+                <div class="form-actions">
+                  <button type="button" id="cancelEdit" class="btn outline">Cancel</button>
+                  <button type="submit" id="saveBtn" class="btn primary">Save Changes</button>
+                </div>
+              </form>
+            </dialog>
           </div>
 
           <!-- ===== PAGE: Feedback & Reports ===== -->
           <div class="page" id="page-feedback" hidden>
-          <h1 class="page-title">Feedback &amp; Reports</h1>
-          <!-- Feedback / Report Section -->
-          <section class="feedback-grid">
-            <div class="card">
-              <h2>NEW MESSAGE TO ADMIN</h2>
-              <form id="feedbackForm">
-                <div class="form-group">
-                  <label>Type
-                    <select name="feedback_type">
-                      <option>Inquiry</option>
-                      <option>Report a Problem</option>
-                      <option>Suggestion</option>
-                      <option>Stall Info Change</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="form-group">
-                  <label>Subject <input name="subject" placeholder="[Short summary]" required /></label>
-                </div>
-                <div class="form-group">
-                  <label>Message <textarea name="message" rows="4" placeholder="[Describe your inquiry or the issue]" required></textarea></label>
-                </div>
-                <div class="form-group">
-                  <label>Attach screenshot (optional) <input type="file" name="attachment" accept="image/*" /></label>
-                </div>
-                <button type="submit" class="btn primary">Send to Admin</button>
-              </form>
-              <pre id="feedbackMsg"></pre>
-            </div>
+            <h1 class="page-title">Feedback &amp; Reports</h1>
 
-            <div class="card">
-              <h2>MY SUBMISSIONS</h2>
-              <ul id="subs" class="submission-list">
-                <!-- Dynamic submissions list -->
-              </ul>
-            </div>
-          </section>
+            <section class="feedback-grid">
+              <div class="card">
+                <h2>New Message to Admin</h2>
+                <form id="feedbackForm">
+                  <div class="form-group">
+                    <label>Type
+                      <select name="feedback_type">
+                        <option>Inquiry</option>
+                        <option>Report a Problem</option>
+                        <option>Suggestion</option>
+                        <option>Stall Info Change</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label>Subject <input name="subject" placeholder="Short summary" required /></label>
+                  </div>
+                  <div class="form-group">
+                    <label>Message <textarea name="message" rows="5" placeholder="Describe your inquiry or the issue" required></textarea></label>
+                  </div>
+                  <div class="form-group">
+                    <label>Attach screenshot (optional) <input type="file" name="attachment" accept="image/*" /></label>
+                  </div>
+                  <button type="submit" class="btn primary">Send to Admin</button>
+                </form>
+                <pre id="feedbackMsg" class="form-msg" role="status"></pre>
+              </div>
+
+              <div class="card">
+                <h2>My Submissions</h2>
+                <ul id="subs" class="submission-list">
+                  <!-- Dynamic submissions list -->
+                </ul>
+              </div>
+            </section>
           </div>
         </main>
       </div>
