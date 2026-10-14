@@ -18,6 +18,7 @@ function escapeHtml(value) {
 // Show a backend error (and its field messages) under a form.
 function showError(elId, err) {
   const details = Object.values(err.details || {});
+  document.getElementById(elId).classList.remove("ok");
   document.getElementById(elId).textContent = err.message + (details.length ? "\n- " + details.join("\n- ") : "");
 }
 
@@ -50,8 +51,7 @@ async function loadProducts() {
   const data = await WasteLessAPI.getProducts();
   // backend sends category_name; this page uses `category`
   products = data.products.map(p => ({ ...p, category: p.category_name }));
-  const countBadge = document.getElementById("count"); // Dashboard "Products" card
-  if (countBadge) countBadge.textContent = products.length < 10 ? `0${products.length}` : products.length;
+  renderDashboard();
   applyFilters();
 }
 
@@ -78,6 +78,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error(err);
   }
 });
+
+// Dashboard cards: Products, Low Stock, Package Category
+function renderDashboard() {
+  const pad = n => (n < 10 ? `0${n}` : String(n));
+  const countBadge = document.getElementById("count");
+  const lowStock = document.getElementById("lowStockCount");
+  const breakdown = document.getElementById("packageBreakdown");
+
+  if (countBadge) countBadge.textContent = pad(products.length);
+  if (lowStock) lowStock.textContent = pad(products.filter(p => p.is_low_stock).length);
+  if (breakdown) {
+    breakdown.innerHTML = ["Plastic", "Paper", "Reusable"].map(type => {
+      const n = products.filter(p => p.packaging_type === type).length;
+      return `<li><span class="badge ${type.toLowerCase()}">${type}</span> <strong>${n}</strong></li>`;
+    }).join("");
+  }
+}
 
 // Initialize Stall Header details
 function initStallInfo() {
@@ -125,7 +142,7 @@ function renderProducts(dataToRender) {
   tbody.innerHTML = "";
 
   if (dataToRender.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #718096;">No products found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-row">No products found.</td></tr>`;
     return;
   }
 
@@ -133,9 +150,17 @@ function renderProducts(dataToRender) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${prod.product_id}</td>
-      <td><strong>${escapeHtml(prod.product_name)}</strong><br><small style="color:#718096">${escapeHtml(prod.description)}</small></td>
+      <td>
+        <div class="product-cell">
+          ${prod.image_url
+            ? `<img class="product-thumb" src="${escapeHtml(prod.image_url)}" alt="">`
+            : `<span class="product-thumb empty" aria-hidden="true">🍽</span>`}
+          <div><strong>${escapeHtml(prod.product_name)}</strong><br><small>${escapeHtml(prod.description)}</small></div>
+        </div>
+      </td>
       <td><span class="badge ${prod.packaging_type.toLowerCase()}">${prod.packaging_type}</span></td>
       <td>₱${Number(prod.unit_price).toFixed(2)}</td>
+      <td class="${prod.is_low_stock ? "low-stock" : ""}">${prod.stock}${prod.is_low_stock ? " (low)" : ""}</td>
       <td>${escapeHtml(prod.category)}</td>
       <td>
         <button class="btn outline btn-sm" onclick="editProduct(${prod.product_id})">Edit</button>
@@ -153,7 +178,7 @@ function renderSubmissions() {
 
   subsList.innerHTML = "";
   if (submissions.length === 0) {
-    subsList.innerHTML = `<li style="color: #718096; padding: 0.5rem 0;">No submissions yet.</li>`;
+    subsList.innerHTML = `<li class="empty-row">No submissions yet.</li>`;
     return;
   }
 
@@ -163,7 +188,7 @@ function renderSubmissions() {
     li.innerHTML = `
       <div>
         <strong>[${escapeHtml(sub.type)}] ${escapeHtml(sub.subject)}</strong>
-        <div style="font-size: 0.85rem; color: #718096;">Date: ${escapeHtml(sub.date)}</div>
+        <div class="stat-note">Date: ${escapeHtml(sub.date)}</div>
       </div>
       <span class="status-badge ${sub.status.toLowerCase()}">${sub.status}</span>
     `;
@@ -218,6 +243,15 @@ function setupEventListeners() {
   if (closeModalBtn) closeModalBtn.addEventListener("click", closeForm);
   if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeForm);
 
+  // Preview the picked image before saving
+  const imageInput = document.getElementById("imageInput");
+  if (imageInput) {
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+      showImagePreview(file ? URL.createObjectURL(file) : currentImageUrl);
+    });
+  }
+
   // Product Form Submission -> POST (add) or PUT (edit)
   if (productForm) {
     productForm.addEventListener("submit", async (e) => {
@@ -254,6 +288,7 @@ function setupEventListeners() {
         await WasteLessAPI.sendFeedback(formData);
         feedbackForm.reset();
         await loadSubmissions();
+        document.getElementById("feedbackMsg").classList.add("ok");
         document.getElementById("feedbackMsg").textContent = "Message sent to admin successfully!";
         setTimeout(() => { document.getElementById("feedbackMsg").textContent = ""; }, 3000);
       } catch (err) {
@@ -297,7 +332,19 @@ window.editProduct = function(productId) {
   productForm.packaging_type.value = prod.packaging_type;
   productForm.unit_price.value = prod.unit_price;
   productForm.stock.value = prod.stock;
+  currentImageUrl = prod.image_url;
+  showImagePreview(prod.image_url);
 };
+
+// Image shown under the file input (current image when editing, or the newly picked file)
+let currentImageUrl = null;
+function showImagePreview(url) {
+  const img = document.getElementById("imagePreview");
+  if (!img) return;
+  img.hidden = !url;
+  if (url) img.src = url;
+  else img.removeAttribute("src");
+}
 
 // Open the Add / Edit Product pop-up (prod = null for Add).
 // Clears it first, so leftovers from last time (or an Esc close) never show.
@@ -307,6 +354,8 @@ function openProductModal(prod) {
   form.reset();
   form.product_id.value = "";
   document.getElementById("productMsg").textContent = "";
+  currentImageUrl = null;
+  showImagePreview(null);
   document.getElementById("formTitle").textContent = prod ? "Edit Product" : "Add Product";
   document.getElementById("saveBtn").textContent = prod ? "Save Changes" : "Save Product";
   modal.showModal();
