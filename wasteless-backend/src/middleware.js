@@ -1,18 +1,58 @@
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const multer = require('multer');
 
 // ---------------------------------------------------------------------
-// Which stall is making the request?
-// TEMPORARY: there is no login yet, so we use DEFAULT_CANTEEN_ID from
-// .env (or an X-Canteen-Id header for testing other stalls).
-// When login is built, set req.canteenId from the logged-in staff instead.
+// Passwords: scrypt with a random salt, stored as "salt:hash".
 // ---------------------------------------------------------------------
-function currentStall(req, res, next) {
-  const fromHeader = Number(req.get('X-Canteen-Id'));
-  req.canteenId = fromHeader || Number(process.env.DEFAULT_CANTEEN_ID || 1);
-  req.staffId = Number(process.env.DEFAULT_STAFF_ID || 0) || null;
-  next();
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return `${salt}:${crypto.scryptSync(password, salt, 64).toString('hex')}`;
+}
+
+function checkPassword(password, stored) {
+  const [salt, hash] = String(stored).split(':');
+  if (!salt || !hash) return false;
+  const given = crypto.scryptSync(password, salt, 64);
+  const expected = Buffer.from(hash, 'hex');
+  return given.length === expected.length && crypto.timingSafeEqual(given, expected);
+}
+
+// ---------------------------------------------------------------------
+// Login sessions: a random token in an httpOnly "sid" cookie.
+// ponytail: kept in memory, so everyone is logged out when the server
+// restarts. Move to a session table if that becomes a problem.
+// ---------------------------------------------------------------------
+const sessions = new Map(); // token -> { staffId, canteenId, role }
+
+function getSession(req) {
+  const m = /(?:^|;\s*)sid=([^;]+)/.exec(req.headers.cookie || '');
+  return m ? sessions.get(m[1]) : undefined;
+}
+
+function startSession(res, user) {
+  const token = crypto.randomBytes(32).toString('hex');
+  sessions.set(token, user);
+  res.cookie('sid', token, { httpOnly: true, sameSite: 'lax' });
+}
+
+function endSession(req, res) {
+  const m = /(?:^|;\s*)sid=([^;]+)/.exec(req.headers.cookie || '');
+  if (m) sessions.delete(m[1]);
+  res.clearCookie('sid');
+}
+
+// Only let in a logged-in 'vendor' or 'admin'. Sets req.staffId / req.canteenId.
+function requireRole(role) {
+  return (req, res, next) => {
+    const s = getSession(req);
+    if (!s) throw new HttpError(401, 'Please log in first');
+    if (s.role !== role) throw new HttpError(403, `Only ${role} accounts can do this`);
+    req.staffId = s.staffId;
+    req.canteenId = s.canteenId;
+    next();
+  };
 }
 
 // ---------------------------------------------------------------------
@@ -54,6 +94,8 @@ function errorHandler(err, req, res, next) {
   if (err.status) {
     return res.status(err.status).json({ error: err.message, details: err.details });
   }
+  if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'That name or email is already used' });
+  if (err.code === 'ER_ROW_IS_REFERENCED_2') return res.status(400).json({ error: 'It is still used by other records, so it cannot be deleted' });
   console.error(err);
   res.status(500).json({ error: 'Something went wrong on the server' });
 }
@@ -63,4 +105,7 @@ function discardUpload(req) {
   if (req.file) fs.unlink(req.file.path, () => {});
 }
 
-module.exports = { currentStall, upload, HttpError, wrap, errorHandler, discardUpload };
+module.exports = {
+  hashPassword, checkPassword, startSession, endSession, requireRole,
+  upload, HttpError, wrap, errorHandler, discardUpload
+};

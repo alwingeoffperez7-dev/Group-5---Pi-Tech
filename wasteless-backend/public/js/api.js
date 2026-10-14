@@ -15,6 +15,7 @@ const WasteLessAPI = (() => {
     }
     const res = await fetch(url, opts);
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401) location.href = '/system.html/log-in.html'; // not logged in
     if (!res.ok) {
       const err = new Error(data.error || `Request failed (${res.status})`);
       err.status = res.status;
@@ -25,6 +26,10 @@ const WasteLessAPI = (() => {
   }
 
   return {
+    // Any route, e.g. request('GET', '/api/admin/stalls?search=x'). Used by the admin page.
+    request,
+    logout: () => request('POST', '/api/auth/logout'),
+
     // Header + My Stall page
     getStall: () => request('GET', '/api/stall'),
 

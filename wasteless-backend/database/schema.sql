@@ -21,7 +21,9 @@ CREATE TABLE canteen (
   contact_email   VARCHAR(120),
   contact_number  VARCHAR(20),
   location        VARCHAR(120),
-  joined_date     DATE NOT NULL DEFAULT (CURRENT_DATE)
+  joined_date     DATE NOT NULL DEFAULT (CURRENT_DATE),
+  -- Pending = signed up, waiting for admin; Removed = deleted by admin (soft delete)
+  status          ENUM('Pending','Approved','Declined','Removed') NOT NULL DEFAULT 'Approved'
 );
 
 -- ---------------------------------------------------------------------
