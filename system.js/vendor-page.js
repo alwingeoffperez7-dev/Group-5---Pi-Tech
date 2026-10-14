@@ -151,12 +151,8 @@ function renderProducts(dataToRender) {
     tr.innerHTML = `
       <td>${prod.product_id}</td>
       <td>
-        <div class="product-cell">
-          ${prod.image_url
-            ? `<img class="product-thumb" src="${escapeHtml(prod.image_url)}" alt="">`
-            : `<span class="product-thumb empty" aria-hidden="true">🍽</span>`}
-          <div><strong>${escapeHtml(prod.product_name)}</strong><br><small>${escapeHtml(prod.description)}</small></div>
-        </div>
+        ${prod.image_url ? `<img class="product-thumb" src="${escapeHtml(prod.image_url)}" width="48" height="48" alt=""><br>` : ""}
+        <strong>${escapeHtml(prod.product_name)}</strong><br><small>${escapeHtml(prod.description)}</small>
       </td>
       <td><span class="badge ${prod.packaging_type.toLowerCase()}">${prod.packaging_type}</span></td>
       <td>₱${Number(prod.unit_price).toFixed(2)}</td>
