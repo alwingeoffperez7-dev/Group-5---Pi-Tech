@@ -32,6 +32,7 @@ const WasteLessAPI = (() => {
 
     // Header + My Stall page
     getStall: () => request('GET', '/api/stall'),
+    getDashboard: () => request('GET', '/api/stall/dashboard'), // last 7 days: revenue total + items sold per packaging
 
     // Category chips
     getCategories: () => request('GET', '/api/categories'),
