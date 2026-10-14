@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteLess</title>
+</head>
+<body>
+    <section>
+        <div>
+
+            <div>
+                <h2>REGISTER</h2>
+                <hr>
+            </div>
+
+            <form id="registerForm" method="POST" action="/api/auth/register">
+                <div>
+                    
+                    <div>
+                        <div>
+                            <span>[Store Icon]</span>
+                        </div>
+
+                        <div>
+                            <label for="regBusinessName">Business Name:</label>
+                            <input type="text" id="regBusinessName" name="business_name" required>
+                        </div>
+
+                        <div>
+                            <label for="regEmail">Email Address:</label>
+                            <input type="email" id="regEmail" name="email" required>
+                        </div>
+
+                        <div>
+                            <label for="regPassword">Password:</label>
+                            <input type="password" id="regPassword" name="user_pass" required>
+                        </div>
+
+                        <div></div>
+
+                        <div>
+                            <label for="regContactNumber">Contact Number:</label>
+                            <input type="tel" id="regContactNumber" name="contact_number" required>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div>
+                    <button type="submit">Register</button>
+                </div>
+
+                <div id="registerFeedback"></div>
+            </form>
+
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 WasteLess. All rights reserved.</p>
+    </footer>
+
+    <script src="../system.js/register.js"></script>
+</body>
+</html>

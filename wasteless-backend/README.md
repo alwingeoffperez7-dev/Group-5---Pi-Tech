@@ -1,6 +1,7 @@
-# WasteLess — Vendor Page Backend
+# WasteLess — Backend
 
-Backend for the vendor side of WasteLess: **My Stall**, **Product Listing** (add / edit / delete pop-ups), and **Feedback / Report**.
+Backend for WasteLess: **log-in / register**, the **vendor page** (My Stall, Product Listing, Feedback / Report), the **admin page** (accounts, stalls, products, categories, feedback) and the **landing page** summary.
+The front end (`system.html/`, `system.js/`, `system.css/` in the repo root) is served by this server.
 Stack: HTML + CSS + JavaScript (Node.js + Express) + SQL (MySQL / MariaDB).
 
 Business Analytics and Eco-Tip logic are **not** in here yet (other members / later phase), but their tables already exist in the database.
@@ -20,7 +21,17 @@ Business Analytics and Eco-Tip logic are **not** in here yet (other members / la
    npm install
    npm start
    ```
-5. Open **http://localhost:3000** — a plain test page. Add a product, then check phpMyAdmin → `wasteless` → `product`. It's there.
+5. Open **http://localhost:3000** (the landing page). Log in with a test account from `database/seed.sql`:
+
+   | Role | Email | Password |
+   |---|---|---|
+   | Vendor | juan@example.com | vendor123 |
+   | Admin | admin@wasteless.local | admin123 |
+
+   New sign-ups from the Register page are **Pending** until an admin clicks **Approve** in Account Management.
+
+Already made the database before login existed? Re-run both SQL files (this wipes the data), or run:
+`ALTER TABLE canteen ADD COLUMN status ENUM('Pending','Approved','Declined','Removed') NOT NULL DEFAULT 'Approved';` and add the two staff rows from `seed.sql`.
 
 ## For the front-end team
 
@@ -34,9 +45,27 @@ Include `public/js/api.js` and call the functions — no need to write fetch cod
 </script>
 ```
 
-The page is in the repo root: `index.html`, `script.js`, `style.css` (served at http://localhost:3000). It's only a test page with no design. Replace it with the real screens.
+The real pages are `system.html/*.html` (each loads `/js/api.js`). If a call gets 401 (not logged in), `api.js` sends the browser to the log-in page.
+The old plain test page is still at http://localhost:3000/index.html.
 
 ## API
+
+Log-in uses a cookie, so open the pages through this server (http://localhost:3000), not with Live Server or by double-clicking.
+
+| Page action | Method & URL | Who |
+|---|---|---|
+| Register | `POST /api/auth/register` (business_name, email, user_pass, contact_number) | anyone |
+| Log In as Vendor / Admin | `POST /api/auth/login` (email, password, role) | anyone |
+| Log Out | `POST /api/auth/logout` | anyone |
+| Landing chart / summary | `GET /api/landing/chart`, `GET /api/landing/summary` | anyone |
+| Admin dashboard totals | `GET /api/admin/stats` | admin |
+| Admin feedback list | `GET /api/admin/feedback?sort=newest|oldest` | admin |
+| Account Management | `GET /api/admin/accounts?search=&filter=Pending|Approved|Declined&sort=`, `POST /api/admin/accounts/:id/approve|decline` | admin |
+| Stall Management | `GET/POST /api/admin/stalls`, `PUT/DELETE /api/admin/stalls/:id` | admin |
+| Product Management | `GET/POST /api/admin/products`, `PUT/DELETE /api/admin/products/:id` | admin |
+| Packaging Category | `GET/POST /api/admin/categories`, `PUT/DELETE /api/admin/categories/:id` | admin |
+
+Vendor routes (below) act on the **logged-in vendor's own stall**.
 
 | Wireframe action | Method & URL | Send | Get back |
 |---|---|---|---|
@@ -66,7 +95,7 @@ The page is in the repo root: `index.html`, `script.js`, `style.css` (served at 
 
 ## Not done yet
 
-- **Login:** no login yet, so every request acts as the stall in `DEFAULT_CANTEEN_ID` (`.env`). When login is built, set `req.canteenId` from the logged-in staff in `src/middleware.js`.
+- **Sessions** are kept in memory, so everyone is logged out when the server restarts.
 - **Eco-Tip:** `conditions`, `eco_tip`, `notification` tables exist; logic comes later.
 - **Business Analytics:** `sales_record` table and a `business_analytics` view exist for the other members.
 - **Spreadsheet version** of Product Listing (2-ALT) isn't wired; the same endpoints can back it if the team picks it.
