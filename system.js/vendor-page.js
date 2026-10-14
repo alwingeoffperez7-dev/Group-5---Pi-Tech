@@ -210,23 +210,10 @@ function setupEventListeners() {
   const productForm = document.getElementById("productForm");
 
   if (openAddModalBtn) {
-    openAddModalBtn.addEventListener("click", () => {
-      if (productForm) {
-        productForm.reset();
-        productForm.product_id.value = "";
-      }
-      document.getElementById("formTitle").textContent = "Add Product";
-      if (productFormContainer) productFormContainer.scrollIntoView({ behavior: 'smooth' });
-    });
+    openAddModalBtn.addEventListener("click", () => openProductModal(null));
   }
 
-  const closeForm = () => {
-    if (productForm) {
-      productForm.reset();
-      productForm.product_id.value = "";
-    }
-    if (document.getElementById("productMsg")) document.getElementById("productMsg").textContent = "";
-  };
+  const closeForm = () => productFormContainer.close();
 
   if (closeModalBtn) closeModalBtn.addEventListener("click", closeForm);
   if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeForm);
@@ -243,13 +230,11 @@ function setupEventListeners() {
       try {
         if (id) {
           await WasteLessAPI.editProduct(id, formData);
-          document.getElementById("productMsg").textContent = "Product updated successfully!";
         } else {
           await WasteLessAPI.addProduct(formData);
-          document.getElementById("productMsg").textContent = "Product added successfully!";
         }
-        productForm.reset();
-        productForm.product_id.value = "";
+        productFormContainer.close();
+        showListingMsg(id ? "Product updated successfully!" : "Product added successfully!");
         await loadProducts();
       } catch (err) {
         showError("productMsg", err);
@@ -304,6 +289,7 @@ window.editProduct = function(productId) {
   const productForm = document.getElementById("productForm");
   if (!productForm) return;
 
+  openProductModal(prod);
   productForm.product_id.value = prod.product_id;
   productForm.product_name.value = prod.product_name;
   productForm.category.value = prod.category;
@@ -311,10 +297,28 @@ window.editProduct = function(productId) {
   productForm.packaging_type.value = prod.packaging_type;
   productForm.unit_price.value = prod.unit_price;
   productForm.stock.value = prod.stock;
-
-  document.getElementById("formTitle").textContent = "Edit Product";
-  document.getElementById("productFormContainer").scrollIntoView({ behavior: 'smooth' });
 };
+
+// Open the Add / Edit Product pop-up (prod = null for Add).
+// Clears it first, so leftovers from last time (or an Esc close) never show.
+function openProductModal(prod) {
+  const modal = document.getElementById("productFormContainer");
+  const form = document.getElementById("productForm");
+  form.reset();
+  form.product_id.value = "";
+  document.getElementById("productMsg").textContent = "";
+  document.getElementById("formTitle").textContent = prod ? "Edit Product" : "Add Product";
+  document.getElementById("saveBtn").textContent = prod ? "Save Changes" : "Save Product";
+  modal.showModal();
+}
+
+// Short message above the product table (e.g. after saving)
+function showListingMsg(text) {
+  const el = document.getElementById("listingMsg");
+  if (!el) return;
+  el.textContent = text;
+  setTimeout(() => { el.textContent = ""; }, 3000);
+}
 
 window.deleteProduct = async function(productId) {
   if (!confirm("Are you sure you want to delete this product?")) return;

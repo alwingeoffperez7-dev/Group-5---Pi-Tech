@@ -88,6 +88,7 @@
               </label>
               <button id="refresh" class="btn outline">Refresh</button>
             </div>
+            <p id="listingMsg" class="listing-msg"></p>
 
             <div class="table-responsive">
               <table>
@@ -109,7 +110,7 @@
           </section>
 
           <!-- Add / Edit Product Form Modal / Section -->
-          <section class="card form-section" id="productFormContainer">
+          <dialog class="card form-section product-modal" id="productFormContainer">
             <div class="modal-header-row">
               <h2 id="formTitle">Edit Product</h2>
               <button type="button" id="closeModalBtn" class="close-btn">×</button>
@@ -159,7 +160,7 @@
               </div>
             </form>
             <pre id="productMsg"></pre>
-          </section>
+          </dialog>
 
           </div>
 
