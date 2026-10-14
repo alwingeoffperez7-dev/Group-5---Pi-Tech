@@ -24,9 +24,21 @@ function showError(elId, err) {
 // ---------- Loading from the backend ----------
 async function loadStall() {
   const s = await WasteLessAPI.getStall();
-  stallData = { stall_id: s.stall_id, stall_name: s.stall_name };
+  stallData = s;
   initStallInfo();
 }
+
+// ---------- Sidebar pages (#dashboard, #listing, #feedback) ----------
+function showPage() {
+  const name = location.hash.slice(1) || "dashboard";
+  const page = document.getElementById("page-" + name) ? name : "dashboard";
+  document.querySelectorAll(".page").forEach(p => { p.hidden = p.id !== "page-" + page; });
+  document.querySelectorAll(".sidebar-nav a").forEach(a => {
+    a.classList.toggle("active", a.getAttribute("href") === "#" + page);
+  });
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", showPage);
 
 async function loadCategories() {
   const list = await WasteLessAPI.getCategories();
@@ -38,6 +50,8 @@ async function loadProducts() {
   const data = await WasteLessAPI.getProducts();
   // backend sends category_name; this page uses `category`
   products = data.products.map(p => ({ ...p, category: p.category_name }));
+  const countBadge = document.getElementById("count"); // Dashboard "Products" card
+  if (countBadge) countBadge.textContent = products.length < 10 ? `0${products.length}` : products.length;
   applyFilters();
 }
 
@@ -55,6 +69,7 @@ async function loadSubmissions() {
 
 // DOMContentLoaded Initialization
 document.addEventListener("DOMContentLoaded", async () => {
+  showPage();
   setupEventListeners();
   try {
     await Promise.all([loadStall(), loadCategories(), loadSubmissions()]);
@@ -105,9 +120,6 @@ function initCategories() {
 // Render Products Table
 function renderProducts(dataToRender) {
   const tbody = document.getElementById("rows");
-  const countBadge = document.getElementById("count");
-
-  if (countBadge) countBadge.textContent = dataToRender.length < 10 ? `0${dataToRender.length}` : dataToRender.length;
   if (!tbody) return;
 
   tbody.innerHTML = "";
@@ -282,16 +294,6 @@ function setupEventListeners() {
       window.location.href = "landing.html";
     });
   }
-
-  // Sidebar navigation interaction
-  const sidebarLinks = document.querySelectorAll(".sidebar-nav a");
-  sidebarLinks.forEach(link => {
-    link.addEventListener("click", function(e) {
-      e.preventDefault();
-      sidebarLinks.forEach(l => l.classList.remove("active"));
-      this.classList.add("active");
-    });
-  });
 }
 
 // Global functions for table row actions

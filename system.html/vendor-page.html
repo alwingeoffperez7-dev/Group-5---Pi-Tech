@@ -17,11 +17,9 @@
         </div>
         <nav class="sidebar-nav">
           <ul>
-            <li><a href="#" class="active">Dashboard</a></li>
-            <li><a href="#">Product Listing</a></li>
-            <li><a href="#">Data Report</a></li>
-            <li><a href="#">Feedback & Reports</a></li>
-            <li><a href="#">Stall Settings</a></li>
+            <li><a href="#dashboard" class="active">Dashboard</a></li>
+            <li><a href="#listing">Product Listing</a></li>
+            <li><a href="#feedback">Feedback & Reports</a></li>
           </ul>
         </nav>
         <div class="sidebar-footer">
@@ -43,6 +41,9 @@
         </header>
 
         <main class="container">
+          <!-- ===== PAGE: Dashboard ===== -->
+          <div class="page" id="page-dashboard">
+          <h1 class="page-title">Dashboard</h1>
           <!-- Dashboard Summary Cards -->
           <section class="dashboard-stats">
             <div class="stat-card">
@@ -64,6 +65,10 @@
             <strong>EcoTip 101</strong> Category Category Category Category Category
           </aside>
 
+          </div>
+
+          <!-- ===== PAGE: Product Listing ===== -->
+          <div class="page" id="page-listing" hidden>
           <!-- Product Listing Section -->
           <section class="card product-section">
             <div class="section-header">
@@ -156,6 +161,11 @@
             <pre id="productMsg"></pre>
           </section>
 
+          </div>
+
+          <!-- ===== PAGE: Feedback & Reports ===== -->
+          <div class="page" id="page-feedback" hidden>
+          <h1 class="page-title">Feedback &amp; Reports</h1>
           <!-- Feedback / Report Section -->
           <section class="feedback-grid">
             <div class="card">
@@ -192,6 +202,7 @@
               </ul>
             </div>
           </section>
+          </div>
         </main>
       </div>
     </div>
