@@ -72,28 +72,70 @@ document.addEventListener("DOMContentLoaded", async () => {
   showPage();
   setupEventListeners();
   try {
-    await Promise.all([loadStall(), loadCategories(), loadSubmissions()]);
+    await Promise.all([loadStall(), loadCategories(), loadSubmissions(), loadDashboard()]);
     await loadProducts();
   } catch (err) {
     console.error(err);
   }
 });
 
-// Dashboard cards: Products, Low Stock, Package Category
+// Dashboard cards: Products, Package Category
 function renderDashboard() {
   const pad = n => (n < 10 ? `0${n}` : String(n));
   const countBadge = document.getElementById("count");
-  const lowStock = document.getElementById("lowStockCount");
   const breakdown = document.getElementById("packageBreakdown");
 
   if (countBadge) countBadge.textContent = pad(products.length);
-  if (lowStock) lowStock.textContent = pad(products.filter(p => p.is_low_stock).length);
   if (breakdown) {
     breakdown.innerHTML = ["Plastic", "Paper", "Reusable"].map(type => {
       const n = products.filter(p => p.packaging_type === type).length;
       return `<li><span class="badge ${type.toLowerCase()}">${type}</span> <strong>${n}</strong></li>`;
     }).join("");
   }
+}
+
+// ---------- Dashboard graphs (Chart.js) ----------
+const charts = {};
+const PACKAGING_COLORS = { Plastic: "#dc2626", Paper: "#d97706", Reusable: "#16a34a" };
+
+// Draws (or redraws) one chart; shows a message instead when there's nothing to draw.
+function drawChart(id, config, emptyMessage) {
+  const status = document.getElementById(id + "Status");
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  if (typeof Chart === "undefined") {
+    if (status) status.textContent = "Chart library failed to load.";
+    return;
+  }
+  if (status) status.textContent = emptyMessage || "";
+  config.options = { responsive: false, animation: false, ...config.options };
+  charts[id] = new Chart(document.getElementById(id), config);
+}
+
+// "Sales & Revenue" card + packaging line graph (one line per packaging type)
+async function loadDashboard() {
+  const data = await WasteLessAPI.getDashboard();
+  const total = document.getElementById("salesTotal");
+  if (total) total.textContent = "₱" + data.revenue_total.toFixed(2);
+
+  const types = ["Plastic", "Paper", "Reusable"];
+  const anySold = types.some(t => data.packaging[t].some(n => n > 0));
+  drawChart("packagingChart", {
+    type: "line",
+    data: {
+      labels: data.labels.map(d => new Date(d + "T00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })),
+      datasets: types.map(t => ({
+        label: t,
+        data: data.packaging[t],
+        borderColor: PACKAGING_COLORS[t],
+        backgroundColor: PACKAGING_COLORS[t],
+        tension: 0.3
+      }))
+    },
+    options: {
+      plugins: { legend: { position: "bottom" } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Items sold" } } }
+    }
+  }, anySold ? "" : "No sales recorded in the last 7 days yet.");
 }
 
 // Initialize Stall Header details
