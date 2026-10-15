@@ -2,6 +2,7 @@
 // Not logged in as a vendor -> api.js sends you to the log-in page.
 let stallData = { stall_id: "", stall_name: "" };
 let categories = [];
+let packagingList = []; // [{ packaging_id, packaging_name, description, example }]
 let products = [];
 let submissions = [];
 
@@ -47,6 +48,21 @@ async function loadCategories() {
   initCategories();
 }
 
+async function loadPackaging() {
+  packagingList = await WasteLessAPI.getPackaging();
+  const select = document.getElementById("formPackaging");
+  if (select) {
+    select.innerHTML = "";
+    packagingList.forEach(pk => {
+      const opt = document.createElement("option");
+      opt.value = pk.packaging_id;
+      opt.textContent = pk.packaging_name;
+      if (pk.example) opt.title = "e.g. " + pk.example; // shows on hover
+      select.appendChild(opt);
+    });
+  }
+}
+
 async function loadProducts() {
   const data = await WasteLessAPI.getProducts();
   // backend sends category_name; this page uses `category`
@@ -72,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   showPage();
   setupEventListeners();
   try {
-    await Promise.all([loadStall(), loadCategories(), loadSubmissions(), loadDashboard()]);
+    await Promise.all([loadStall(), loadCategories(), loadPackaging(), loadSubmissions(), loadDashboard(), loadReportStatus()]);
     await loadProducts();
   } catch (err) {
     console.error(err);
@@ -87,16 +103,17 @@ function renderDashboard() {
 
   if (countBadge) countBadge.textContent = pad(products.length);
   if (breakdown) {
-    breakdown.innerHTML = ["Plastic", "Paper", "Reusable"].map(type => {
-      const n = products.filter(p => p.packaging_type === type).length;
-      return `<li><span class="badge ${type.toLowerCase()}">${type}</span> <strong>${n}</strong></li>`;
+    breakdown.innerHTML = packagingList.map(pk => {
+      const n = products.filter(p => p.packaging_id === pk.packaging_id).length;
+      return `<li>${escapeHtml(pk.packaging_name)}: <strong>${n}</strong></li>`;
     }).join("");
   }
 }
 
 // ---------- Dashboard graphs (Chart.js) ----------
 const charts = {};
-const PACKAGING_COLORS = { Plastic: "#dc2626", Paper: "#d97706", Reusable: "#16a34a" };
+// One colour per packaging category line (in order); repeats if the admin adds more than 6
+const LINE_COLORS = ["#2563eb", "#dc2626", "#d97706", "#16a34a", "#7c3aed", "#0891b2"];
 
 // Draws (or redraws) one chart; shows a message instead when there's nothing to draw.
 function drawChart(id, config, emptyMessage) {
@@ -111,24 +128,23 @@ function drawChart(id, config, emptyMessage) {
   charts[id] = new Chart(document.getElementById(id), config);
 }
 
-// "Sales & Revenue" card + packaging line graph (one line per packaging type)
+// "Sales & Revenue" card + packaging line graph (one line per packaging category)
 async function loadDashboard() {
   const data = await WasteLessAPI.getDashboard();
   const total = document.getElementById("salesTotal");
   if (total) total.textContent = "₱" + data.revenue_total.toFixed(2);
 
-  const types = ["Plastic", "Paper", "Reusable"];
-  const anySold = types.some(t => data.packaging[t].some(n => n > 0));
+  const anySold = data.lines.some(line => line.values.some(n => n > 0));
   drawChart("packagingChart", {
     type: "line",
     data: {
       labels: data.labels.map(d => new Date(d + "T00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })),
-      datasets: types.map(t => ({
-        label: t,
-        data: data.packaging[t],
-        borderColor: PACKAGING_COLORS[t],
-        backgroundColor: PACKAGING_COLORS[t],
-        tension: 0.3
+      datasets: data.lines.map((line, i) => ({
+        label: line.label,
+        data: line.values,
+        borderColor: LINE_COLORS[i % LINE_COLORS.length],
+        backgroundColor: LINE_COLORS[i % LINE_COLORS.length],
+        cubicInterpolationMode: "monotone" // smooth, but never dips below 0 between points
       }))
     },
     options: {
@@ -136,6 +152,49 @@ async function loadDashboard() {
       scales: { y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Items sold" } } }
     }
   }, anySold ? "" : "No sales recorded in the last 7 days yet.");
+}
+
+// ---------- Download Report (PDF, once every 7 days) ----------
+const formatWhen = d => new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+
+// Button says when the next report can be downloaded
+async function loadReportStatus() {
+  const status = await WasteLessAPI.getReportStatus();
+  const btn = document.getElementById("downloadReportBtn");
+  if (!btn) return;
+  btn.disabled = !status.available;
+  btn.textContent = status.available ? "Download Report" : "Next report: " + formatWhen(status.next_available_at);
+  btn.title = status.last_downloaded_at ? "Last downloaded " + formatWhen(status.last_downloaded_at) : "";
+}
+
+async function downloadReport() {
+  const btn = document.getElementById("downloadReportBtn");
+  if (!confirm("You can download the report only once every 7 days. Download it now?")) return;
+  btn.disabled = true;
+  btn.textContent = "Preparing report...";
+  try {
+    const res = await fetch("/api/stall/report");
+    if (res.status === 401) { location.href = "log-in.html"; return; }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Could not create the report.");
+    }
+    // Save the PDF the server sent
+    const blob = await res.blob();
+    const name = (res.headers.get("Content-Disposition") || "").match(/filename="(.+)"/);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = name ? name[1] : "WasteLess-Report.pdf";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+    showListingMsg("Report downloaded.");
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    loadReportStatus();
+  }
 }
 
 // Initialize Stall Header details
@@ -184,7 +243,7 @@ function renderProducts(dataToRender) {
   tbody.innerHTML = "";
 
   if (dataToRender.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-row">No products found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-row">No products found.</td></tr>`;
     return;
   }
 
@@ -192,11 +251,10 @@ function renderProducts(dataToRender) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${prod.product_id}</td>
-      <td>
-        ${prod.image_url ? `<img class="product-thumb" src="${escapeHtml(prod.image_url)}" width="48" height="48" alt=""><br>` : ""}
-        <strong>${escapeHtml(prod.product_name)}</strong><br><small>${escapeHtml(prod.description)}</small>
-      </td>
-      <td><span class="badge ${prod.packaging_type.toLowerCase()}">${prod.packaging_type}</span></td>
+      <td>${prod.image_url ? `<img class="product-thumb" src="${escapeHtml(prod.image_url)}" width="48" height="48" alt="${escapeHtml(prod.product_name)}">` : "No image"}</td>
+      <td><strong>${escapeHtml(prod.product_name)}</strong></td>
+      <td>${escapeHtml(prod.description) || "—"}</td>
+      <td>${escapeHtml(prod.packaging_name)}</td>
       <td>₱${Number(prod.unit_price).toFixed(2)}</td>
       <td class="${prod.is_low_stock ? "low-stock" : ""}">${prod.stock}${prod.is_low_stock ? " (low)" : ""}</td>
       <td>${escapeHtml(prod.category)}</td>
@@ -338,9 +396,7 @@ function setupEventListeners() {
   // Download Report Button Action
   const downloadReportBtn = document.getElementById("downloadReportBtn");
   if (downloadReportBtn) {
-    downloadReportBtn.addEventListener("click", () => {
-      alert("Generating vendor PDF report...");
-    });
+    downloadReportBtn.addEventListener("click", downloadReport);
   }
 
   // Log Out
@@ -367,7 +423,7 @@ window.editProduct = function(productId) {
   productForm.product_name.value = prod.product_name;
   productForm.category.value = prod.category;
   productForm.description.value = prod.description || "";
-  productForm.packaging_type.value = prod.packaging_type;
+  productForm.packaging_id.value = prod.packaging_id;
   productForm.unit_price.value = prod.unit_price;
   productForm.stock.value = prod.stock;
   currentImageUrl = prod.image_url;

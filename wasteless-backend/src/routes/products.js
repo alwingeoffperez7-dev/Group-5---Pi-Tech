@@ -4,18 +4,18 @@ const pool = require('../db');
 const { upload, HttpError, wrap, discardUpload } = require('../middleware');
 
 const router = express.Router();
-const PACKAGING = ['Plastic', 'Paper', 'Reusable'];
 
 // Columns the front end gets for each product.
 const SELECT_PRODUCT = `
   SELECT p.product_id, p.canteen_id AS stall_id, c.business_name AS stall_name,
          p.product_name, p.description, p.category_id, cat.category_name,
-         p.packaging_type, p.unit, p.unit_price, p.stock, p.reorder_threshold,
+         p.packaging_id, pk.packaging_name, p.unit, p.unit_price, p.stock, p.reorder_threshold,
          (p.stock <= p.reorder_threshold) AS is_low_stock,
          p.image_path, p.created_at, p.updated_at
   FROM product p
   JOIN canteen  c   ON c.canteen_id = p.canteen_id
-  JOIN category cat ON cat.category_id = p.category_id`;
+  JOIN category cat ON cat.category_id = p.category_id
+  JOIN packaging_category pk ON pk.packaging_id = p.packaging_id`;
 
 function toJson(row) {
   return {
@@ -68,10 +68,10 @@ async function validate(body, existing) {
     else out.category_id = catId;
   }
 
-  const pack = body.packaging_type ?? body.packaging;
-  if (pack !== undefined || !existing) {
-    out.packaging_type = pack === undefined ? 'Plastic' : String(pack);
-    if (!PACKAGING.includes(out.packaging_type)) errors.packaging_type = 'Packaging must be Plastic, Paper, or Reusable';
+  if (body.packaging_id !== undefined || !existing) {
+    const [r] = await pool.query('SELECT packaging_id FROM packaging_category WHERE packaging_id = ?', [body.packaging_id ?? null]);
+    if (!r[0]) errors.packaging_id = 'Pick a packaging category';
+    else out.packaging_id = r[0].packaging_id;
   }
 
   const price = body.unit_price ?? body.price;
@@ -146,10 +146,10 @@ router.post('/', upload.single('image'), wrap(async (req, res) => {
   try {
     await conn.beginTransaction();
     const [result] = await conn.query(
-      `INSERT INTO product (canteen_id, category_id, product_name, description, packaging_type,
+      `INSERT INTO product (canteen_id, category_id, product_name, description, packaging_id,
                             unit, unit_price, stock, reorder_threshold, image_path)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [req.canteenId, data.category_id, data.product_name, data.description ?? null, data.packaging_type,
+      [req.canteenId, data.category_id, data.product_name, data.description ?? null, data.packaging_id,
        data.unit ?? 'pc', data.unit_price, data.stock, data.reorder_threshold ?? 5,
        req.file ? req.file.filename : null]
     );

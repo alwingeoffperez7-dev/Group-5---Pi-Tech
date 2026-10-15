@@ -23,7 +23,7 @@ function required(body, fields) {
 router.get('/stats', wrap(async (req, res) => {
   const [[stats]] = await pool.query(
     `SELECT (SELECT COUNT(*) FROM canteen WHERE status = 'Approved') AS total_stalls,
-            (SELECT COUNT(*) FROM category) AS total_categories,
+            (SELECT COUNT(*) FROM packaging_category) AS total_categories,
             (SELECT COUNT(*) FROM product WHERE is_active = 1) AS total_products`
   );
   res.json(stats);
@@ -128,19 +128,21 @@ router.delete('/stalls/:id', wrap(async (req, res) => {
 }));
 
 // ---------- Product Management (all stalls) ----------
-// filter = category_id
+// filter = packaging_id
 router.get('/products', wrap(async (req, res) => {
   const { search, filter, sort } = req.query;
   const where = ['p.is_active = 1'];
   const params = [];
-  if (filter) { where.push('p.category_id = ?'); params.push(filter); }
+  if (filter) { where.push('p.packaging_id = ?'); params.push(filter); }
   if (search) { where.push('p.product_name LIKE ?'); params.push(like(search)); }
   const [rows] = await pool.query(
-    `SELECT p.product_id, p.product_name, p.category_id, cat.category_name, p.packaging_type,
+    `SELECT p.product_id, p.product_name, p.packaging_id, pk.packaging_name,
+            p.category_id, cat.category_name,
             p.canteen_id AS stall_id, c.business_name AS stall_name, p.unit_price, p.stock
      FROM product p
      JOIN canteen c ON c.canteen_id = p.canteen_id
      JOIN category cat ON cat.category_id = p.category_id
+     JOIN packaging_category pk ON pk.packaging_id = p.packaging_id
      WHERE ${where.join(' AND ')}
      ORDER BY ${pickSort(sort, NAME_SORT('p.product_name', 'p.created_at'), 'name_asc')}`,
     params
@@ -149,30 +151,32 @@ router.get('/products', wrap(async (req, res) => {
 }));
 
 async function checkProductRefs(body) {
-  if (body.category_id !== undefined) {
-    const [c] = await pool.query('SELECT 1 FROM category WHERE category_id = ?', [body.category_id]);
-    if (!c.length) throw new HttpError(400, 'Pick a valid category', { category_id: 'Pick a valid category' });
-  }
-  if (body.stall_id !== undefined) {
-    const [s] = await pool.query(`SELECT 1 FROM canteen WHERE canteen_id = ? AND status = 'Approved'`, [body.stall_id]);
-    if (!s.length) throw new HttpError(400, 'Pick a valid stall', { stall_id: 'Pick a valid stall' });
+  const checks = [
+    ['packaging_id', 'SELECT 1 FROM packaging_category WHERE packaging_id = ?', 'Pick a valid packaging category'],
+    ['category_id', 'SELECT 1 FROM category WHERE category_id = ?', 'Pick a valid category'],
+    ['stall_id', `SELECT 1 FROM canteen WHERE canteen_id = ? AND status = 'Approved'`, 'Pick a valid stall']
+  ];
+  for (const [field, sql, message] of checks) {
+    if (body[field] === undefined || body[field] === '') continue;
+    const [r] = await pool.query(sql, [body[field]]);
+    if (!r.length) throw new HttpError(400, message, { [field]: message });
   }
 }
 
 // Price/stock start at 0; the vendor fills them in from their own page.
 router.post('/products', wrap(async (req, res) => {
-  required(req.body, ['product_name', 'category_id', 'stall_id']);
+  required(req.body, ['product_name', 'packaging_id', 'category_id', 'stall_id']);
   await checkProductRefs(req.body);
   const [r] = await pool.query(
-    `INSERT INTO product (canteen_id, category_id, product_name, unit_price) VALUES (?, ?, ?, 0)`,
-    [req.body.stall_id, req.body.category_id, String(req.body.product_name).trim()]
+    `INSERT INTO product (canteen_id, category_id, packaging_id, product_name, unit_price) VALUES (?, ?, ?, ?, 0)`,
+    [req.body.stall_id, req.body.category_id, req.body.packaging_id, String(req.body.product_name).trim()]
   );
   res.status(201).json({ product_id: r.insertId });
 }));
 
-// Only the fields sent are changed (the row's category dropdown sends just category_id).
+// Only the fields sent are changed (the row's packaging dropdown sends just packaging_id).
 router.put('/products/:id', wrap(async (req, res) => {
-  const cols = { product_name: 'product_name', category_id: 'category_id', stall_id: 'canteen_id' };
+  const cols = { product_name: 'product_name', packaging_id: 'packaging_id', category_id: 'category_id', stall_id: 'canteen_id' };
   const sent = Object.keys(cols).filter((k) => req.body[k] !== undefined && req.body[k] !== '');
   if (!sent.length) throw new HttpError(400, 'Nothing to update');
   await checkProductRefs(req.body);
@@ -190,48 +194,54 @@ router.delete('/products/:id', wrap(async (req, res) => {
   res.json({ deleted: true });
 }));
 
-// ---------- Packaging Category Management ----------
-router.get('/categories', wrap(async (req, res) => {
+// ---------- Packaging Category Management (plastic packaging) ----------
+router.get('/packaging', wrap(async (req, res) => {
   const { search, sort } = req.query;
   const sorts = {
-    name_asc: 'cat.category_name ASC', name_desc: 'cat.category_name DESC',
+    name_asc: 'pk.packaging_name ASC', name_desc: 'pk.packaging_name DESC',
     items_desc: 'item_count DESC', items_asc: 'item_count ASC'
   };
   const [rows] = await pool.query(
-    `SELECT cat.category_id, cat.category_name, cat.description, COUNT(p.product_id) AS item_count
-     FROM category cat
-     LEFT JOIN product p ON p.category_id = cat.category_id AND p.is_active = 1
-     ${search ? 'WHERE cat.category_name LIKE ?' : ''}
-     GROUP BY cat.category_id
-     ORDER BY ${sorts[sort] || 'cat.category_id ASC'}`,
+    `SELECT pk.packaging_id, pk.packaging_name, pk.description, pk.example, COUNT(p.product_id) AS item_count
+     FROM packaging_category pk
+     LEFT JOIN product p ON p.packaging_id = pk.packaging_id AND p.is_active = 1
+     ${search ? 'WHERE pk.packaging_name LIKE ?' : ''}
+     GROUP BY pk.packaging_id
+     ORDER BY ${sorts[sort] || 'pk.packaging_id ASC'}`,
     search ? [like(search)] : []
   );
   res.json(rows);
 }));
 
-const categoryValues = (b) => [String(b.category_name).trim(), String(b.description ?? '').trim() || null];
+const packagingValues = (b) => [
+  String(b.packaging_name).trim(),
+  String(b.description ?? '').trim() || null,
+  String(b.example ?? '').trim() || null
+];
 
-router.post('/categories', wrap(async (req, res) => {
-  required(req.body, ['category_name']);
-  const [r] = await pool.query('INSERT INTO category (category_name, description) VALUES (?, ?)', categoryValues(req.body));
-  res.status(201).json({ category_id: r.insertId });
-}));
-
-router.put('/categories/:id', wrap(async (req, res) => {
-  required(req.body, ['category_name']);
+router.post('/packaging', wrap(async (req, res) => {
+  required(req.body, ['packaging_name']);
   const [r] = await pool.query(
-    'UPDATE category SET category_name = ?, description = ? WHERE category_id = ?',
-    [...categoryValues(req.body), req.params.id]
+    'INSERT INTO packaging_category (packaging_name, description, example) VALUES (?, ?, ?)', packagingValues(req.body)
   );
-  if (!r.affectedRows) throw new HttpError(404, 'Category not found');
-  res.json({ category_id: Number(req.params.id) });
+  res.status(201).json({ packaging_id: r.insertId });
 }));
 
-router.delete('/categories/:id', wrap(async (req, res) => {
-  const [[used]] = await pool.query('SELECT COUNT(*) AS n FROM product WHERE category_id = ? AND is_active = 1', [req.params.id]);
-  if (used.n) throw new HttpError(400, `${used.n} product(s) still use this category. Move them first.`);
-  const [r] = await pool.query('DELETE FROM category WHERE category_id = ?', [req.params.id]);
-  if (!r.affectedRows) throw new HttpError(404, 'Category not found');
+router.put('/packaging/:id', wrap(async (req, res) => {
+  required(req.body, ['packaging_name']);
+  const [r] = await pool.query(
+    'UPDATE packaging_category SET packaging_name = ?, description = ?, example = ? WHERE packaging_id = ?',
+    [...packagingValues(req.body), req.params.id]
+  );
+  if (!r.affectedRows) throw new HttpError(404, 'Packaging category not found');
+  res.json({ packaging_id: Number(req.params.id) });
+}));
+
+router.delete('/packaging/:id', wrap(async (req, res) => {
+  const [[used]] = await pool.query('SELECT COUNT(*) AS n FROM product WHERE packaging_id = ? AND is_active = 1', [req.params.id]);
+  if (used.n) throw new HttpError(400, `${used.n} product(s) still use this packaging category. Move them first.`);
+  const [r] = await pool.query('DELETE FROM packaging_category WHERE packaging_id = ?', [req.params.id]);
+  if (!r.affectedRows) throw new HttpError(404, 'Packaging category not found');
   res.json({ deleted: true });
 }));
 

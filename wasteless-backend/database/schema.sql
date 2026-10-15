@@ -40,9 +40,7 @@ CREATE TABLE staff (
 );
 
 -- ---------------------------------------------------------------------
--- CATEGORY  (Meals, Snacks, Drinks, Desserts)
--- NOTE: the ERD puts packaging_type here, but the wireframe lets each
--- product pick its own packaging, so packaging_type lives on PRODUCT.
+-- CATEGORY  (food category: Meals, Snacks, Drinks, Desserts)
 -- ---------------------------------------------------------------------
 CREATE TABLE category (
   category_id    INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,8 +49,20 @@ CREATE TABLE category (
 );
 
 -- ---------------------------------------------------------------------
+-- PACKAGING_CATEGORY  (plastic packaging: Tetra Pak, Polystyrene, ...)
+-- Managed by the admin ("Packaging Category Management"); every product
+-- picks one, so plastic use can be summed per packaging category.
+-- ---------------------------------------------------------------------
+CREATE TABLE packaging_category (
+  packaging_id    INT AUTO_INCREMENT PRIMARY KEY,
+  packaging_name  VARCHAR(60) NOT NULL UNIQUE,
+  description     VARCHAR(500),
+  example         VARCHAR(255)
+);
+
+-- ---------------------------------------------------------------------
 -- PRODUCT  (the vendor's catalog)
--- ERD fields + description, packaging_type, stock, image_path from the
+-- ERD fields + description, packaging_id, stock, image_path from the
 -- Add/Edit Product pop-up. is_active = soft delete, so old sales and
 -- waste records still point at a real product.
 -- ---------------------------------------------------------------------
@@ -62,7 +72,7 @@ CREATE TABLE product (
   category_id        INT NOT NULL,
   product_name       VARCHAR(120) NOT NULL,
   description        VARCHAR(500),
-  packaging_type     ENUM('Plastic','Paper','Reusable') NOT NULL DEFAULT 'Plastic',
+  packaging_id       INT NOT NULL,
   unit               VARCHAR(30) NOT NULL DEFAULT 'pc',
   unit_price         DECIMAL(10,2) NOT NULL,
   stock              INT NOT NULL DEFAULT 0,
@@ -75,6 +85,7 @@ CREATE TABLE product (
   CONSTRAINT chk_stock CHECK (stock >= 0),
   FOREIGN KEY (canteen_id)  REFERENCES canteen(canteen_id),
   FOREIGN KEY (category_id) REFERENCES category(category_id),
+  FOREIGN KEY (packaging_id) REFERENCES packaging_category(packaging_id),
   INDEX idx_product_canteen (canteen_id, is_active)
 );
 
@@ -147,6 +158,19 @@ CREATE TABLE feedback (
   updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (canteen_id) REFERENCES canteen(canteen_id),
   FOREIGN KEY (staff_id)   REFERENCES staff(staff_id)
+);
+
+-- ---------------------------------------------------------------------
+-- REPORT_DOWNLOAD  (vendor "Download Report": one PDF per stall every 7 days)
+-- ---------------------------------------------------------------------
+CREATE TABLE report_download (
+  download_id    INT AUTO_INCREMENT PRIMARY KEY,
+  canteen_id     INT NOT NULL,
+  staff_id       INT NULL,
+  downloaded_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (canteen_id) REFERENCES canteen(canteen_id),
+  FOREIGN KEY (staff_id)   REFERENCES staff(staff_id),
+  INDEX idx_report_canteen (canteen_id, downloaded_at)
 );
 
 -- =====================================================================

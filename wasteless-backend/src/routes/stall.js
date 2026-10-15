@@ -26,7 +26,7 @@ router.get('/', wrap(async (req, res) => {
     `SELECT COALESCE(SUM(s.quantity_sold), 0) AS plastic_items_sold_this_week
      FROM sales_record s
      JOIN product p ON p.product_id = s.product_id
-     WHERE p.canteen_id = ? AND p.packaging_type = 'Plastic'
+     WHERE p.canteen_id = ?
        AND YEARWEEK(s.sold_at, 1) = YEARWEEK(CURDATE(), 1)`,
     [req.canteenId]
   );
@@ -42,18 +42,19 @@ router.get('/', wrap(async (req, res) => {
 }));
 
 // GET /api/stall/dashboard   last 7 days (today included):
-//   revenue_total  -> "Sales & Revenue" card
-//   packaging      -> items sold per day for each packaging type (the packaging line graph)
+//   revenue_total -> "Sales & Revenue" card
+//   lines         -> items sold per day for each packaging category (the packaging line graph)
 router.get('/dashboard', wrap(async (req, res) => {
   const [rows] = await pool.query(
-    `SELECT DATE(s.sold_at) AS day, p.packaging_type,
+    `SELECT DATE(s.sold_at) AS day, p.packaging_id,
             SUM(s.quantity_sold) AS items, SUM(s.quantity_sold * s.unit_price) AS revenue
      FROM sales_record s
      JOIN product p ON p.product_id = s.product_id
      WHERE p.canteen_id = ? AND s.sold_at >= CURDATE() - INTERVAL 6 DAY
-     GROUP BY DATE(s.sold_at), p.packaging_type`,
+     GROUP BY DATE(s.sold_at), p.packaging_id`,
     [req.canteenId]
   );
+  const [packaging] = await pool.query('SELECT packaging_id, packaging_name FROM packaging_category ORDER BY packaging_id');
 
   // Every day gets a value, so days with no sales show as 0 on the graph
   const days = [];
@@ -62,15 +63,15 @@ router.get('/dashboard', wrap(async (req, res) => {
     d.setDate(d.getDate() - i);
     days.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
   }
-  const packaging = {};
-  for (const type of ['Plastic', 'Paper', 'Reusable']) {
-    packaging[type] = days.map((day) => {
-      const r = rows.find((x) => x.day === day && x.packaging_type === type);
+  const lines = packaging.map((pk) => ({
+    label: pk.packaging_name,
+    values: days.map((day) => {
+      const r = rows.find((x) => x.day === day && x.packaging_id === pk.packaging_id);
       return r ? Number(r.items) : 0;
-    });
-  }
+    })
+  }));
   const revenueTotal = rows.reduce((sum, r) => sum + Number(r.revenue), 0);
-  res.json({ labels: days, packaging, revenue_total: revenueTotal });
+  res.json({ labels: days, lines, revenue_total: revenueTotal });
 }));
 
 module.exports = router;

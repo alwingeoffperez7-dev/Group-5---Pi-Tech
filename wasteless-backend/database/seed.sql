@@ -8,6 +8,13 @@ INSERT INTO category (category_name, description) VALUES
   ('Drinks',   'Bottled and cup drinks'),
   ('Desserts', 'Sweets and cold treats');
 
+INSERT INTO packaging_category (packaging_name, description, example) VALUES
+  ('Tetra Pak', 'Multi-layered cartons made of paperboard, plastic, and aluminum foil, commonly used to package shelf-stable liquids like juice, milk, and broth.', 'Zest-O'),
+  ('Polystyrene (PS)', 'Light, rigid, or foam plastic frequently used for disposable coffee cups, takeout clamshells, foam packaging, and plastic cutlery.', 'Yakult, Cup of Instant Noodles'),
+  ('Plastic Container', 'Rigid plastic tubs, bottles, jars, and clamshells designed to hold food, liquids, or household products.', 'Container ng take-out ng Pancit Canton'),
+  ('Plastic Wrapper', 'Soft, flexible plastic film or bags used to wrap individual products, snack foods, grocery items, or multi-packs.', 'Chips, Biscuit, Sachet'),
+  ('Plastic Lid / Cap', 'Small, rigid plastic closures from bottles, jars, and tubs designed to seal container openings.', NULL);
+
 -- Sample stall (canteen_id = 1). Replace with your real vendors.
 INSERT INTO canteen (business_name, business_email, contact_person, contact_email, contact_number, location)
 VALUES ('Sample Stall', 'stall@example.com', 'Juan Dela Cruz', 'juan@example.com', '09171234567', 'QCU Coop, Stall 1');

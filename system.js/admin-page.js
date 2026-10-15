@@ -122,12 +122,13 @@ function loadProducts() {
 
 function loadCategories() {
   const options = getListOptions("category");
-  api("GET", listUrl("/api/admin/categories", options)).then(renderCategories).catch(showApiError);
+  api("GET", listUrl("/api/admin/packaging", options)).then(renderCategories).catch(showApiError);
 }
 
 // Dropdown lists need ALL categories and ALL stalls (not the searched/filtered ones)
 function loadDropdownOptions() {
-  api("GET", "/api/categories").then(renderCategoryOptions).catch(showApiError);
+  api("GET", "/api/packaging").then(renderCategoryOptions).catch(showApiError); // packaging categories
+  api("GET", "/api/categories").then(renderFoodCategoryOptions).catch(showApiError); // Meals, Snacks, ...
   api("GET", "/api/admin/stalls").then(renderStallOptions).catch(showApiError);
 }
 
@@ -206,7 +207,7 @@ function renderProducts(products) {
       <td>${escapeHtml(p.product_name)}</td>
       <td>
         <select data-action="change-category" data-id="${escapeHtml(p.product_id)}">
-          ${makeOptions(allCategories, "category_id", "category_name", p.category_id)}
+          ${makeOptions(allCategories, "packaging_id", "packaging_name", p.packaging_id)}
         </select>
       </td>
       <td>${escapeHtml(p.stall_id)}</td>
@@ -228,24 +229,31 @@ function renderCategories(categories) {
     if (c.trend === "up") arrow = "▲";
     if (c.trend === "down") arrow = "▼";
     rows += `<tr>
-      <td>${escapeHtml(c.category_id)}</td>
-      <td>${escapeHtml(c.category_name)}</td>
+      <td>${escapeHtml(c.packaging_id)}</td>
+      <td>${escapeHtml(c.packaging_name)}</td>
       <td>${escapeHtml(c.description)}</td>
+      <td>${escapeHtml(c.example)}</td>
       <td>${escapeHtml(c.item_count)} ${arrow}</td>
       <td>
-        <button type="button" data-action="edit" data-id="${escapeHtml(c.category_id)}">Edit</button>
-        <button type="button" data-action="delete" data-id="${escapeHtml(c.category_id)}">Delete</button>
+        <button type="button" data-action="edit" data-id="${escapeHtml(c.packaging_id)}">Edit</button>
+        <button type="button" data-action="delete" data-id="${escapeHtml(c.packaging_id)}">Delete</button>
       </td>
     </tr>`;
   });
   byId("category-table-body").innerHTML = rows;
 }
 
+// "categories" here = packaging categories (Tetra Pak, Polystyrene, ...)
 function renderCategoryOptions(categories) {
   allCategories = categories;
-  fillSelect("product-filter", categories, "category_id", "category_name", "Filter/Category");
-  fillSelect("product-form-category", categories, "category_id", "category_name", "-- Select category --");
+  fillSelect("product-filter", categories, "packaging_id", "packaging_name", "Filter/Category");
+  fillSelect("product-form-category", categories, "packaging_id", "packaging_name", "-- Select packaging category --");
   renderProducts(currentProducts); // redraw so the row dropdowns get their options
+}
+
+// Food categories (Meals, Snacks, ...) for the product form
+function renderFoodCategoryOptions(categories) {
+  fillSelect("product-form-foodcat", categories, "category_id", "category_name", "-- Select category --");
 }
 
 function renderStallOptions(stalls) {
@@ -312,7 +320,7 @@ function handleFormSubmit(formId, idField, url, reloadFunction) {
 
 handleFormSubmit("stall-form", "stall_id", "/api/admin/stalls", loadStalls);
 handleFormSubmit("product-form", "product_id", "/api/admin/products", loadProducts);
-handleFormSubmit("category-form", "category_id", "/api/admin/categories", loadCategories);
+handleFormSubmit("category-form", "packaging_id", "/api/admin/packaging", loadCategories);
 
 // Delete a record, then refresh its table + the dashboard totals
 function deleteRecord(url, reloadFunction) {
@@ -356,11 +364,11 @@ listenToTableClicks("product-table-body", {
 
 listenToTableClicks("category-table-body", {
   edit: function (id) {
-    openForm("category-form", findById(currentCategories, "category_id", id));
+    openForm("category-form", findById(currentCategories, "packaging_id", id));
   },
   delete: function (id) {
     if (!confirm("Delete this packaging category?")) return;
-    deleteRecord("/api/admin/categories/" + id, loadCategories);
+    deleteRecord("/api/admin/packaging/" + id, loadCategories);
   }
 });
 
@@ -382,7 +390,7 @@ byId("product-table-body").addEventListener("change", function (event) {
   if (event.target.dataset.action !== "change-category") return;
   const productId = event.target.dataset.id;
   const newCategoryId = event.target.value;
-  api("PUT", "/api/admin/products/" + productId, { category_id: newCategoryId })
+  api("PUT", "/api/admin/products/" + productId, { packaging_id: newCategoryId })
     .then(loadCategories) // item counts change
     .catch(function (err) { showApiError(err); loadProducts(); });
 });
