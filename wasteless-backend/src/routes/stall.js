@@ -2,6 +2,7 @@
 const express = require('express');
 const pool = require('../db');
 const { HttpError, wrap } = require('../middleware');
+const { rangeDays, lastDays, packagingLines } = require('../packaging-graph');
 
 const router = express.Router();
 
@@ -41,37 +42,25 @@ router.get('/', wrap(async (req, res) => {
   });
 }));
 
-// GET /api/stall/dashboard   last 7 days (today included):
-//   revenue_total -> "Sales & Revenue" card
+// GET /api/stall/dashboard?days=7|14|30   (default 7, today included)
 //   lines         -> items sold per day for each packaging category (the packaging line graph)
 router.get('/dashboard', wrap(async (req, res) => {
+  const n = rangeDays(req.query);
   const [rows] = await pool.query(
     `SELECT DATE(s.sold_at) AS day, p.packaging_id,
-            SUM(s.quantity_sold) AS items, SUM(s.quantity_sold * s.unit_price) AS revenue
+            SUM(s.quantity_sold) AS items
      FROM sales_record s
      JOIN product p ON p.product_id = s.product_id
-     WHERE p.canteen_id = ? AND s.sold_at >= CURDATE() - INTERVAL 6 DAY
+     WHERE p.canteen_id = ? AND s.sold_at >= CURDATE() - INTERVAL ? DAY
      GROUP BY DATE(s.sold_at), p.packaging_id`,
-    [req.canteenId]
+    [req.canteenId, n - 1]
   );
-  const [packaging] = await pool.query('SELECT packaging_id, packaging_name FROM packaging_category ORDER BY packaging_id');
-
-  // Every day gets a value, so days with no sales show as 0 on the graph
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
-  }
-  const lines = packaging.map((pk) => ({
-    label: pk.packaging_name,
-    values: days.map((day) => {
-      const r = rows.find((x) => x.day === day && x.packaging_id === pk.packaging_id);
-      return r ? Number(r.items) : 0;
-    })
-  }));
-  const revenueTotal = rows.reduce((sum, r) => sum + Number(r.revenue), 0);
-  res.json({ labels: days, lines, revenue_total: revenueTotal });
+  const days = lastDays(n);
+  res.json({
+    days: n,
+    labels: days,
+    lines: await packagingLines(rows, days)
+  });
 }));
 
 module.exports = router;

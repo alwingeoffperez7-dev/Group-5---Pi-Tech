@@ -63,7 +63,7 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Register | `POST /api/auth/register` (business_name, email, user_pass, contact_number) | anyone |
 | Log In as Vendor / Admin | `POST /api/auth/login` (email, password, role) | anyone |
 | Log Out | `POST /api/auth/logout` | anyone |
-| Landing chart / summary | `GET /api/landing/chart`, `GET /api/landing/summary` | anyone |
+| Landing chart / summary | `GET /api/landing/chart?days=7|14|30` (items sold per packaging category, all stalls), `GET /api/landing/summary` | anyone |
 | Admin dashboard totals | `GET /api/admin/stats` | admin |
 | Admin feedback list | `GET /api/admin/feedback?sort=newest|oldest` | admin |
 | Account Management | `GET /api/admin/accounts?search=&filter=Pending|Approved|Declined&sort=`, `POST /api/admin/accounts/:id/approve|decline` | admin |
@@ -71,7 +71,7 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Product Management | `GET/POST /api/admin/products`, `PUT/DELETE /api/admin/products/:id` | admin |
 | Packaging Category (plastic: Tetra Pak, Polystyrene, ...) | `GET/POST /api/admin/packaging`, `PUT/DELETE /api/admin/packaging/:id` | admin |
 | Packaging dropdown | `GET /api/packaging` | anyone |
-| Vendor dashboard (revenue total + packaging graph) | `GET /api/stall/dashboard` | vendor |
+| Vendor dashboard packaging graph | `GET /api/stall/dashboard?days=7|14|30` | vendor |
 | Download Report (PDF of the last 7 days; **once every 7 days** per stall) | `GET /api/stall/report` (PDF, or 429 with the next date), `GET /api/stall/report/status` | vendor |
 
 Vendor routes (below) act on the **logged-in vendor's own stall**.

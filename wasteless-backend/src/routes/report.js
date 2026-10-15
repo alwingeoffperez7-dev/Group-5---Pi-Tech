@@ -50,8 +50,7 @@ async function loadReportData(canteenId) {
   // Products + what each sold in the last 7 days
   const [products] = await pool.query(
     `SELECT p.product_name, cat.category_name, pk.packaging_name, p.unit_price, p.stock,
-            COALESCE(SUM(s.quantity_sold), 0) AS sold,
-            COALESCE(SUM(s.quantity_sold * s.unit_price), 0) AS revenue
+            COALESCE(SUM(s.quantity_sold), 0) AS sold
      FROM product p
      JOIN category cat ON cat.category_id = p.category_id
      JOIN packaging_category pk ON pk.packaging_id = p.packaging_id
@@ -79,7 +78,6 @@ async function loadReportData(canteenId) {
     packaging,
     period: { from, to: new Date() },
     totals: {
-      revenue: products.reduce((sum, p) => sum + Number(p.revenue), 0),
       sold: products.reduce((sum, p) => sum + Number(p.sold), 0)
     }
   };
@@ -114,7 +112,6 @@ function buildPdf({ stall, products, packaging, period, totals }) {
 
     // Summary
     heading(doc, 'Summary');
-    line(doc, 'Sales & Revenue', money(totals.revenue));
     line(doc, 'Items sold', String(totals.sold));
     line(doc, 'Products listed', String(products.length));
 
@@ -130,11 +127,11 @@ function buildPdf({ stall, products, packaging, period, totals }) {
     heading(doc, 'Products');
     table(doc,
       [
-        { label: 'Product', width: 125 }, { label: 'Category', width: 65 }, { label: 'Packaging', width: 95 },
-        { label: 'Price', width: 65, align: 'right' }, { label: 'Stock', width: 40, align: 'right' },
-        { label: 'Sold', width: 40, align: 'right' }, { label: 'Revenue', width: 65, align: 'right' }
+        { label: 'Product', width: 150 }, { label: 'Category', width: 75 }, { label: 'Packaging', width: 110 },
+        { label: 'Price', width: 70, align: 'right' }, { label: 'Stock', width: 45, align: 'right' },
+        { label: 'Sold', width: 45, align: 'right' }
       ],
-      products.map((p) => [p.product_name, p.category_name, p.packaging_name, money(p.unit_price), String(p.stock), String(p.sold), money(p.revenue)]),
+      products.map((p) => [p.product_name, p.category_name, p.packaging_name, money(p.unit_price), String(p.stock), String(p.sold)]),
       'No products listed.');
 
     doc.end();
