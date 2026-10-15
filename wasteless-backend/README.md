@@ -30,6 +30,12 @@ Business Analytics and Eco-Tip logic are **not** in here yet (other members / la
 
    New sign-ups from the Register page are **Pending** until an admin clicks **Approve** in Account Management.
 
+Pulled new code? Run `npm install` again (the PDF report needs `pdfkit`).
+
+Made the database before 2026-10-15 (before plastic packaging categories and the PDF report)? Run `mysql -u root wasteless < database/migrate.sql` once (keeps your data; existing products become "Plastic Container").
+
+Want graphs with data for a demo? `mysql -u root wasteless < database/demo-data.sql` adds 3 vendor stalls with a year of random sales (logins are listed at the top of that file).
+
 Already made the database before login existed? Re-run both SQL files (this wipes the data), or run:
 `ALTER TABLE canteen ADD COLUMN status ENUM('Pending','Approved','Declined','Removed') NOT NULL DEFAULT 'Approved';` and add the two staff rows from `seed.sql`.
 
@@ -63,7 +69,10 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Account Management | `GET /api/admin/accounts?search=&filter=Pending|Approved|Declined&sort=`, `POST /api/admin/accounts/:id/approve|decline` | admin |
 | Stall Management | `GET/POST /api/admin/stalls`, `PUT/DELETE /api/admin/stalls/:id` | admin |
 | Product Management | `GET/POST /api/admin/products`, `PUT/DELETE /api/admin/products/:id` | admin |
-| Packaging Category | `GET/POST /api/admin/categories`, `PUT/DELETE /api/admin/categories/:id` | admin |
+| Packaging Category (plastic: Tetra Pak, Polystyrene, ...) | `GET/POST /api/admin/packaging`, `PUT/DELETE /api/admin/packaging/:id` | admin |
+| Packaging dropdown | `GET /api/packaging` | anyone |
+| Vendor dashboard (revenue total + packaging graph) | `GET /api/stall/dashboard` | vendor |
+| Download Report (PDF of the last 7 days; **once every 7 days** per stall) | `GET /api/stall/report` (PDF, or 429 with the next date), `GET /api/stall/report/status` | vendor |
 
 Vendor routes (below) act on the **logged-in vendor's own stall**.
 
@@ -80,7 +89,7 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 | My Submissions list | `GET /api/feedback` | — | `submissions` (newest first) |
 | View button | `GET /api/feedback/:id` | — | full submission + admin reply |
 
-**Product fields:** `product_name`, `description`, `category` (name like `Meals`) or `category_id`, `packaging_type` (`Plastic` / `Paper` / `Reusable`), `unit_price`, `stock`, `image` (file, optional, ≤2 MB).
+**Product fields:** `product_name`, `description`, `category` (name like `Meals`) or `category_id`, `packaging_id` (a plastic packaging category from `GET /api/packaging`), `unit_price`, `stock`, `image` (file, optional, ≤2 MB).
 
 **Feedback fields:** `feedback_type` (`Inquiry` / `Report a Problem` / `Suggestion` / `Stall Info Change`), `subject`, `message`, `attachment` (image, optional).
 
@@ -102,7 +111,7 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 
 ## Changes from the ERD (2nd draft)
 
-- `packaging_type` moved from **Category** to **Product** — the wireframe lets each product pick its own packaging.
+- New **Packaging_Category** table (Tetra Pak, Polystyrene, Plastic Container, Plastic Wrapper, Plastic Lid / Cap); each **Product** has a `packaging_id`, so plastic use is counted per packaging category.
 - **Product** gained `description`, `stock`, `image_path`, `is_active` (all shown in the Add/Edit pop-up).
 - **Canteen** gained `business_email` and `contact_email` (shown on My Stall).
 - New **Feedback** table for the Feedback / Report page.

@@ -5,16 +5,42 @@ const { wrap } = require('../middleware');
 
 const router = express.Router();
 
-// GET /api/landing/chart   plastic waste (kg) per month, last 12 months
+// GET /api/landing/chart   items sold per month for each packaging category, ALL stalls,
+// last 12 months (this month included). One line per packaging category.
 router.get('/chart', wrap(async (req, res) => {
   const [rows] = await pool.query(
-    `SELECT DATE_FORMAT(wastelog_date, '%b %Y') AS label, SUM(weight_kg) AS kg
-     FROM wastelog
-     WHERE wastelog_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-     GROUP BY DATE_FORMAT(wastelog_date, '%Y-%m'), label
-     ORDER BY DATE_FORMAT(wastelog_date, '%Y-%m')`
+    `SELECT DATE_FORMAT(s.sold_at, '%Y-%m') AS month, p.packaging_id, SUM(s.quantity_sold) AS items
+     FROM sales_record s
+     JOIN product p ON p.product_id = s.product_id
+     JOIN canteen c ON c.canteen_id = p.canteen_id
+     WHERE c.status <> 'Removed'
+       AND s.sold_at >= DATE_FORMAT(CURDATE() - INTERVAL 11 MONTH, '%Y-%m-01')
+     GROUP BY month, p.packaging_id`
   );
-  res.json({ yLabel: 'Plastic waste (kg)', labels: rows.map((r) => r.label), values: rows.map((r) => Number(r.kg)) });
+  const [packaging] = await pool.query('SELECT packaging_id, packaging_name FROM packaging_category ORDER BY packaging_id');
+
+  // Every month gets a value, so months with no sales show as 0
+  const months = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    months.push(d);
+  }
+  const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const datasets = packaging.map((pk) => ({
+    label: pk.packaging_name,
+    values: months.map((d) => {
+      const r = rows.find((x) => x.month === key(d) && x.packaging_id === pk.packaging_id);
+      return r ? Number(r.items) : 0;
+    })
+  }));
+
+  res.json({
+    yLabel: 'Items sold',
+    labels: months.map((d) => d.toLocaleString('en-US', { month: 'short', year: 'numeric' })),
+    datasets
+  });
 }));
 
 // GET /api/landing/summary

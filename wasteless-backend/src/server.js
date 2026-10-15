@@ -28,8 +28,13 @@ app.get('/api/categories', wrap(async (req, res) => {
   const [rows] = await pool.query('SELECT category_id, category_name FROM category ORDER BY category_id');
   res.json(rows);
 }));
+app.get('/api/packaging', wrap(async (req, res) => {
+  const [rows] = await pool.query('SELECT packaging_id, packaging_name, description, example FROM packaging_category ORDER BY packaging_id');
+  res.json(rows);
+}));
 
 // Vendor API (acts on the logged-in vendor's own stall)
+app.use('/api/stall/report', requireRole('vendor'), require('./routes/report'));
 app.use('/api/stall', requireRole('vendor'), require('./routes/stall'));
 app.use('/api/products', requireRole('vendor'), require('./routes/products'));
 app.use('/api/feedback', requireRole('vendor'), require('./routes/feedback'));

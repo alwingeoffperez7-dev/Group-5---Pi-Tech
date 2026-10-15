@@ -33,9 +33,14 @@ const WasteLessAPI = (() => {
     // Header + My Stall page
     getStall: () => request('GET', '/api/stall'),
     getDashboard: () => request('GET', '/api/stall/dashboard'), // last 7 days: revenue total + items sold per packaging
+    // Download Report: { available, last_downloaded_at, next_available_at }. The PDF itself is GET /api/stall/report
+    getReportStatus: () => request('GET', '/api/stall/report/status'),
 
     // Category chips
     getCategories: () => request('GET', '/api/categories'),
+
+    // Plastic packaging categories (Tetra Pak, Polystyrene, ...) for the packaging dropdown
+    getPackaging: () => request('GET', '/api/packaging'),
 
     // Product Listing: filters are optional { q: 'adobo', category: 'Meals' }
     getProducts: (filters = {}) => {

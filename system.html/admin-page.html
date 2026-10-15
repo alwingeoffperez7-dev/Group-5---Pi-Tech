@@ -152,6 +152,7 @@
                         <th>Packaging ID</th>
                         <th>Packaging Name</th>
                         <th>Description</th>
+                        <th>Example</th>
                         <th>Item Count</th>
                         <th>Action/Edit</th>
                     </tr>
@@ -180,7 +181,10 @@
             <input type="hidden" name="product_id">
             <p><label>Product Name <input type="text" name="product_name" required></label></p>
             <p><label>Packaging Category
-                <select name="category_id" id="product-form-category" required></select>
+                <select name="packaging_id" id="product-form-category" required></select>
+            </label></p>
+            <p><label>Category
+                <select name="category_id" id="product-form-foodcat" required></select>
             </label></p>
             <p><label>Stall
                 <select name="stall_id" id="product-form-stall" required></select>
@@ -193,9 +197,10 @@
      <dialog id="category-dialog">
         <form id="category-form">
             <h2>Packaging Category Details</h2>
-            <input type="hidden" name="category_id">
-            <p><label>Packaging Name <input type="text" name="category_name" required></label></p>
-            <p><label>Contact Person <textarea name="description" rows="4"></textarea></p>
+            <input type="hidden" name="packaging_id">
+            <p><label>Packaging Name <input type="text" name="packaging_name" required></label></p>
+            <p><label>Description <textarea name="description" rows="4"></textarea></label></p>
+            <p><label>Example <input type="text" name="example" placeholder="e.g. Zest-O"></label></p>
             <button type="submit">Save</button>
             <button type="button" data-action="close-dialog">Cancel</button>
         </form>

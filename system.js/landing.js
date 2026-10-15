@@ -43,6 +43,8 @@ function getSummaryData() {
 
 /* ---------- Line graph ---------- */
 let wasteChart = null;
+// One colour per packaging category line (same order as the vendor dashboard graph)
+const LINE_COLORS = ["#2563eb", "#dc2626", "#d97706", "#16a34a", "#7c3aed", "#0891b2"];
 
 function renderChart(data) {
   const statusEl = document.getElementById("chart-status");
@@ -57,29 +59,36 @@ function renderChart(data) {
     return;
   }
 
-  statusEl.textContent = "";
+  // Backend sends one line per packaging category: datasets = [{ label: "Tetra Pak", values: [...] }, ...]
+  // (the mock data still uses a single `values` line)
+  const lines = Array.isArray(data.datasets) ? data.datasets : [{ label: data.yLabel || "Plastic waste", values: data.values }];
+  const anyData = lines.some((line) => line.values.some((v) => v));
+  statusEl.textContent = anyData ? "" : "No sales recorded yet.";
   if (wasteChart) wasteChart.destroy(); // avoid duplicate charts on re-render
 
   wasteChart = new Chart(canvas, {
     type: "line",
     data: {
       labels: data.labels,
-      datasets: [
-        {
-          label: data.yLabel || "Plastic waste",
-          data: data.values,
-          tension: 0.4,      // smooth curve, like the design
-          spanGaps: true,    // connect points across null values
-          pointRadius: 4,
-          borderColor: "#000000",
-          backgroundColor: "#000000",
-        },
-      ],
+      datasets: lines.map((line, i) => ({
+        label: line.label,
+        data: line.values,
+        tension: 0.4,      // smooth curve, like the design
+        cubicInterpolationMode: "monotone", // smooth, but never dips below 0 between points
+        spanGaps: true,    // connect points across null values
+        pointRadius: 4,
+        borderColor: lines.length > 1 ? LINE_COLORS[i % LINE_COLORS.length] : "#000000",
+        backgroundColor: lines.length > 1 ? LINE_COLORS[i % LINE_COLORS.length] : "#000000",
+      })),
     },
     options: {
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: lines.length > 1, position: "bottom" } },
       scales: {
-        y: { beginAtZero: true, suggestedMax: 40 },
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 },
+          title: { display: true, text: data.yLabel || "" },
+        },
       },
     },
   });

@@ -56,25 +56,22 @@
               </div>
               <div class="stat-card">
                 <h3>Package Category</h3>
-                <ul class="package-breakdown" id="packageBreakdown">
-                  <li><span class="badge plastic">Plastic</span> <strong>0</strong></li>
-                  <li><span class="badge paper">Paper</span> <strong>0</strong></li>
-                  <li><span class="badge reusable">Reusable</span> <strong>0</strong></li>
-                </ul>
+                <!-- products per packaging category, filled by vendor-page.js -->
+                <ul class="package-breakdown" id="packageBreakdown"></ul>
               </div>
             </section>
 
-            <!-- Dashboard graph: items sold per packaging type -->
+            <!-- Dashboard graph: items sold per packaging category -->
             <section class="card chart-card">
               <h2>Packaging Used (items sold, last 7 days)</h2>
-              <canvas id="packagingChart" width="720" height="320" role="img" aria-label="Line graph of Plastic, Paper and Reusable items sold per day for the last 7 days"></canvas>
+              <canvas id="packagingChart" width="720" height="320" role="img" aria-label="Line graph of items sold per day for each packaging category, last 7 days"></canvas>
               <p class="chart-status" id="packagingChartStatus"></p>
             </section>
 
             <!-- Eco Tip Banner -->
             <aside class="eco-tip-banner">
               <strong>EcoTip 101</strong>
-              <span>Switching even one best-seller from plastic to paper or reusable packaging cuts your stall's plastic waste every day.</span>
+              <span>Every item sold leaves plastic behind. Check which packaging category your stall uses most, and look for products with less of it.</span>
             </aside>
           </div>
 
@@ -105,7 +102,9 @@
                   <thead>
                     <tr>
                       <th>Product ID</th>
+                      <th>Product Image</th>
                       <th>Product Name</th>
+                      <th>Product Description</th>
                       <th>Packaging Category</th>
                       <th>Price</th>
                       <th>Stock</th>
@@ -147,12 +146,9 @@
                     <label>Description <textarea name="description" rows="3" placeholder="Short description"></textarea></label>
                   </div>
                   <div class="form-group">
-                    <label>Packaging
-                      <select name="packaging_type">
-                        <option>Plastic</option>
-                        <option>Paper</option>
-                        <option>Reusable</option>
-                      </select>
+                    <label>Packaging Category
+                      <!-- options filled from the database by vendor-page.js -->
+                      <select name="packaging_id" id="formPackaging" required></select>
                     </label>
                   </div>
                   <div class="form-group">
