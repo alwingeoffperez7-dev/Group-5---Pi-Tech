@@ -24,8 +24,9 @@ router.get('/status', wrap(async (req, res) => {
   res.json({ available: !next, last_downloaded_at: last, next_available_at: next });
 }));
 
-// GET /api/stall/report   -> the PDF (or 429 if downloaded in the last 7 days)
-router.get('/', wrap(async (req, res) => {
+// POST /api/stall/report   -> the PDF (or 429 if downloaded in the last 7 days)
+// POST (not GET) so a link on another website can't use up the stall's weekly download.
+router.post('/', wrap(async (req, res) => {
   const { next } = await nextAvailable(req.canteenId);
   if (next) {
     throw new HttpError(429, `You can download your next report on ${formatDateTime(next)}.`, { next_available_at: next });

@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
+const pool = require('./db');
 
 // ---------------------------------------------------------------------
 // Passwords: scrypt with a random salt, stored as "salt:hash".
@@ -24,34 +25,67 @@ function checkPassword(password, stored) {
 // ponytail: kept in memory, so everyone is logged out when the server
 // restarts. Move to a session table if that becomes a problem.
 // ---------------------------------------------------------------------
-const sessions = new Map(); // token -> { staffId, canteenId, role }
+const sessions = new Map(); // token -> { staffId, canteenId, role, expires }
+const SESSION_HOURS = 8; // log in again after 8 hours
+
+// Cookie policy: the only cookie is "sid" (login session). Not readable by page
+// scripts (httpOnly), never sent from other sites (sameSite strict), expires with
+// the session, and HTTPS-only when COOKIE_SECURE=true in .env (turn on when deployed).
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'strict',
+  secure: process.env.COOKIE_SECURE === 'true',
+  path: '/'
+};
+
+function readToken(req) {
+  const m = /(?:^|;\s*)sid=([^;]+)/.exec(req.headers.cookie || '');
+  return m ? m[1] : null;
+}
 
 function getSession(req) {
-  const m = /(?:^|;\s*)sid=([^;]+)/.exec(req.headers.cookie || '');
-  return m ? sessions.get(m[1]) : undefined;
+  const token = readToken(req);
+  const s = token && sessions.get(token);
+  if (!s) return undefined;
+  if (s.expires < Date.now()) { sessions.delete(token); return undefined; }
+  return s;
 }
 
 function startSession(res, user) {
   const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, user);
-  res.cookie('sid', token, { httpOnly: true, sameSite: 'lax' });
+  const maxAge = SESSION_HOURS * 60 * 60 * 1000;
+  sessions.set(token, { ...user, expires: Date.now() + maxAge });
+  res.cookie('sid', token, { ...COOKIE_OPTIONS, maxAge });
 }
 
 function endSession(req, res) {
-  const m = /(?:^|;\s*)sid=([^;]+)/.exec(req.headers.cookie || '');
-  if (m) sessions.delete(m[1]);
-  res.clearCookie('sid');
+  const token = readToken(req);
+  if (token) sessions.delete(token);
+  res.clearCookie('sid', COOKIE_OPTIONS);
 }
 
 // Only let in a logged-in 'vendor' or 'admin'. Sets req.staffId / req.canteenId.
+// Vendors are re-checked every request, so a stall the admin declines or removes
+// is locked out right away (not only at the next login).
 function requireRole(role) {
-  return (req, res, next) => {
-    const s = getSession(req);
-    if (!s) throw new HttpError(401, 'Please log in first');
-    if (s.role !== role) throw new HttpError(403, `Only ${role} accounts can do this`);
-    req.staffId = s.staffId;
-    req.canteenId = s.canteenId;
-    next();
+  return async (req, res, next) => {
+    try {
+      const s = getSession(req);
+      if (!s) throw new HttpError(401, 'Please log in first');
+      if (s.role !== role) throw new HttpError(403, `Only ${role} accounts can do this`);
+      if (role === 'vendor') {
+        const [[stall]] = await pool.query('SELECT status FROM canteen WHERE canteen_id = ?', [s.canteenId]);
+        if (!stall || stall.status !== 'Approved') {
+          endSession(req, res);
+          throw new HttpError(401, 'Your stall account is no longer active. Please contact the admin.');
+        }
+      }
+      req.staffId = s.staffId;
+      req.canteenId = s.canteenId;
+      next();
+    } catch (err) {
+      next(err);
+    }
   };
 }
 
@@ -61,17 +95,20 @@ function requireRole(role) {
 const uploadDir = path.join(__dirname, '..', 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 
+// The saved file's extension comes from this list, never from the uploaded name,
+// so a file can only ever be served back as an image (not e.g. .html / .svg).
+const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: uploadDir,
     filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+      cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${IMAGE_EXT[file.mimetype]}`);
     }
   }),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
   fileFilter: (req, file, cb) => {
-    const ok = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.mimetype);
+    const ok = Boolean(IMAGE_EXT[file.mimetype]);
     cb(ok ? null : new HttpError(400, 'Only JPG, PNG, WEBP or GIF images are allowed'), ok);
   }
 });

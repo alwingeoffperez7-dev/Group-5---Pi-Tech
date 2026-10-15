@@ -7,6 +7,12 @@ const { upload, wrap, hashPassword, checkPassword, startSession, endSession } = 
 const router = express.Router();
 const fail = (res, status, message) => res.status(status).json({ success: false, message });
 
+// Basic brute-force protection: 5 wrong passwords for an email (from one address) -> locked 15 minutes.
+// ponytail: in memory, resets when the server restarts.
+const MAX_FAILS = 5;
+const LOCK_MS = 15 * 60 * 1000;
+const failedLogins = new Map(); // "email|ip" -> { count, until }
+
 // POST /api/auth/register   FormData: business_name, email, user_pass, contact_number
 // Creates the stall + its vendor login as "Pending" until an admin approves it.
 router.post('/register', upload.none(), wrap(async (req, res) => {
@@ -55,8 +61,20 @@ router.post('/login', upload.none(), wrap(async (req, res) => {
      WHERE s.email = ?`,
     [email]
   );
+  const key = `${email}|${req.ip}`;
+  const tries = failedLogins.get(key);
+  if (tries && tries.until > Date.now()) {
+    const minutes = Math.ceil((tries.until - Date.now()) / 60000);
+    return fail(res, 429, `Too many wrong passwords. Try again in ${minutes} minute(s).`);
+  }
   const user = rows[0];
-  if (!user || !checkPassword(password, user.password_hash)) return fail(res, 401, 'Invalid email or password.');
+  if (!user || !checkPassword(password, user.password_hash)) {
+    // count restarts after a lock has run out (until > 0 means it was locked before)
+    const count = (tries && tries.until === 0 ? tries.count : 0) + 1;
+    failedLogins.set(key, { count, until: count >= MAX_FAILS ? Date.now() + LOCK_MS : 0 });
+    return fail(res, 401, 'Invalid email or password.');
+  }
+  failedLogins.delete(key);
   if (role && role !== user.role) return fail(res, 403, `This is ${user.role === 'admin' ? 'an admin' : 'a vendor'} account. Use "Log In as ${user.role === 'admin' ? 'Admin' : 'Vendor'}".`);
   if (user.role === 'vendor' && user.status !== 'Approved') {
     const why = { Pending: 'is still waiting for admin approval', Declined: 'was declined by the admin', Removed: 'was removed by the admin' };
