@@ -32,7 +32,7 @@ const WasteLessAPI = (() => {
 
     // Header + My Stall page
     getStall: () => request('GET', '/api/stall'),
-    getDashboard: () => request('GET', '/api/stall/dashboard'), // last 7 days: revenue total + items sold per packaging
+    getDashboard: (days = 7) => request('GET', `/api/stall/dashboard?days=${days}`), // days: 7 | 14 | 30
     // Download Report: { available, last_downloaded_at, next_available_at }. The PDF itself is GET /api/stall/report
     getReportStatus: () => request('GET', '/api/stall/report/status'),
 

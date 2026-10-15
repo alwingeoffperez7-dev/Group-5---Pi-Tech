@@ -2,44 +2,28 @@
 const express = require('express');
 const pool = require('../db');
 const { wrap } = require('../middleware');
+const { rangeDays, lastDays, packagingLines } = require('../packaging-graph');
 
 const router = express.Router();
 
-// GET /api/landing/chart   items sold per month for each packaging category, ALL stalls,
-// last 12 months (this month included). One line per packaging category.
+// GET /api/landing/chart?days=7|14|30   (default 7, today included)
+// Items sold per day for each packaging category, ALL stalls. One line per packaging category.
 router.get('/chart', wrap(async (req, res) => {
+  const n = rangeDays(req.query);
   const [rows] = await pool.query(
-    `SELECT DATE_FORMAT(s.sold_at, '%Y-%m') AS month, p.packaging_id, SUM(s.quantity_sold) AS items
+    `SELECT DATE(s.sold_at) AS day, p.packaging_id, SUM(s.quantity_sold) AS items
      FROM sales_record s
      JOIN product p ON p.product_id = s.product_id
      JOIN canteen c ON c.canteen_id = p.canteen_id
-     WHERE c.status <> 'Removed'
-       AND s.sold_at >= DATE_FORMAT(CURDATE() - INTERVAL 11 MONTH, '%Y-%m-01')
-     GROUP BY month, p.packaging_id`
+     WHERE c.status <> 'Removed' AND s.sold_at >= CURDATE() - INTERVAL ? DAY
+     GROUP BY DATE(s.sold_at), p.packaging_id`,
+    [n - 1]
   );
-  const [packaging] = await pool.query('SELECT packaging_id, packaging_name FROM packaging_category ORDER BY packaging_id');
-
-  // Every month gets a value, so months with no sales show as 0
-  const months = [];
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() - i);
-    months.push(d);
-  }
-  const key = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  const datasets = packaging.map((pk) => ({
-    label: pk.packaging_name,
-    values: months.map((d) => {
-      const r = rows.find((x) => x.month === key(d) && x.packaging_id === pk.packaging_id);
-      return r ? Number(r.items) : 0;
-    })
-  }));
-
+  const days = lastDays(n);
   res.json({
     yLabel: 'Items sold',
-    labels: months.map((d) => d.toLocaleString('en-US', { month: 'short', year: 'numeric' })),
-    datasets
+    labels: days.map((d) => new Date(d + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+    datasets: await packagingLines(rows, days)
   });
 }));
 

@@ -1,62 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WasteLess</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WasteLess</title>
+  </head>
+  <body>
+    <!-- ===== HEADER / NAVBAR ===== -->
+    <header id="site-header">
+      <div id="header-logo">LOGO</div>
+      <p id="header-title">
+        WasteLess: Canteen Inventory and Plastic Waste Monitoring System
+      </p>
 
-  <!-- ===== HEADER / NAVBAR ===== -->
-  <header id="site-header">
-    <div id="header-logo">LOGO</div>
-    <p id="header-title">WasteLess: Canteen Inventory and Plastic Waste Monitoring System</p>
+      <nav id="header-nav">
+        <a id="login-link" href="log-in.html">Log In</a>
+        <a id="register-link" href="register.html">Sign Up</a>
+      </nav>
+    </header>
 
-    <nav id="header-nav">
-      <a id="login-link" href="log-in.html">Log In</a>
-      <a id="register-link" href="register.html">Sign Up</a>
-    </nav>
-  </header>
-
-  <main>
-    <!-- ===== HERO ===== -->
-    <section id="hero">
-      <div id="hero-text">
-        <h1>
-          <span id="hero-welcome">Welcome to</span><br>
-          <span id="hero-brand">WasteLess</span>
-        </h1>
-        <p id="hero-subtitle">Canteen Inventory and Plastic Waste Monitoring System</p>
-      </div>
-
-      <div id="hero-logo">LOGO</div>
-    </section>
-
-    <!-- ===== DATA SUMMARY ===== -->
-    <section id="data-summary">
-      <h2>Data Summary</h2>
-
-      <div id="data-summary-content">
-        <div id="chart-container">
-          <canvas id="waste-chart" aria-label="Line graph of items sold per month for each packaging category, across all stalls" role="img"></canvas>
-          <p id="chart-status">Loading chart...</p>
+    <main>
+      <!-- ===== HERO ===== -->
+      <section id="hero">
+        <div id="hero-text">
+          <h1>
+            <span id="hero-welcome">Welcome to</span><br />
+            <span id="hero-brand">WasteLess</span>
+          </h1>
+          <p id="hero-subtitle">
+            Canteen Inventory and Plastic Waste Monitoring System
+          </p>
         </div>
 
-        <div id="summary-card">
-          <h3 id="summary-title">Summary</h3>
-          <hr>
-          <dl id="summary-list"></dl>
-          <p id="summary-status">Loading summary...</p>
+        <div id="hero-logo">LOGO</div>
+      </section>
+
+      <!-- ===== DATA SUMMARY ===== -->
+      <section id="data-summary">
+        <h2>Data Summary</h2>
+
+        <div id="data-summary-content">
+          <div id="chart-container">
+            <label
+              >Show
+              <select id="chart-range">
+                <option value="7">Last 7 days</option>
+                <option value="14">Last 14 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+            </label>
+            <canvas
+              id="waste-chart"
+              aria-label="Line graph of items sold per month for each packaging category, across all stalls"
+              role="img"
+            ></canvas>
+            <p id="chart-status">Loading chart...</p>
+          </div>
+
+          <div id="summary-card">
+            <h3 id="summary-title">Summary</h3>
+            <hr />
+            <dl id="summary-list"></dl>
+            <p id="summary-status">Loading summary...</p>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
 
-  <!-- ===== FOOTER ===== -->
-  <footer id="site-footer"></footer>
+    <!-- ===== FOOTER ===== -->
+    <footer id="site-footer"></footer>
 
-  <!-- Chart.js (draws the line graph) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="../system.js/landing.js"></script>
-</body>
+    <!-- Chart.js (draws the line graph) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="../system.js/landing.js"></script>
+  </body>
 </html>

@@ -33,8 +33,11 @@ async function fetchJSON(url) {
   return response.json();
 }
 
+// Range comes from the "Show" dropdown above the graph (7 / 14 / 30 days)
 function getChartData() {
-  return USE_MOCK_DATA ? Promise.resolve(MOCK_CHART_DATA) : fetchJSON(API_ENDPOINTS.chart);
+  const range = document.getElementById("chart-range");
+  const days = range ? range.value : 7;
+  return USE_MOCK_DATA ? Promise.resolve(MOCK_CHART_DATA) : fetchJSON(`${API_ENDPOINTS.chart}?days=${days}`);
 }
 
 function getSummaryData() {
@@ -143,4 +146,16 @@ async function initLanding() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", initLanding);
+document.addEventListener("DOMContentLoaded", () => {
+  initLanding();
+  // Redraw the graph when the range dropdown changes
+  const range = document.getElementById("chart-range");
+  if (range) {
+    range.addEventListener("change", () => {
+      getChartData().then(renderChart).catch((err) => {
+        console.error(err);
+        document.getElementById("chart-status").textContent = "Could not load chart data.";
+      });
+    });
+  }
+});

@@ -128,11 +128,11 @@ function drawChart(id, config, emptyMessage) {
   charts[id] = new Chart(document.getElementById(id), config);
 }
 
-// "Sales & Revenue" card + packaging line graph (one line per packaging category)
+// Packaging line graph (one line per packaging category)
+// Range comes from the "Show" dropdown above the graph (7 / 14 / 30 days)
 async function loadDashboard() {
-  const data = await WasteLessAPI.getDashboard();
-  const total = document.getElementById("salesTotal");
-  if (total) total.textContent = "₱" + data.revenue_total.toFixed(2);
+  const range = document.getElementById("packagingRange");
+  const data = await WasteLessAPI.getDashboard(range ? range.value : 7);
 
   const anySold = data.lines.some(line => line.values.some(n => n > 0));
   drawChart("packagingChart", {
@@ -151,7 +151,7 @@ async function loadDashboard() {
       plugins: { legend: { position: "bottom" } },
       scales: { y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Items sold" } } }
     }
-  }, anySold ? "" : "No sales recorded in the last 7 days yet.");
+  }, anySold ? "" : `No sales recorded in the last ${data.days} days yet.`);
 }
 
 // ---------- Download Report (PDF, once every 7 days) ----------
@@ -338,6 +338,10 @@ function setupEventListeners() {
 
   if (closeModalBtn) closeModalBtn.addEventListener("click", closeForm);
   if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeForm);
+
+  // Graph range dropdown (7 / 14 / 30 days)
+  const packagingRange = document.getElementById("packagingRange");
+  if (packagingRange) packagingRange.addEventListener("change", () => loadDashboard().catch(console.error));
 
   // Preview the picked image before saving
   const imageInput = document.getElementById("imageInput");

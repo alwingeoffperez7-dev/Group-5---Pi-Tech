@@ -9,11 +9,11 @@
   <body>
     <!-- App Layout Wrapper for Sidebar & Main Content -->
     <div class="app-layout">
-
       <!-- Sidebar Navigation -->
       <aside class="vendor-sidebar">
         <div class="sidebar-logo">
-          <span class="logo-icon" aria-hidden="true">🌱</span> <strong>WasteLess</strong>
+          <span class="logo-icon" aria-hidden="true">🌱</span>
+          <strong>WasteLess</strong>
         </div>
         <nav class="sidebar-nav" aria-label="Vendor pages">
           <ul>
@@ -45,11 +45,6 @@
             <!-- Dashboard Summary Cards -->
             <section class="dashboard-stats">
               <div class="stat-card">
-                <h3>Sales &amp; Revenue</h3>
-                <p class="stat-value" id="salesTotal">₱0.00</p>
-                <p class="stat-note">Last 7 days</p>
-              </div>
-              <div class="stat-card">
                 <h3>Products</h3>
                 <p class="stat-value" id="count">00</p>
                 <p class="stat-note">Listed in your stall</p>
@@ -63,15 +58,33 @@
 
             <!-- Dashboard graph: items sold per packaging category -->
             <section class="card chart-card">
-              <h2>Packaging Used (items sold, last 7 days)</h2>
-              <canvas id="packagingChart" width="720" height="320" role="img" aria-label="Line graph of items sold per day for each packaging category, last 7 days"></canvas>
+              <h2>Packaging Used (items sold)</h2>
+              <label
+                >Show
+                <select id="packagingRange">
+                  <option value="7">Last 7 days</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+              </label>
+              <canvas
+                id="packagingChart"
+                width="720"
+                height="320"
+                role="img"
+                aria-label="Line graph of items sold per day for each packaging category"
+              ></canvas>
               <p class="chart-status" id="packagingChartStatus"></p>
             </section>
 
             <!-- Eco Tip Banner -->
             <aside class="eco-tip-banner">
               <strong>EcoTip 101</strong>
-              <span>Every item sold leaves plastic behind. Check which packaging category your stall uses most, and look for products with less of it.</span>
+              <span
+                >Every item sold leaves plastic behind. Check which packaging
+                category your stall uses most, and look for products with less
+                of it.</span
+              >
             </aside>
           </div>
 
@@ -81,14 +94,22 @@
               <div class="section-header">
                 <h1 class="page-title">Product Listing</h1>
                 <div class="action-buttons">
-                  <button id="downloadReportBtn" class="btn secondary">Download Report</button>
-                  <button id="openAddModalBtn" class="btn primary">+ Add Product</button>
+                  <button id="downloadReportBtn" class="btn secondary">
+                    Download Report
+                  </button>
+                  <button id="openAddModalBtn" class="btn primary">
+                    + Add Product
+                  </button>
                 </div>
               </div>
 
               <div class="filter-toolbar">
-                <label>Search <input id="q" type="search" placeholder="Search products..." /></label>
-                <label>Category
+                <label
+                  >Search
+                  <input id="q" type="search" placeholder="Search products..."
+                /></label>
+                <label
+                  >Category
                   <select id="filterCat">
                     <option>Category</option>
                   </select>
@@ -120,20 +141,38 @@
             </section>
 
             <!-- Add / Edit Product pop-up -->
-            <dialog class="product-modal" id="productFormContainer" aria-labelledby="formTitle">
+            <dialog
+              class="product-modal"
+              id="productFormContainer"
+              aria-labelledby="formTitle"
+            >
               <div class="modal-header-row">
                 <h2 id="formTitle">Edit Product</h2>
-                <button type="button" id="closeModalBtn" class="close-btn" aria-label="Close">×</button>
+                <button
+                  type="button"
+                  id="closeModalBtn"
+                  class="close-btn"
+                  aria-label="Close"
+                >
+                  ×
+                </button>
               </div>
               <p class="modal-subtitle">Stall 000 [Stall Name]</p>
               <form id="productForm">
                 <input type="hidden" name="product_id" />
                 <div class="form-grid">
                   <div class="form-group">
-                    <label>Product name <input name="product_name" placeholder="e.g. Chicken Adobo" required /></label>
+                    <label
+                      >Product name
+                      <input
+                        name="product_name"
+                        placeholder="e.g. Chicken Adobo"
+                        required
+                    /></label>
                   </div>
                   <div class="form-group">
-                    <label>Category
+                    <label
+                      >Category
                       <select name="category" id="formCat" required>
                         <option>Meals</option>
                         <option>Snacks</option>
@@ -143,32 +182,81 @@
                     </label>
                   </div>
                   <div class="form-group full-width">
-                    <label>Description <textarea name="description" rows="3" placeholder="Short description"></textarea></label>
-                  </div>
-                  <div class="form-group">
-                    <label>Packaging Category
-                      <!-- options filled from the database by vendor-page.js -->
-                      <select name="packaging_id" id="formPackaging" required></select>
+                    <label
+                      >Description
+                      <textarea
+                        name="description"
+                        rows="3"
+                        placeholder="Short description"
+                      ></textarea>
                     </label>
                   </div>
                   <div class="form-group">
-                    <label>Price (₱) <input name="unit_price" type="number" min="0" step="0.01" placeholder="0.00" required /></label>
+                    <label
+                      >Packaging Category
+                      <!-- options filled from the database by vendor-page.js -->
+                      <select
+                        name="packaging_id"
+                        id="formPackaging"
+                        required
+                      ></select>
+                    </label>
                   </div>
                   <div class="form-group">
-                    <label>Stock <input name="stock" type="number" min="0" step="1" placeholder="0" required /></label>
+                    <label
+                      >Price (₱)
+                      <input
+                        name="unit_price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        required
+                    /></label>
                   </div>
                   <div class="form-group">
-                    <label>Product Image <input type="file" name="image" id="imageInput" accept="image/*" /></label>
-                    <small class="field-hint">JPG, PNG, WEBP or GIF, up to 2 MB</small>
+                    <label
+                      >Stock
+                      <input
+                        name="stock"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="0"
+                        required
+                    /></label>
+                  </div>
+                  <div class="form-group">
+                    <label
+                      >Product Image
+                      <input
+                        type="file"
+                        name="image"
+                        id="imageInput"
+                        accept="image/*"
+                    /></label>
+                    <small class="field-hint"
+                      >JPG, PNG, WEBP or GIF, up to 2 MB</small
+                    >
                   </div>
                   <div class="form-group full-width image-preview-row">
-                    <img id="imagePreview" class="image-preview" width="160" alt="Product image preview" hidden />
+                    <img
+                      id="imagePreview"
+                      class="image-preview"
+                      width="160"
+                      alt="Product image preview"
+                      hidden
+                    />
                   </div>
                 </div>
                 <pre id="productMsg" class="form-msg"></pre>
                 <div class="form-actions">
-                  <button type="button" id="cancelEdit" class="btn outline">Cancel</button>
-                  <button type="submit" id="saveBtn" class="btn primary">Save Changes</button>
+                  <button type="button" id="cancelEdit" class="btn outline">
+                    Cancel
+                  </button>
+                  <button type="submit" id="saveBtn" class="btn primary">
+                    Save Changes
+                  </button>
                 </div>
               </form>
             </dialog>
@@ -183,7 +271,8 @@
                 <h2>New Message to Admin</h2>
                 <form id="feedbackForm">
                   <div class="form-group">
-                    <label>Type
+                    <label
+                      >Type
                       <select name="feedback_type">
                         <option>Inquiry</option>
                         <option>Report a Problem</option>
@@ -193,15 +282,34 @@
                     </label>
                   </div>
                   <div class="form-group">
-                    <label>Subject <input name="subject" placeholder="Short summary" required /></label>
+                    <label
+                      >Subject
+                      <input
+                        name="subject"
+                        placeholder="Short summary"
+                        required
+                    /></label>
                   </div>
                   <div class="form-group">
-                    <label>Message <textarea name="message" rows="5" placeholder="Describe your inquiry or the issue" required></textarea></label>
+                    <label
+                      >Message
+                      <textarea
+                        name="message"
+                        rows="5"
+                        placeholder="Describe your inquiry or the issue"
+                        required
+                      ></textarea>
+                    </label>
                   </div>
                   <div class="form-group">
-                    <label>Attach screenshot (optional) <input type="file" name="attachment" accept="image/*" /></label>
+                    <label
+                      >Attach screenshot (optional)
+                      <input type="file" name="attachment" accept="image/*"
+                    /></label>
                   </div>
-                  <button type="submit" class="btn primary">Send to Admin</button>
+                  <button type="submit" class="btn primary">
+                    Send to Admin
+                  </button>
                 </form>
                 <pre id="feedbackMsg" class="form-msg" role="status"></pre>
               </div>
