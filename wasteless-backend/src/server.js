@@ -5,6 +5,31 @@ const pool = require('./db');
 const { requireRole, wrap, errorHandler } = require('./middleware');
 
 const app = express();
+app.disable('x-powered-by'); // don't advertise "Express"
+
+// Basic security headers on every response
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',          // browser must trust our Content-Type (no guessing)
+    'X-Frame-Options': 'DENY',                    // page can't be put inside another site's frame
+    'Referrer-Policy': 'same-origin',
+    // Only load scripts/styles/images from this server (+ Chart.js from cdnjs).
+    // 'unsafe-inline' is needed because the HTML pages use inline onclick handlers.
+    'Content-Security-Policy': [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "connect-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'"
+    ].join('; ')
+  });
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

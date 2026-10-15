@@ -173,7 +173,7 @@ async function downloadReport() {
   btn.disabled = true;
   btn.textContent = "Preparing report...";
   try {
-    const res = await fetch("/api/stall/report");
+    const res = await fetch("/api/stall/report", { method: "POST" });
     if (res.status === 401) { location.href = "log-in.html"; return; }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));

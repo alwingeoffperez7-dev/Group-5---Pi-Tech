@@ -72,7 +72,7 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Packaging Category (plastic: Tetra Pak, Polystyrene, ...) | `GET/POST /api/admin/packaging`, `PUT/DELETE /api/admin/packaging/:id` | admin |
 | Packaging dropdown | `GET /api/packaging` | anyone |
 | Vendor dashboard packaging graph | `GET /api/stall/dashboard?days=7|14|30` | vendor |
-| Download Report (PDF of the last 7 days; **once every 7 days** per stall) | `GET /api/stall/report` (PDF, or 429 with the next date), `GET /api/stall/report/status` | vendor |
+| Download Report (PDF of the last 7 days; **once every 7 days** per stall) | `POST /api/stall/report` (PDF, or 429 with the next date), `GET /api/stall/report/status` | vendor |
 
 Vendor routes (below) act on the **logged-in vendor's own stall**.
 
