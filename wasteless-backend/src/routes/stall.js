@@ -3,6 +3,7 @@ const express = require('express');
 const pool = require('../db');
 const { HttpError, wrap } = require('../middleware');
 const { rangeDays, lastDays, packagingLines } = require('../packaging-graph');
+const { ecoTips } = require('../eco-tip');
 
 const router = express.Router();
 
@@ -61,6 +62,13 @@ router.get('/dashboard', wrap(async (req, res) => {
     labels: days,
     lines: await packagingLines(rows, days)
   });
+}));
+
+// GET /api/stall/eco-tips -> this week's plastic waste + the Eco-Tip alerts that apply
+//   { week_total, previous_week_total, breakdown: [{ packaging_name, pieces, percent }],
+//     alerts: [{ code, level: 'high'|'warning'|'positive', title, tip, effects? }] }
+router.get('/eco-tips', wrap(async (req, res) => {
+  res.json(await ecoTips(req.canteenId));
 }));
 
 module.exports = router;

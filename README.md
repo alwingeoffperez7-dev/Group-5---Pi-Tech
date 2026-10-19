@@ -8,8 +8,8 @@ WasteLess tracks each canteen vendor's products and **plastic packaging** (Tetra
 |---|---|---|
 | Landing | anyone | Packaging graph for **all stalls** (last 7 / 14 / 30 days) + summary |
 | Register / Log In | anyone | Vendors sign up (admin must approve), vendors and admins log in |
-| Vendor page | vendor | Dashboard + packaging graph, Product Listing (add / edit / delete, images), weekly PDF report, Feedback to admin |
-| Admin page | admin | Approve accounts, manage stalls, products, packaging categories, read feedback |
+| Vendor page | vendor | Dashboard + packaging graph + **Eco-Tip pop-up**, Product Listing (add / edit / delete, images), weekly PDF report, Feedback to admin |
+| Admin page | admin | Approve accounts, manage stalls, products, packaging categories, Eco-Tip rules and tips, read feedback |
 
 **Stack:** HTML + CSS + JavaScript (front end) · Node.js + Express (back end) · MySQL / MariaDB (XAMPP)
 
@@ -73,6 +73,7 @@ cd wasteless-backend
 npm install
 ```
 If your database was made **before 2026-10-15**, run `wasteless-backend/database/migrate.sql` once (phpMyAdmin → `wasteless` → SQL tab). It keeps your data.
+If it was made **before 2026-10-19** (no Eco-Tips tab on the admin page), also run `wasteless-backend/database/migrate-eco-tip.sql` once, the same way.
 
 ### Common problems
 
@@ -84,6 +85,8 @@ If your database was made **before 2026-10-15**, run `wasteless-backend/database
 | `ECONNREFUSED` / database error | MySQL isn't started in XAMPP, or the password in `.env` is wrong |
 | `WasteLessAPI is not defined` | You opened the page without the server. Use http://localhost:3000 |
 | Page looks old after an update | Hard refresh: `Ctrl + F5` |
+| Eco-Tips tab is empty / `Table 'wasteless.conditions'` error | Run `migrate-eco-tip.sql` (see "After pulling new code") |
+| MySQL won't start, log says `Incorrect file format 'db'` | XAMPP's `mysql.db` table got damaged (unclean shutdown). Stop MySQL, copy the three `db.*` files from `C:\xampp\mysql\backup\mysql` into `C:\xampp\mysql\data\mysql`, start again. Your data is not affected |
 | Everyone got logged out | Normal after restarting the server (logins are kept in memory) |
 | "Too many wrong passwords" | 5 wrong tries locks that email for 15 minutes (or restart the server) |
 
@@ -100,7 +103,7 @@ Group-5---Pi-Tech/
 ├── wasteless-backend/
 │   ├── src/            ← Express server + API routes
 │   ├── public/js/api.js← shared helper the pages use to talk to the backend
-│   ├── database/       ← schema.sql, seed.sql, migrate.sql, demo-data.sql
+│   ├── database/       ← schema.sql, seed.sql, migrate*.sql, demo-data.sql
 │   ├── uploads/        ← product images / screenshots (not on GitHub)
 │   └── README.md       ← API reference for the backend
 └── index.html, script.js, style.css  ← old backend test page (http://localhost:3000/index.html)

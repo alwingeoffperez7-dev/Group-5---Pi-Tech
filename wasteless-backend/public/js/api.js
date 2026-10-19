@@ -35,6 +35,8 @@ const WasteLessAPI = (() => {
     getDashboard: (days = 7) => request('GET', `/api/stall/dashboard?days=${days}`), // days: 7 | 14 | 30
     // Download Report: { available, last_downloaded_at, next_available_at }. The PDF itself is POST /api/stall/report
     getReportStatus: () => request('GET', '/api/stall/report/status'),
+    // Eco-Tip pop-up: { week_total, previous_week_total, breakdown, alerts }
+    getEcoTips: () => request('GET', '/api/stall/eco-tips'),
 
     // Category chips
     getCategories: () => request('GET', '/api/categories'),

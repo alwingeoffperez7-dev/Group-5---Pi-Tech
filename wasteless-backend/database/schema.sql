@@ -174,22 +174,33 @@ CREATE TABLE report_download (
 );
 
 -- =====================================================================
--- ECO-TIP (later phase) — tables created now so the DB matches the ERD
+-- ECO-TIP  (pop-up on the vendor dashboard, see src/eco-tip.js)
+-- "Plastic waste" = pieces sold in the last 7 days (1 item sold = 1 piece).
+-- The admin edits the thresholds and tips on the admin page (Eco-Tips tab).
 -- =====================================================================
+-- One row per rule. condition_code is what the code looks for, so don't rename it.
+--   high_overall    total pieces this week >= threshold (pieces)
+--   category_share  one packaging category >= threshold % of this week's pieces, and >= min_pieces
+--   increase        this week >= threshold % more than last week (last week needs >= min_pieces)
+--   continuous      high_overall reached for threshold weeks in a row
+--   reduction       this week >= threshold % less than last week (last week needs >= min_pieces)
 CREATE TABLE conditions (
   condition_id    INT AUTO_INCREMENT PRIMARY KEY,
+  condition_code  VARCHAR(30)  NOT NULL UNIQUE,
   condition_name  VARCHAR(120) NOT NULL,
-  total_sold      INT NULL,              -- threshold on units sold
-  total_revenue   DECIMAL(12,2) NULL     -- threshold on revenue
+  threshold       INT NOT NULL,
+  min_pieces      INT NOT NULL DEFAULT 0,
+  tip_text        VARCHAR(500) NOT NULL
 );
 
+-- The category-specific part of the pop-up: bad effects (one per line) + targeted tip.
 CREATE TABLE eco_tip (
-  tip_id             INT AUTO_INCREMENT PRIMARY KEY,
-  category_id        INT NULL,
-  condition_id       INT NULL,
-  tip_text           VARCHAR(500) NOT NULL,
-  trigger_condition  VARCHAR(255),
-  FOREIGN KEY (category_id)  REFERENCES category(category_id),
+  tip_id        INT AUTO_INCREMENT PRIMARY KEY,
+  packaging_id  INT NOT NULL UNIQUE,
+  condition_id  INT NULL,               -- the category_share rule
+  effects       VARCHAR(1000),
+  tip_text      VARCHAR(500) NOT NULL,
+  FOREIGN KEY (packaging_id) REFERENCES packaging_category(packaging_id) ON DELETE CASCADE,
   FOREIGN KEY (condition_id) REFERENCES conditions(condition_id)
 );
 

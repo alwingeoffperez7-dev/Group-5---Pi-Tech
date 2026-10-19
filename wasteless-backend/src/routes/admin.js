@@ -245,4 +245,53 @@ router.delete('/packaging/:id', wrap(async (req, res) => {
   res.json({ deleted: true });
 }));
 
+// ---------- Eco-Tip Management (thresholds + tips) ----------
+const UNITS = { high_overall: 'pieces / week', category_share: '% of the week', increase: '% more than last week',
+  continuous: 'weeks in a row', reduction: '% less than last week' };
+const PERCENT_MAX = { category_share: 100, reduction: 100 }; // can't be over 100%
+
+router.get('/eco/conditions', wrap(async (req, res) => {
+  const [rows] = await pool.query('SELECT * FROM conditions ORDER BY condition_id');
+  res.json(rows.map((r) => ({ ...r, unit: UNITS[r.condition_code] || '' })));
+}));
+
+router.put('/eco/conditions/:id', wrap(async (req, res) => {
+  required(req.body, ['threshold', 'tip_text']);
+  const [[cond]] = await pool.query('SELECT condition_code FROM conditions WHERE condition_id = ?', [req.params.id]);
+  if (!cond) throw new HttpError(404, 'Condition not found');
+  const threshold = Number(req.body.threshold);
+  const minPieces = Number(req.body.min_pieces ?? 0);
+  const max = PERCENT_MAX[cond.condition_code] || 100000;
+  const errors = {};
+  if (!Number.isInteger(threshold) || threshold < 1 || threshold > max) errors.threshold = `Threshold must be a whole number from 1 to ${max}`;
+  if (!Number.isInteger(minPieces) || minPieces < 0) errors.min_pieces = 'Min. pieces must be a whole number, 0 or more';
+  if (Object.keys(errors).length) throw new HttpError(400, Object.values(errors).join('. ') + '.', errors);
+  await pool.query('UPDATE conditions SET threshold = ?, min_pieces = ?, tip_text = ? WHERE condition_id = ?',
+    [threshold, minPieces, String(req.body.tip_text).trim(), req.params.id]);
+  res.json({ condition_id: Number(req.params.id) });
+}));
+
+// One row per packaging category (tip fields empty if it has no tip yet)
+router.get('/eco/tips', wrap(async (req, res) => {
+  const [rows] = await pool.query(
+    `SELECT pk.packaging_id, pk.packaging_name, t.effects, t.tip_text
+     FROM packaging_category pk LEFT JOIN eco_tip t ON t.packaging_id = pk.packaging_id
+     ORDER BY pk.packaging_id`
+  );
+  res.json(rows);
+}));
+
+router.put('/eco/tips/:packagingId', wrap(async (req, res) => {
+  required(req.body, ['tip_text']);
+  const [[pk]] = await pool.query('SELECT packaging_id FROM packaging_category WHERE packaging_id = ?', [req.params.packagingId]);
+  if (!pk) throw new HttpError(404, 'Packaging category not found');
+  await pool.query(
+    `INSERT INTO eco_tip (packaging_id, condition_id, effects, tip_text)
+     VALUES (?, (SELECT condition_id FROM conditions WHERE condition_code = 'category_share'), ?, ?)
+     ON DUPLICATE KEY UPDATE effects = VALUES(effects), tip_text = VALUES(tip_text)`,
+    [pk.packaging_id, String(req.body.effects ?? '').trim() || null, String(req.body.tip_text).trim()]
+  );
+  res.json({ packaging_id: pk.packaging_id });
+}));
+
 module.exports = router;

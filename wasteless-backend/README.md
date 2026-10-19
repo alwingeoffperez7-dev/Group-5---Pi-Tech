@@ -4,7 +4,7 @@ Backend for WasteLess: **log-in / register**, the **vendor page** (My Stall, Pro
 The front end (`system.html/`, `system.js/`, `system.css/` in the repo root) is served by this server.
 Stack: HTML + CSS + JavaScript (Node.js + Express) + SQL (MySQL / MariaDB).
 
-Business Analytics and Eco-Tip logic are **not** in here yet (other members / later phase), but their tables already exist in the database.
+Business Analytics is **not** in here (other members), but its tables already exist in the database.
 
 ## Setup
 
@@ -33,6 +33,8 @@ Business Analytics and Eco-Tip logic are **not** in here yet (other members / la
 Pulled new code? Run `npm install` again (the PDF report needs `pdfkit`).
 
 Made the database before 2026-10-15 (before plastic packaging categories and the PDF report)? Run `mysql -u root wasteless < database/migrate.sql` once (keeps your data; existing products become "Plastic Container").
+
+Made the database before 2026-10-19 (before Eco-Tips)? Run `database/migrate-eco-tip.sql` once (phpMyAdmin → `wasteless` → SQL tab). It only replaces the empty `conditions` / `eco_tip` / `notification` tables.
 
 Want graphs with data for a demo? `mysql -u root wasteless < database/demo-data.sql` adds 3 vendor stalls with a year of random sales (logins are listed at the top of that file).
 
@@ -72,6 +74,8 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Packaging Category (plastic: Tetra Pak, Polystyrene, ...) | `GET/POST /api/admin/packaging`, `PUT/DELETE /api/admin/packaging/:id` | admin |
 | Packaging dropdown | `GET /api/packaging` | anyone |
 | Vendor dashboard packaging graph | `GET /api/stall/dashboard?days=7|14|30` | vendor |
+| Eco-Tip Management (rules + tip per packaging category) | `GET /api/admin/eco/conditions`, `PUT /api/admin/eco/conditions/:id` (threshold, min_pieces, tip_text), `GET /api/admin/eco/tips`, `PUT /api/admin/eco/tips/:packaging_id` (effects, tip_text) | admin |
+| Eco-Tip pop-up (this week's waste + alerts that apply) | `GET /api/stall/eco-tips` | vendor |
 | Download Report (PDF of the last 7 days; **once every 7 days** per stall) | `POST /api/stall/report` (PDF, or 429 with the next date), `GET /api/stall/report/status` | vendor |
 
 Vendor routes (below) act on the **logged-in vendor's own stall**.
@@ -101,11 +105,22 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 - Adding a product writes a `stocklog` row (`initial`). Changing stock in Edit writes another (`restock` or `adjustment`), so stock history is kept.
 - Delete is a **soft delete** (`is_active = 0`). Old sales and waste records still point to it, so analytics don't break.
 - Uploaded images go to `/uploads` and are served at `image_url`.
+- **Eco-Tip** (`src/eco-tip.js`, rules from Condition_Tip.pdf). Plastic waste = pieces sold in the last 7 days (1 item = 1 piece), compared with the 7 days before. Defaults (admin can change them):
+
+  | Condition | Rule | Shows |
+  |---|---|---|
+  | High Overall Waste | ≥ 90 pieces this week | warning pop-up |
+  | High Category Share | one packaging category ≥ 40% of the week **and** ≥ 20 pieces | pop-up with that category's bad effects + tip |
+  | Increasing Plastic Waste | ≥ 10% more than last week (last week ≥ 20 pieces) | warning pop-up |
+  | Continuous High Usage | High Overall Waste 2 weeks in a row (replaces the plain one) | high-priority pop-up |
+  | Reduction Observed | ≥ 10% less than last week (last week ≥ 20 pieces) | positive banner, no pop-up |
+
+  The pop-up opens on every dashboard visit while a warning applies. `npm test` checks these rules.
 
 ## Not done yet
 
 - **Sessions** are kept in memory, so everyone is logged out when the server restarts.
-- **Eco-Tip:** `conditions`, `eco_tip`, `notification` tables exist; logic comes later.
+- **Notification** table exists (from the ERD) but isn't used: Eco-Tips are checked live on each visit.
 - **Business Analytics:** `sales_record` table and a `business_analytics` view exist for the other members.
 - **Spreadsheet version** of Product Listing (2-ALT) isn't wired; the same endpoints can back it if the team picks it.
 
@@ -116,4 +131,5 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 - **Canteen** gained `business_email` and `contact_email` (shown on My Stall).
 - New **Feedback** table for the Feedback / Report page.
 - **Business_Analytics** is a view, not a table — it's computed from `sales_record`, so it can't go out of sync.
+- **Conditions** holds one row per Eco-Tip rule (`condition_code`, `threshold`, `min_pieces`, `tip_text`) instead of `total_sold` / `total_revenue`. **Eco_Tip** is linked to a **packaging** category (not a food category) and holds the bad effects + tip.
 - **Sales_Record** gained `unit_price` and `sold_at` so revenue and "this week" can be computed.

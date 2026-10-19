@@ -3,6 +3,8 @@ let currentStalls = [];
 let currentProducts = [];
 let currentCategories = [];
 let allCategories = []; // ALL categories (used by the dropdowns)
+let currentConditions = [];
+let currentEcoTips = [];
 
 
 function byId(id) {
@@ -125,6 +127,11 @@ function loadCategories() {
   api("GET", listUrl("/api/admin/packaging", options)).then(renderCategories).catch(showApiError);
 }
 
+function loadEcoTips() {
+  api("GET", "/api/admin/eco/conditions").then(renderConditions).catch(showApiError);
+  api("GET", "/api/admin/eco/tips").then(renderEcoTips).catch(showApiError);
+}
+
 // Dropdown lists need ALL categories and ALL stalls (not the searched/filtered ones)
 function loadDropdownOptions() {
   api("GET", "/api/packaging").then(renderCategoryOptions).catch(showApiError); // packaging categories
@@ -243,6 +250,40 @@ function renderCategories(categories) {
   byId("category-table-body").innerHTML = rows;
 }
 
+// Text with line breaks (e.g. the effects) -> lines in the table cell
+function multiline(value) {
+  return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
+function renderConditions(conditions) {
+  currentConditions = conditions;
+  let rows = "";
+  conditions.forEach(function (c) {
+    rows += `<tr>
+      <td>${escapeHtml(c.condition_name)}</td>
+      <td>${escapeHtml(c.threshold)} ${escapeHtml(c.unit)}</td>
+      <td>${escapeHtml(c.min_pieces)}</td>
+      <td>${escapeHtml(c.tip_text)}</td>
+      <td><button type="button" data-action="edit" data-id="${escapeHtml(c.condition_id)}">Edit</button></td>
+    </tr>`;
+  });
+  byId("condition-table-body").innerHTML = rows;
+}
+
+function renderEcoTips(tips) {
+  currentEcoTips = tips;
+  let rows = "";
+  tips.forEach(function (t) {
+    rows += `<tr>
+      <td>${escapeHtml(t.packaging_name)}</td>
+      <td>${multiline(t.effects)}</td>
+      <td>${t.tip_text ? escapeHtml(t.tip_text) : "(no tip yet: the general tip is used)"}</td>
+      <td><button type="button" data-action="edit" data-id="${escapeHtml(t.packaging_id)}">Edit</button></td>
+    </tr>`;
+  });
+  byId("ecotip-table-body").innerHTML = rows;
+}
+
 // "categories" here = packaging categories (Tetra Pak, Polystyrene, ...)
 function renderCategoryOptions(categories) {
   allCategories = categories;
@@ -320,7 +361,9 @@ function handleFormSubmit(formId, idField, url, reloadFunction) {
 
 handleFormSubmit("stall-form", "stall_id", "/api/admin/stalls", loadStalls);
 handleFormSubmit("product-form", "product_id", "/api/admin/products", loadProducts);
-handleFormSubmit("category-form", "packaging_id", "/api/admin/packaging", loadCategories);
+handleFormSubmit("category-form", "packaging_id", "/api/admin/packaging", function () { loadCategories(); loadEcoTips(); });
+handleFormSubmit("condition-form", "condition_id", "/api/admin/eco/conditions", loadEcoTips); // edit only
+handleFormSubmit("ecotip-form", "packaging_id", "/api/admin/eco/tips", loadEcoTips); // edit only
 
 // Delete a record, then refresh its table + the dashboard totals
 function deleteRecord(url, reloadFunction) {
@@ -368,7 +411,21 @@ listenToTableClicks("category-table-body", {
   },
   delete: function (id) {
     if (!confirm("Delete this packaging category?")) return;
-    deleteRecord("/api/admin/packaging/" + id, loadCategories);
+    deleteRecord("/api/admin/packaging/" + id, function () { loadCategories(); loadEcoTips(); });
+  }
+});
+
+listenToTableClicks("condition-table-body", {
+  edit: function (id) {
+    const condition = findById(currentConditions, "condition_id", id);
+    openForm("condition-form", condition);
+    byId("condition-form-unit").textContent = condition.unit;
+  }
+});
+
+listenToTableClicks("ecotip-table-body", {
+  edit: function (id) {
+    openForm("ecotip-form", findById(currentEcoTips, "packaging_id", id));
   }
 });
 
@@ -405,4 +462,5 @@ loadAccounts();
 loadStalls();
 loadProducts();
 loadCategories();
+loadEcoTips();
 loadDropdownOptions();

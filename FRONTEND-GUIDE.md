@@ -89,6 +89,18 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | `id="packagingRange"` | "Show" dropdown (keep the `value="7"`, `value="14"` and `value="30"` options) |
 | `id="packagingChart"` | graph `<canvas>` (size = its `width`/`height` attributes) |
 | `id="packagingChartStatus"` | message under the graph |
+| `id="ecoTipBanner"`, `id="ecoTipBannerText"` | EcoTip banner; the script changes the text and adds `class="positive"` when waste went down |
+| `id="ecoTipOpenBtn"` | "View Eco-Tips" button in the banner (hidden when there are no warnings) |
+
+**Eco-Tip pop-up** (opens on the dashboard while a warning applies)
+
+| Keep this | What it is |
+|---|---|
+| `<dialog id="ecoTipDialog">` | the pop-up itself |
+| `id="ecoTipTitle"` | heading ("WARNING: …") |
+| `id="ecoTipSummary"`, `id="ecoTipTotal"`, `id="ecoTipBreakdown"` | this week's total + one `<li>` per packaging category |
+| `id="ecoTipAlerts"` | filled with one `<section class="eco-alert warning">` (or `eco-alert high`) per warning, each with an `<h3>`, an optional effects `<ul>` and `<p class="eco-tip-text">` |
+| `id="ecoTipCloseBtn"` | "Got it" |
 
 **Product Listing**
 
@@ -121,7 +133,7 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | `id="subs"` | My Submissions list (filled by the script) |
 
 **Classes the script puts on generated content (style these freely):**
-`product-thumb` (table image), `empty-row` ("No products found." / "No submissions yet."), `btn outline btn-sm` and `text-danger` (Edit / Delete buttons in rows), `submission-item` (each submission), `status-badge` plus `pending` / `replied` / `resolved` (status pill), `stat-note` (small grey text), `form-msg ok` (green success message), `active` (current sidebar link).
+`product-thumb` (table image), `empty-row` ("No products found." / "No submissions yet."), `btn outline btn-sm` and `text-danger` (Edit / Delete buttons in rows), `submission-item` (each submission), `status-badge` plus `pending` / `replied` / `resolved` (status pill), `stat-note` (small grey text), `form-msg ok` (green success message), `active` (current sidebar link), `eco-alert` + `warning` / `high` (Eco-Tip sections), `eco-tip-text`, `positive` (on the banner).
 
 ### `admin-page.html` (scripts: `/js/api.js`, then `system.js/admin-page.js`)
 
@@ -129,8 +141,8 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 
 | Keep this | What it is |
 |---|---|
-| `<button data-section="dashboard" data-title="Dashboard">` (and `accounts`, `stalls`, `products`, `categories`) | sidebar buttons; `data-section` picks the page, `data-title` is the heading text |
-| `id="section-dashboard"`, `id="section-accounts"`, `id="section-stalls"`, `id="section-products"`, `id="section-categories"` + `class="page"` | the pages (hidden / shown) |
+| `<button data-section="dashboard" data-title="Dashboard">` (and `accounts`, `stalls`, `products`, `categories`, `eco`) | sidebar buttons; `data-section` picks the page, `data-title` is the heading text |
+| `id="section-dashboard"`, `id="section-accounts"`, `id="section-stalls"`, `id="section-products"`, `id="section-categories"`, `id="section-eco"` + `class="page"` | the pages (hidden / shown) |
 | `id="page-title"`, `id="back-btn"` | heading and back button |
 
 **Dashboard:** `id="total-stalls"`, `id="total-categories"`, `id="total-products"`, `id="feedback-count"`, `id="feedback-sort"`, `id="feedback-list"`. `id="chart-1"` and `id="chart-2"` are empty spots reserved for graphs.
@@ -151,6 +163,11 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | `id="stall-dialog"` / `id="stall-form"` | `stall_id` (hidden), `business_name`, `contact_person`, `contact_number`, `email` |
 | `id="product-dialog"` / `id="product-form"` | `product_id` (hidden), `product_name`, `packaging_id` (`id="product-form-category"`), `category_id` (`id="product-form-foodcat"`), `stall_id` (`id="product-form-stall"`) |
 | `id="category-dialog"` / `id="category-form"` (packaging categories) | `packaging_id` (hidden), `packaging_name`, `description`, `example` |
+
+| `id="condition-dialog"` / `id="condition-form"` (Eco-Tip rules, edit only) | `condition_id` (hidden), `condition_name` (read-only), `threshold`, `min_pieces`, `tip_text`; unit text in `id="condition-form-unit"` |
+| `id="ecotip-dialog"` / `id="ecotip-form"` (tip per packaging category, edit only) | `packaging_id` (hidden), `packaging_name` (read-only), `effects` (one per line), `tip_text` |
+
+**Eco-Tips page:** tables `id="condition-table-body"` (5 columns) and `id="ecotip-table-body"` (4 columns), filled by the script.
 
 Cancel buttons need `data-action="close-dialog"`.
 

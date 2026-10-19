@@ -17,6 +17,7 @@
             <button type="button" data-section="stalls" data-title="Stall Management">Stall Management</button>
             <button type="button" data-section="products" data-title="Product Management">Product Management</button>
             <button type="button" data-section="categories" data-title="Packaging Category Management">Packaging Category</button>
+            <button type="button" data-section="eco" data-title="Eco-Tip Management">Eco-Tips</button>
         </nav>
      </aside>
 
@@ -161,6 +162,37 @@
                 <tbody id="category-table-body"></tbody>
             </table>
           </section>
+          <!-- eco-tips: the rules that open the vendor's Eco-Tip pop-up, and the tip per packaging category -->
+           <section id="section-eco" class="page" hidden>
+            <h2>Conditions</h2>
+            <p>Plastic waste = pieces sold in the last 7 days (1 item sold = 1 piece).</p>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Condition</th>
+                        <th>Threshold</th>
+                        <th>Min. Pieces</th>
+                        <th>Eco-Tip</th>
+                        <th>Action/Edit</th>
+                    </tr>
+                </thead>
+                <tbody id="condition-table-body"></tbody>
+            </table>
+
+            <h2>Tips per Packaging Category</h2>
+            <p>Shown when a category reaches the "High Category Share" condition.</p>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Packaging Category</th>
+                        <th>Negative Effects</th>
+                        <th>Eco-Tip</th>
+                        <th>Action/Edit</th>
+                    </tr>
+                </thead>
+                <tbody id="ecotip-table-body"></tbody>
+            </table>
+          </section>
      </main>
 
      <dialog id="stall-dialog">
@@ -202,6 +234,32 @@
             <p><label>Packaging Name <input type="text" name="packaging_name" required></label></p>
             <p><label>Description <textarea name="description" rows="4"></textarea></label></p>
             <p><label>Example <input type="text" name="example" placeholder="e.g. Zest-O"></label></p>
+            <button type="submit">Save</button>
+            <button type="button" data-action="close-dialog">Cancel</button>
+        </form>
+     </dialog>
+
+     <dialog id="condition-dialog">
+        <form id="condition-form">
+            <h2>Edit Condition</h2>
+            <input type="hidden" name="condition_id">
+            <p><label>Condition <input type="text" name="condition_name" readonly></label></p>
+            <p><label>Threshold <input type="number" name="threshold" min="1" step="1" required></label>
+               <span id="condition-form-unit"></span></p>
+            <p><label>Min. Pieces <input type="number" name="min_pieces" min="0" step="1" required></label></p>
+            <p><label>Eco-Tip <textarea name="tip_text" rows="4" maxlength="500" required></textarea></label></p>
+            <button type="submit">Save</button>
+            <button type="button" data-action="close-dialog">Cancel</button>
+        </form>
+     </dialog>
+
+     <dialog id="ecotip-dialog">
+        <form id="ecotip-form">
+            <h2>Edit Eco-Tip</h2>
+            <input type="hidden" name="packaging_id">
+            <p><label>Packaging Category <input type="text" name="packaging_name" readonly></label></p>
+            <p><label>Negative Effects (one per line) <textarea name="effects" rows="5" maxlength="1000"></textarea></label></p>
+            <p><label>Eco-Tip <textarea name="tip_text" rows="4" maxlength="500" required></textarea></label></p>
             <button type="submit">Save</button>
             <button type="button" data-action="close-dialog">Cancel</button>
         </form>
