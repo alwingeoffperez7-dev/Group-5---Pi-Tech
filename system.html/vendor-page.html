@@ -79,14 +79,40 @@
             </section>
 
             <!-- Eco Tip Banner -->
-            <aside class="eco-tip-banner">
+            <aside class="eco-tip-banner" id="ecoTipBanner">
               <strong>EcoTip 101</strong>
-              <span
+              <span id="ecoTipBannerText"
                 >Every item sold leaves plastic behind. Check which packaging
                 category your stall uses most, and look for products with less
                 of it.</span
               >
+              <button
+                type="button"
+                id="ecoTipOpenBtn"
+                class="btn outline btn-sm"
+                hidden
+              >
+                View Eco-Tips
+              </button>
             </aside>
+
+            <!-- Eco-Tip pop-up: opens on every dashboard visit while a condition is reached -->
+            <dialog
+              class="eco-tip-modal"
+              id="ecoTipDialog"
+              aria-labelledby="ecoTipTitle"
+            >
+              <h2 id="ecoTipTitle">Eco-Tip</h2>
+              <section id="ecoTipSummary">
+                <h3>This Week's Plastic Waste (last 7 days)</h3>
+                <p>Total: <strong id="ecoTipTotal">0</strong> pieces</p>
+                <ul id="ecoTipBreakdown"></ul>
+              </section>
+              <div id="ecoTipAlerts"></div>
+              <button type="button" id="ecoTipCloseBtn" class="btn primary">
+                Got it
+              </button>
+            </dialog>
           </div>
 
           <!-- ===== PAGE: Product Listing ===== -->

@@ -20,7 +20,8 @@ function escapeHtml(value) {
 function showError(elId, err) {
   const details = Object.values(err.details || {});
   document.getElementById(elId).classList.remove("ok");
-  document.getElementById(elId).textContent = err.message + (details.length ? "\n- " + details.join("\n- ") : "");
+  document.getElementById(elId).textContent =
+    err.message + (details.length ? "\n- " + details.join("\n- ") : "");
 }
 
 // ---------- Loading from the backend ----------
@@ -34,17 +35,20 @@ async function loadStall() {
 function showPage() {
   const name = location.hash.slice(1) || "dashboard";
   const page = document.getElementById("page-" + name) ? name : "dashboard";
-  document.querySelectorAll(".page").forEach(p => { p.hidden = p.id !== "page-" + page; });
-  document.querySelectorAll(".sidebar-nav a").forEach(a => {
+  document.querySelectorAll(".page").forEach((p) => {
+    p.hidden = p.id !== "page-" + page;
+  });
+  document.querySelectorAll(".sidebar-nav a").forEach((a) => {
     a.classList.toggle("active", a.getAttribute("href") === "#" + page);
   });
   window.scrollTo(0, 0);
+  if (page === "dashboard") loadEcoTips().catch(console.error); // pop-up on every dashboard visit
 }
 window.addEventListener("hashchange", showPage);
 
 async function loadCategories() {
   const list = await WasteLessAPI.getCategories();
-  categories = list.map(c => c.category_name);
+  categories = list.map((c) => c.category_name);
   initCategories();
 }
 
@@ -53,7 +57,7 @@ async function loadPackaging() {
   const select = document.getElementById("formPackaging");
   if (select) {
     select.innerHTML = "";
-    packagingList.forEach(pk => {
+    packagingList.forEach((pk) => {
       const opt = document.createElement("option");
       opt.value = pk.packaging_id;
       opt.textContent = pk.packaging_name;
@@ -66,19 +70,19 @@ async function loadPackaging() {
 async function loadProducts() {
   const data = await WasteLessAPI.getProducts();
   // backend sends category_name; this page uses `category`
-  products = data.products.map(p => ({ ...p, category: p.category_name }));
+  products = data.products.map((p) => ({ ...p, category: p.category_name }));
   renderDashboard();
   applyFilters();
 }
 
 async function loadSubmissions() {
   const data = await WasteLessAPI.getSubmissions();
-  submissions = data.submissions.map(s => ({
+  submissions = data.submissions.map((s) => ({
     id: s.feedback_id,
     type: s.feedback_type,
     subject: s.subject,
     date: String(s.created_at).split("T")[0],
-    status: s.status
+    status: s.status,
   }));
   renderSubmissions();
 }
@@ -88,7 +92,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   showPage();
   setupEventListeners();
   try {
-    await Promise.all([loadStall(), loadCategories(), loadPackaging(), loadSubmissions(), loadDashboard(), loadReportStatus()]);
+    await Promise.all([
+      loadStall(),
+      loadCategories(),
+      loadPackaging(),
+      loadSubmissions(),
+      loadDashboard(),
+      loadReportStatus(),
+    ]);
     await loadProducts();
   } catch (err) {
     console.error(err);
@@ -97,28 +108,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Dashboard cards: Products, Package Category
 function renderDashboard() {
-  const pad = n => (n < 10 ? `0${n}` : String(n));
+  const pad = (n) => (n < 10 ? `0${n}` : String(n));
   const countBadge = document.getElementById("count");
   const breakdown = document.getElementById("packageBreakdown");
 
   if (countBadge) countBadge.textContent = pad(products.length);
   if (breakdown) {
-    breakdown.innerHTML = packagingList.map(pk => {
-      const n = products.filter(p => p.packaging_id === pk.packaging_id).length;
-      return `<li>${escapeHtml(pk.packaging_name)}: <strong>${n}</strong></li>`;
-    }).join("");
+    breakdown.innerHTML = packagingList
+      .map((pk) => {
+        const n = products.filter(
+          (p) => p.packaging_id === pk.packaging_id,
+        ).length;
+        return `<li>${escapeHtml(pk.packaging_name)}: <strong>${n}</strong></li>`;
+      })
+      .join("");
   }
 }
 
 // ---------- Dashboard graphs (Chart.js) ----------
 const charts = {};
 // One colour per packaging category line (in order); repeats if the admin adds more than 6
-const LINE_COLORS = ["#2563eb", "#dc2626", "#d97706", "#16a34a", "#7c3aed", "#0891b2"];
+const LINE_COLORS = [
+  "#2563eb",
+  "#dc2626",
+  "#d97706",
+  "#16a34a",
+  "#7c3aed",
+  "#0891b2",
+];
 
 // Draws (or redraws) one chart; shows a message instead when there's nothing to draw.
 function drawChart(id, config, emptyMessage) {
   const status = document.getElementById(id + "Status");
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  if (charts[id]) {
+    charts[id].destroy();
+    delete charts[id];
+  }
   if (typeof Chart === "undefined") {
     if (status) status.textContent = "Chart library failed to load.";
     return;
@@ -134,28 +159,102 @@ async function loadDashboard() {
   const range = document.getElementById("packagingRange");
   const data = await WasteLessAPI.getDashboard(range ? range.value : 7);
 
-  const anySold = data.lines.some(line => line.values.some(n => n > 0));
-  drawChart("packagingChart", {
-    type: "line",
-    data: {
-      labels: data.labels.map(d => new Date(d + "T00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })),
-      datasets: data.lines.map((line, i) => ({
-        label: line.label,
-        data: line.values,
-        borderColor: LINE_COLORS[i % LINE_COLORS.length],
-        backgroundColor: LINE_COLORS[i % LINE_COLORS.length],
-        cubicInterpolationMode: "monotone" // smooth, but never dips below 0 between points
-      }))
+  const anySold = data.lines.some((line) => line.values.some((n) => n > 0));
+  drawChart(
+    "packagingChart",
+    {
+      type: "line",
+      data: {
+        labels: data.labels.map((d) =>
+          new Date(d + "T00:00").toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+          }),
+        ),
+        datasets: data.lines.map((line, i) => ({
+          label: line.label,
+          data: line.values,
+          borderColor: LINE_COLORS[i % LINE_COLORS.length],
+          backgroundColor: LINE_COLORS[i % LINE_COLORS.length],
+          cubicInterpolationMode: "monotone", // smooth, but never dips below 0 between points
+        })),
+      },
+      options: {
+        plugins: { legend: { position: "bottom" } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 },
+            title: { display: true, text: "Items sold" },
+          },
+        },
+      },
     },
-    options: {
-      plugins: { legend: { position: "bottom" } },
-      scales: { y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Items sold" } } }
-    }
-  }, anySold ? "" : `No sales recorded in the last ${data.days} days yet.`);
+    anySold ? "" : `No sales recorded in the last ${data.days} days yet.`,
+  );
+}
+
+let defaultBannerText = null;
+
+async function loadEcoTips() {
+  const data = await WasteLessAPI.getEcoTips();
+  const warnings = data.alerts.filter((a) => a.level !== "positive");
+  const positive = data.alerts.find((a) => a.level === "positive");
+
+  const banner = document.getElementById("ecoTipBanner");
+  const bannerText = document.getElementById("ecoTipBannerText");
+  const openBtn = document.getElementById("ecoTipOpenBtn");
+  if (bannerText) {
+    if (defaultBannerText === null) defaultBannerText = bannerText.textContent;
+    bannerText.textContent = positive
+      ? positive.title + ". " + positive.tip
+      : warnings.length
+        ? `Your stall has ${warnings.length} Eco-Tip warning(s) this week.`
+        : defaultBannerText;
+  }
+  if (banner) banner.classList.toggle("positive", Boolean(positive));
+  if (openBtn) openBtn.hidden = !warnings.length;
+
+  document.getElementById("ecoTipTotal").textContent = data.week_total;
+  document.getElementById("ecoTipBreakdown").innerHTML = data.breakdown
+    .map(
+      (b) =>
+        `<li>${escapeHtml(b.packaging_name)}: <strong>${b.pieces}</strong> pieces (${b.percent}%)</li>`,
+    )
+    .join("");
+  document.getElementById("ecoTipTitle").textContent = warnings.length
+    ? "WARNING: " + warnings[0].title
+    : "Eco-Tip";
+  document.getElementById("ecoTipAlerts").innerHTML = warnings
+    .map(
+      (a) => `
+    <section class="eco-alert ${a.level}">
+      <h3>${a.level === "high" ? "HIGH PRIORITY: " : ""}${escapeHtml(a.title)}</h3>
+      ${
+        a.effects && a.effects.length
+          ? `<p>Negative community and environmental effects:</p>
+        <ul>${a.effects.map((e) => `<li>${escapeHtml(e)}</li>`).join("")}</ul>`
+          : ""
+      }
+      <p class="eco-tip-text"><strong>Eco-Tip:</strong> ${escapeHtml(a.tip)}</p>
+    </section>`,
+    )
+    .join("");
+
+  const dialog = document.getElementById("ecoTipDialog");
+  const onDashboard = !document.getElementById("page-dashboard").hidden; // still there when the data arrives
+  if (warnings.length && onDashboard && !dialog.open) dialog.showModal();
 }
 
 // ---------- Download Report (PDF, once every 7 days) ----------
-const formatWhen = d => new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+const formatWhen = (d) =>
+  new Date(d).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
 // Button says when the next report can be downloaded
 async function loadReportStatus() {
@@ -163,25 +262,39 @@ async function loadReportStatus() {
   const btn = document.getElementById("downloadReportBtn");
   if (!btn) return;
   btn.disabled = !status.available;
-  btn.textContent = status.available ? "Download Report" : "Next report: " + formatWhen(status.next_available_at);
-  btn.title = status.last_downloaded_at ? "Last downloaded " + formatWhen(status.last_downloaded_at) : "";
+  btn.textContent = status.available
+    ? "Download Report"
+    : "Next report: " + formatWhen(status.next_available_at);
+  btn.title = status.last_downloaded_at
+    ? "Last downloaded " + formatWhen(status.last_downloaded_at)
+    : "";
 }
 
 async function downloadReport() {
   const btn = document.getElementById("downloadReportBtn");
-  if (!confirm("You can download the report only once every 7 days. Download it now?")) return;
+  if (
+    !confirm(
+      "You can download the report only once every 7 days. Download it now?",
+    )
+  )
+    return;
   btn.disabled = true;
   btn.textContent = "Preparing report...";
   try {
     const res = await fetch("/api/stall/report", { method: "POST" });
-    if (res.status === 401) { location.href = "log-in.html"; return; }
+    if (res.status === 401) {
+      location.href = "log-in.html";
+      return;
+    }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error || "Could not create the report.");
     }
     // Save the PDF the server sent
     const blob = await res.blob();
-    const name = (res.headers.get("Content-Disposition") || "").match(/filename="(.+)"/);
+    const name = (res.headers.get("Content-Disposition") || "").match(
+      /filename="(.+)"/,
+    );
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = name ? name[1] : "WasteLess-Report.pdf";
@@ -203,9 +316,11 @@ function initStallInfo() {
   const stallNameHeader = document.getElementById("stall");
   const subtitle = document.querySelector(".modal-subtitle");
 
-  if (stallIdLabel) stallIdLabel.textContent = `Stall ID #${stallData.stall_id}`;
+  if (stallIdLabel)
+    stallIdLabel.textContent = `Stall ID #${stallData.stall_id}`;
   if (stallNameHeader) stallNameHeader.textContent = stallData.stall_name;
-  if (subtitle) subtitle.textContent = `Stall ${stallData.stall_id} ${stallData.stall_name}`;
+  if (subtitle)
+    subtitle.textContent = `Stall ${stallData.stall_id} ${stallData.stall_name}`;
 }
 
 // Populate Category Dropdowns
@@ -216,7 +331,7 @@ function initCategories() {
   if (filterCat) {
     // Clear and add 'All' plus categories
     filterCat.innerHTML = '<option value="All">All Categories</option>';
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       const opt = document.createElement("option");
       opt.value = cat;
       opt.textContent = cat;
@@ -226,7 +341,7 @@ function initCategories() {
 
   if (formCat) {
     formCat.innerHTML = "";
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       const opt = document.createElement("option");
       opt.value = cat;
       opt.textContent = cat;
@@ -247,7 +362,7 @@ function renderProducts(dataToRender) {
     return;
   }
 
-  dataToRender.forEach(prod => {
+  dataToRender.forEach((prod) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${prod.product_id}</td>
@@ -278,7 +393,7 @@ function renderSubmissions() {
     return;
   }
 
-  submissions.forEach(sub => {
+  submissions.forEach((sub) => {
     const li = document.createElement("li");
     li.className = "submission-item";
     li.innerHTML = `
@@ -299,8 +414,10 @@ function applyFilters() {
   const query = searchInput ? searchInput.value.toLowerCase() : "";
   const selectedCat = filterCat ? filterCat.value : "All";
 
-  const filtered = products.filter(p => {
-    const matchesSearch = p.product_name.toLowerCase().includes(query) || (p.description || "").toLowerCase().includes(query);
+  const filtered = products.filter((p) => {
+    const matchesSearch =
+      p.product_name.toLowerCase().includes(query) ||
+      (p.description || "").toLowerCase().includes(query);
     const matchesCat = selectedCat === "All" || p.category === selectedCat;
     return matchesSearch && matchesCat;
   });
@@ -317,11 +434,12 @@ function setupEventListeners() {
 
   if (searchInput) searchInput.addEventListener("input", applyFilters);
   if (filterCat) filterCat.addEventListener("change", applyFilters);
-  if (refreshBtn) refreshBtn.addEventListener("click", () => {
-    if (searchInput) searchInput.value = "";
-    if (filterCat) filterCat.value = "All";
-    loadProducts();
-  });
+  if (refreshBtn)
+    refreshBtn.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      if (filterCat) filterCat.value = "All";
+      loadProducts();
+    });
 
   // Modal / Add Form Toggles
   const openAddModalBtn = document.getElementById("openAddModalBtn");
@@ -339,9 +457,20 @@ function setupEventListeners() {
   if (closeModalBtn) closeModalBtn.addEventListener("click", closeForm);
   if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeForm);
 
+  const ecoTipDialog = document.getElementById("ecoTipDialog");
+  const ecoTipCloseBtn = document.getElementById("ecoTipCloseBtn");
+  const ecoTipOpenBtn = document.getElementById("ecoTipOpenBtn");
+  if (ecoTipCloseBtn)
+    ecoTipCloseBtn.addEventListener("click", () => ecoTipDialog.close());
+  if (ecoTipOpenBtn)
+    ecoTipOpenBtn.addEventListener("click", () => ecoTipDialog.showModal());
+
   // Graph range dropdown (7 / 14 / 30 days)
   const packagingRange = document.getElementById("packagingRange");
-  if (packagingRange) packagingRange.addEventListener("change", () => loadDashboard().catch(console.error));
+  if (packagingRange)
+    packagingRange.addEventListener("change", () =>
+      loadDashboard().catch(console.error),
+    );
 
   // Preview the picked image before saving
   const imageInput = document.getElementById("imageInput");
@@ -359,7 +488,8 @@ function setupEventListeners() {
       const formData = new FormData(productForm);
       const id = formData.get("product_id");
       formData.delete("product_id");
-      if (!formData.get("image") || !formData.get("image").size) formData.delete("image");
+      if (!formData.get("image") || !formData.get("image").size)
+        formData.delete("image");
 
       try {
         if (id) {
@@ -368,7 +498,9 @@ function setupEventListeners() {
           await WasteLessAPI.addProduct(formData);
         }
         productFormContainer.close();
-        showListingMsg(id ? "Product updated successfully!" : "Product added successfully!");
+        showListingMsg(
+          id ? "Product updated successfully!" : "Product added successfully!",
+        );
         await loadProducts();
       } catch (err) {
         showError("productMsg", err);
@@ -382,15 +514,19 @@ function setupEventListeners() {
     feedbackForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const formData = new FormData(feedbackForm);
-      if (!formData.get("attachment") || !formData.get("attachment").size) formData.delete("attachment");
+      if (!formData.get("attachment") || !formData.get("attachment").size)
+        formData.delete("attachment");
 
       try {
         await WasteLessAPI.sendFeedback(formData);
         feedbackForm.reset();
         await loadSubmissions();
         document.getElementById("feedbackMsg").classList.add("ok");
-        document.getElementById("feedbackMsg").textContent = "Message sent to admin successfully!";
-        setTimeout(() => { document.getElementById("feedbackMsg").textContent = ""; }, 3000);
+        document.getElementById("feedbackMsg").textContent =
+          "Message sent to admin successfully!";
+        setTimeout(() => {
+          document.getElementById("feedbackMsg").textContent = "";
+        }, 3000);
       } catch (err) {
         showError("feedbackMsg", err);
       }
@@ -415,8 +551,8 @@ function setupEventListeners() {
 }
 
 // Global functions for table row actions
-window.editProduct = function(productId) {
-  const prod = products.find(p => p.product_id === productId);
+window.editProduct = function (productId) {
+  const prod = products.find((p) => p.product_id === productId);
   if (!prod) return;
 
   const productForm = document.getElementById("productForm");
@@ -454,8 +590,12 @@ function openProductModal(prod) {
   document.getElementById("productMsg").textContent = "";
   currentImageUrl = null;
   showImagePreview(null);
-  document.getElementById("formTitle").textContent = prod ? "Edit Product" : "Add Product";
-  document.getElementById("saveBtn").textContent = prod ? "Save Changes" : "Save Product";
+  document.getElementById("formTitle").textContent = prod
+    ? "Edit Product"
+    : "Add Product";
+  document.getElementById("saveBtn").textContent = prod
+    ? "Save Changes"
+    : "Save Product";
   modal.showModal();
 }
 
@@ -464,10 +604,12 @@ function showListingMsg(text) {
   const el = document.getElementById("listingMsg");
   if (!el) return;
   el.textContent = text;
-  setTimeout(() => { el.textContent = ""; }, 3000);
+  setTimeout(() => {
+    el.textContent = "";
+  }, 3000);
 }
 
-window.deleteProduct = async function(productId) {
+window.deleteProduct = async function (productId) {
   if (!confirm("Are you sure you want to delete this product?")) return;
   try {
     await WasteLessAPI.deleteProduct(productId);
