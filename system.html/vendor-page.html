@@ -78,15 +78,40 @@
               <p class="chart-status" id="packagingChartStatus"></p>
             </section>
 
-            <!-- Eco Tip Banner -->
-            <aside class="eco-tip-banner">
+            <!-- Eco Tip Banner: congratulates when under the weekly limit ("positive" class) -->
+            <aside class="eco-tip-banner" id="ecoTipBanner">
               <strong>EcoTip 101</strong>
-              <span
+              <span id="ecoTipBannerText"
                 >Every item sold leaves plastic behind. Check which packaging
                 category your stall uses most, and look for products with less
                 of it.</span
               >
+              <button
+                type="button"
+                id="ecoTipOpenBtn"
+                class="btn outline btn-sm"
+                hidden
+              >
+                View Eco-Tip
+              </button>
             </aside>
+
+            <!-- Eco-Tip pop-up (a div; style it as an overlay). Opens on every dashboard visit
+                 while the stall is over the weekly limit. -->
+            <div
+              class="eco-tip-popup"
+              id="ecoTipPopup"
+              role="dialog"
+              aria-labelledby="ecoTipTitle"
+              hidden
+            >
+              <h2 id="ecoTipTitle">Eco-Tip</h2>
+              <p id="ecoTipMessage"></p>
+              <div id="ecoTipCategories"></div>
+              <button type="button" id="ecoTipCloseBtn" class="btn primary">
+                Got it
+              </button>
+            </div>
           </div>
 
           <!-- ===== PAGE: Product Listing ===== -->

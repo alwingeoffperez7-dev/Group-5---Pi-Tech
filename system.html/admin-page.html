@@ -1,217 +1,403 @@
-<!DOCTYPE html>
+<!doctype html>
 <!-- Styling this page? Keep every id / class / name / data-* listed for it in FRONTEND-GUIDE.md (repo root). The scripts in system.js/ use them to talk to the backend. -->
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WasteLess</title>
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- sidebar -->
-     <aside id="sidebar">
-        <div id="logo">[Logo]</div>
-        <nav>
-            <button type="button" data-section="dashboard" data-title="Dashboard">Dashboard</button>
-            <button type="button" data-section="accounts" data-title="Account Management">Account Management</button>
-            <button type="button" data-section="stalls" data-title="Stall Management">Stall Management</button>
-            <button type="button" data-section="products" data-title="Product Management">Product Management</button>
-            <button type="button" data-section="categories" data-title="Packaging Category Management">Packaging Category</button>
-        </nav>
-     </aside>
+    <aside id="sidebar">
+      <div id="logo">[Logo]</div>
+      <nav>
+        <button type="button" data-section="dashboard" data-title="Dashboard">
+          Dashboard
+        </button>
+        <button
+          type="button"
+          data-section="accounts"
+          data-title="Account Management"
+        >
+          Account Management
+        </button>
+        <button
+          type="button"
+          data-section="stalls"
+          data-title="Stall Management"
+        >
+          Stall Management
+        </button>
+        <button
+          type="button"
+          data-section="products"
+          data-title="Product Management"
+        >
+          Product Management
+        </button>
+        <button
+          type="button"
+          data-section="categories"
+          data-title="Packaging Category Management"
+        >
+          Packaging Category
+        </button>
+        <button
+          type="button"
+          data-section="eco"
+          data-title="Eco-Tip Management"
+        >
+          Eco-Tips
+        </button>
+      </nav>
+    </aside>
 
-     <!-- main -->
-     <main>
-        <header>
-            <h1 id="page-title">Dashboard</h1>
-            <button type="button" id="back-btn" aria-label="Back">&#8617;</button>
-        </header>
+    <!-- main -->
+    <main>
+      <header>
+        <h1 id="page-title">Dashboard</h1>
+        <button type="button" id="back-btn" aria-label="Back">&#8617;</button>
+      </header>
 
-        <!-- dashboard -->
-         <section id="section-dashboard" class="page">
-            <div id="stat-cards">
-                <div><span id="total-stalls">0</span> Total Stalls</div>
-                <div><span id="total-categories">0</span> Total Categories</div>
-                <div><span id="total-products">0</span> Total Products</div>
-            </div>
+      <!-- dashboard -->
+      <section id="section-dashboard" class="page">
+        <div id="stat-cards">
+          <div><span id="total-stalls">0</span> Total Stalls</div>
+          <div><span id="total-categories">0</span> Total Categories</div>
+          <div><span id="total-products">0</span> Total Products</div>
+        </div>
 
-            <div id="chart-1"></div>
-            <div id="chart-2"></div>
+        <div id="chart-1"></div>
+        <div id="chart-2"></div>
 
-            <aside id="feedback-panel">
-                <h2>Feedback/Report</h2>
-                <p>Messages Count: <span id="feedback-count">0</span></p>
-                <select id="feedback-sort">
-                    <option value="">Sort by</option>
-                    <option value="newest">Newest first</option>
-                    <option value="oldest">Oldest first</option>
-                </select>
-                <div id="feedback-list"></div>
-            </aside>
-         </section>
+        <aside id="feedback-panel">
+          <h2>Feedback/Report</h2>
+          <p>Messages Count: <span id="feedback-count">0</span></p>
+          <select id="feedback-sort">
+            <option value="">Sort by</option>
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+          <div id="feedback-list"></div>
+        </aside>
+      </section>
 
-         <!-- accounts -->
-          <section id="section-accounts" class="page" hidden>
-            <input type="search" id="account-search" placeholder="Search">
-            <select id="account-filter"><option value="">Filter/Category</option></select>
-            <span>Account Count: <span id="account-count">0</span></span>
-            <select id="account-sort">
-                <option value="">Sort by</option>
-                <option value="name_asc">Business Name (A-Z)</option>
-                <option value="name_desc">Business Name (Z-A)</option>
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-            </select>
+      <!-- accounts -->
+      <section id="section-accounts" class="page" hidden>
+        <input type="search" id="account-search" placeholder="Search" />
+        <select id="account-filter">
+          <option value="">Filter/Category</option>
+        </select>
+        <span>Account Count: <span id="account-count">0</span></span>
+        <select id="account-sort">
+          <option value="">Sort by</option>
+          <option value="name_asc">Business Name (A-Z)</option>
+          <option value="name_desc">Business Name (Z-A)</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
 
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Business Name</th>
-                        <th>Business Email</th>
-                        <th>Contact Person</th>
-                        <th>Contact Number</th>
-                        <th>Action/Edit</th>
-                    </tr>
-                </thead>
-                <tbody id="account-table-body"></tbody>
-            </table>
-          </section>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Business Name</th>
+              <th>Business Email</th>
+              <th>Contact Person</th>
+              <th>Contact Number</th>
+              <th>Action/Edit</th>
+            </tr>
+          </thead>
+          <tbody id="account-table-body"></tbody>
+        </table>
+      </section>
 
-          <!-- stalls -->
-           <section id="section-stalls" class="page" hidden>
-            <input type="search" id="stall-search" placeholder="Search">
-            <select id="stall-filter"><option value="">Filter/Category</option></select>
-            <span>Stall Count: <span id="stall-count">0</span></span>
-            <select id="stall-sort">
-                <option value="">Sort by</option>
-                <option value="name_asc">Business Name (A-Z)</option>
-                <option value="name_desc">Business Name (Z-A)</option>
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-            </select>
-            <button type="button" id="stall-add-button">+ Add Stall</button>
+      <!-- stalls -->
+      <section id="section-stalls" class="page" hidden>
+        <input type="search" id="stall-search" placeholder="Search" />
+        <select id="stall-filter">
+          <option value="">Filter/Category</option>
+        </select>
+        <span>Stall Count: <span id="stall-count">0</span></span>
+        <select id="stall-sort">
+          <option value="">Sort by</option>
+          <option value="name_asc">Business Name (A-Z)</option>
+          <option value="name_desc">Business Name (Z-A)</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        <button type="button" id="stall-add-button">+ Add Stall</button>
 
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Stall ID</th>
-                        <th>Business Name</th>
-                        <th>Contact Person</th>
-                        <th>Contact Number/Email</th>
-                        <th>Action/Edit</th>
-                    </tr>
-                </thead>
-                <tbody id="stall-table-body"></tbody>
-            </table>
-          </section>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Stall ID</th>
+              <th>Business Name</th>
+              <th>Contact Person</th>
+              <th>Contact Number/Email</th>
+              <th>Action/Edit</th>
+            </tr>
+          </thead>
+          <tbody id="stall-table-body"></tbody>
+        </table>
+      </section>
 
-          <!-- products -->
-           <section id="section-products" class="page" hidden>
-            <input type="search" id="product-search" placeholder="Search">
-            <select id="product-filter"><option value="">Filter/Category</option></select>
-            <span>Product Count: <span id="product-count">0</span></span>
-            <select id="product-sort">
-                <option value="">Sort by</option>
-                <option value="name_asc">Product Name (A-Z)</option>
-                <option value="name_desc">Product Name (Z-A)</option>
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-            </select>
-            <button type="button" id="product-add-button">+ Add Product</button>
+      <!-- products -->
+      <section id="section-products" class="page" hidden>
+        <input type="search" id="product-search" placeholder="Search" />
+        <select id="product-filter">
+          <option value="">Filter/Category</option>
+        </select>
+        <span>Product Count: <span id="product-count">0</span></span>
+        <select id="product-sort">
+          <option value="">Sort by</option>
+          <option value="name_asc">Product Name (A-Z)</option>
+          <option value="name_desc">Product Name (Z-A)</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        <button type="button" id="product-add-button">+ Add Product</button>
 
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Product ID</th>
-                        <th>Product Name</th>
-                        <th>Packaging Category</th>
-                        <th>Stall ID</th>
-                        <th>Action/Edit</th>
-                    </tr>
-                </thead>
-                <tbody id="product-table-body"></tbody>
-            </table>
-          </section>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Packaging Category</th>
+              <th>Stall ID</th>
+              <th>Action/Edit</th>
+            </tr>
+          </thead>
+          <tbody id="product-table-body"></tbody>
+        </table>
+      </section>
 
-          <!-- packaging category -->
-           <section id="section-categories" class="page" hidden>
-            <input type="search" id="category-search" placeholder="Search">
-            <select id="category-filter"><option value="">Filter/Category</option></select>
-            <span>Product Count: <span id="category-count">0</span></span>
-            <select id="category-sort">
-                <option value="">Sort by</option>
-                <option value="name_asc">Name (A-Z)</option>
-                <option value="name_desc">Name (Z-A)</option>
-                <option value="items_desc">Most first</option>
-                <option value="items_asc">Fewest first</option>
-            </select>
-            <button type="button" id="category-add-button">+ Add Category</button>
+      <!-- packaging category -->
+      <section id="section-categories" class="page" hidden>
+        <input type="search" id="category-search" placeholder="Search" />
+        <select id="category-filter">
+          <option value="">Filter/Category</option>
+        </select>
+        <span>Product Count: <span id="category-count">0</span></span>
+        <select id="category-sort">
+          <option value="">Sort by</option>
+          <option value="name_asc">Name (A-Z)</option>
+          <option value="name_desc">Name (Z-A)</option>
+          <option value="items_desc">Most first</option>
+          <option value="items_asc">Fewest first</option>
+        </select>
+        <button type="button" id="category-add-button">+ Add Category</button>
 
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Packaging ID</th>
-                        <th>Packaging Name</th>
-                        <th>Description</th>
-                        <th>Example</th>
-                        <th>Item Count</th>
-                        <th>Action/Edit</th>
-                    </tr>
-                </thead>
-                <tbody id="category-table-body"></tbody>
-            </table>
-          </section>
-     </main>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Packaging ID</th>
+              <th>Packaging Name</th>
+              <th>Description</th>
+              <th>Example</th>
+              <th>Item Count</th>
+              <th>Action/Edit</th>
+            </tr>
+          </thead>
+          <tbody id="category-table-body"></tbody>
+        </table>
+      </section>
+      <section id="section-eco" class="page" hidden>
+        <h2>Conditions</h2>
+        <p>
+          Plastic waste = pieces sold in the last 7 days (1 item sold = 1
+          piece).
+        </p>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Condition</th>
+              <th>Threshold</th>
+              <th>Eco-Tip</th>
+              <th>Action/Edit</th>
+            </tr>
+          </thead>
+          <tbody id="condition-table-body"></tbody>
+        </table>
 
-     <dialog id="stall-dialog">
-        <form id="stall-form">
-            <h2>Stall Details</h2>
-            <input type="hidden" name="stall_id">
-            <p><label>Business Name <input type="text" name="business_name" required></label></p>
-            <p><label>Contact Person <input type="text" name="contact_person" required></label></p>
-            <p><label>Contact Number <input type="tel" name="contact_number" required></label></p>
-            <p><label>Email <input type="email" name="email" required></label></p>
-            <button type="submit">Save</button>
-            <button type="button" data-action="close-dialog">Cancel</button>
-        </form>
-     </dialog>
+        <h2>Tips per Packaging Category</h2>
+        <p>
+          Shown when a category reaches the "High Category Share" condition.
+        </p>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Packaging Category</th>
+              <th>Negative Effects</th>
+              <th>Eco-Tip</th>
+              <th>Action/Edit</th>
+            </tr>
+          </thead>
+          <tbody id="ecotip-table-body"></tbody>
+        </table>
+      </section>
+    </main>
 
-     <dialog id="product-dialog">
-        <form id="product-form">
-            <h2>Product Details</h2>
-            <input type="hidden" name="product_id">
-            <p><label>Product Name <input type="text" name="product_name" required></label></p>
-            <p><label>Packaging Category
-                <select name="packaging_id" id="product-form-category" required></select>
-            </label></p>
-            <p><label>Category
-                <select name="category_id" id="product-form-foodcat" required></select>
-            </label></p>
-            <p><label>Stall
-                <select name="stall_id" id="product-form-stall" required></select>
-            </label></p>
-            <button type="submit">Save</button>
-            <button type="button" data-action="close-dialog">Cancel</button>
-        </form>
-     </dialog>
+    <dialog id="stall-dialog">
+      <form id="stall-form">
+        <h2>Stall Details</h2>
+        <input type="hidden" name="stall_id" />
+        <p>
+          <label
+            >Business Name <input type="text" name="business_name" required
+          /></label>
+        </p>
+        <p>
+          <label
+            >Contact Person <input type="text" name="contact_person" required
+          /></label>
+        </p>
+        <p>
+          <label
+            >Contact Number <input type="tel" name="contact_number" required
+          /></label>
+        </p>
+        <p>
+          <label>Email <input type="email" name="email" required /></label>
+        </p>
+        <button type="submit">Save</button>
+        <button type="button" data-action="close-dialog">Cancel</button>
+      </form>
+    </dialog>
 
-     <dialog id="category-dialog">
-        <form id="category-form">
-            <h2>Packaging Category Details</h2>
-            <input type="hidden" name="packaging_id">
-            <p><label>Packaging Name <input type="text" name="packaging_name" required></label></p>
-            <p><label>Description <textarea name="description" rows="4"></textarea></label></p>
-            <p><label>Example <input type="text" name="example" placeholder="e.g. Zest-O"></label></p>
-            <button type="submit">Save</button>
-            <button type="button" data-action="close-dialog">Cancel</button>
-        </form>
-     </dialog>
+    <dialog id="product-dialog">
+      <form id="product-form">
+        <h2>Product Details</h2>
+        <input type="hidden" name="product_id" />
+        <p>
+          <label
+            >Product Name <input type="text" name="product_name" required
+          /></label>
+        </p>
+        <p>
+          <label
+            >Packaging Category
+            <select
+              name="packaging_id"
+              id="product-form-category"
+              required
+            ></select>
+          </label>
+        </p>
+        <p>
+          <label
+            >Category
+            <select
+              name="category_id"
+              id="product-form-foodcat"
+              required
+            ></select>
+          </label>
+        </p>
+        <p>
+          <label
+            >Stall
+            <select name="stall_id" id="product-form-stall" required></select>
+          </label>
+        </p>
+        <button type="submit">Save</button>
+        <button type="button" data-action="close-dialog">Cancel</button>
+      </form>
+    </dialog>
+
+    <dialog id="category-dialog">
+      <form id="category-form">
+        <h2>Packaging Category Details</h2>
+        <input type="hidden" name="packaging_id" />
+        <p>
+          <label
+            >Packaging Name <input type="text" name="packaging_name" required
+          /></label>
+        </p>
+        <p>
+          <label
+            >Description <textarea name="description" rows="4"></textarea>
+          </label>
+        </p>
+        <p>
+          <label
+            >Example
+            <input type="text" name="example" placeholder="e.g. Zest-O"
+          /></label>
+        </p>
+        <button type="submit">Save</button>
+        <button type="button" data-action="close-dialog">Cancel</button>
+      </form>
+    </dialog>
+
+    <dialog id="condition-dialog">
+      <form id="condition-form">
+        <h2>Edit Condition</h2>
+        <input type="hidden" name="condition_id" />
+        <p>
+          <label
+            >Condition <input type="text" name="condition_name" readonly
+          /></label>
+        </p>
+        <!-- hidden for "Good Work", which has no threshold -->
+        <p id="condition-form-threshold-row">
+          <label
+            >Threshold <input type="number" name="threshold" min="1" step="1"
+          /></label>
+          <span id="condition-form-unit"></span>
+        </p>
+        <p>
+          <label
+            >Eco-Tip
+            <textarea
+              name="tip_text"
+              rows="4"
+              maxlength="500"
+              required
+            ></textarea>
+          </label>
+        </p>
+        <button type="submit">Save</button>
+        <button type="button" data-action="close-dialog">Cancel</button>
+      </form>
+    </dialog>
+
+    <dialog id="ecotip-dialog">
+      <form id="ecotip-form">
+        <h2>Edit Eco-Tip</h2>
+        <input type="hidden" name="packaging_id" />
+        <p>
+          <label
+            >Packaging Category
+            <input type="text" name="packaging_name" readonly
+          /></label>
+        </p>
+        <p>
+          <label
+            >Negative Effects (one per line)
+            <textarea name="effects" rows="5" maxlength="1000"></textarea>
+          </label>
+        </p>
+        <p>
+          <label
+            >Eco-Tip
+            <textarea
+              name="tip_text"
+              rows="4"
+              maxlength="500"
+              required
+            ></textarea>
+          </label>
+        </p>
+        <button type="submit">Save</button>
+        <button type="button" data-action="close-dialog">Cancel</button>
+      </form>
+    </dialog>
 
     <footer>
-        <p>&copy; 2026 WasteLess. All rights reserved.</p>
+      <p>&copy; 2026 WasteLess. All rights reserved.</p>
     </footer>
 
     <script src="/js/api.js"></script>
     <script src="../system.js/admin-page.js"></script>
-</body>
+  </body>
 </html>

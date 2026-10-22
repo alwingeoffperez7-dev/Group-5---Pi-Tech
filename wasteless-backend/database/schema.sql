@@ -178,18 +178,20 @@ CREATE TABLE report_download (
 -- =====================================================================
 CREATE TABLE conditions (
   condition_id    INT AUTO_INCREMENT PRIMARY KEY,
+  condition_code  VARCHAR(30)  NOT NULL UNIQUE,
   condition_name  VARCHAR(120) NOT NULL,
-  total_sold      INT NULL,              -- threshold on units sold
-  total_revenue   DECIMAL(12,2) NULL     -- threshold on revenue
+  threshold       INT NULL,
+  tip_text        VARCHAR(500) NOT NULL
 );
 
+-- The category-specific part of the pop-up: bad effects (one per line) + targeted tip.
 CREATE TABLE eco_tip (
-  tip_id             INT AUTO_INCREMENT PRIMARY KEY,
-  category_id        INT NULL,
-  condition_id       INT NULL,
-  tip_text           VARCHAR(500) NOT NULL,
-  trigger_condition  VARCHAR(255),
-  FOREIGN KEY (category_id)  REFERENCES category(category_id),
+  tip_id        INT AUTO_INCREMENT PRIMARY KEY,
+  packaging_id  INT NOT NULL UNIQUE,
+  condition_id  INT NULL,               -- the category_share rule
+  effects       VARCHAR(1000),
+  tip_text      VARCHAR(500) NOT NULL,
+  FOREIGN KEY (packaging_id) REFERENCES packaging_category(packaging_id) ON DELETE CASCADE,
   FOREIGN KEY (condition_id) REFERENCES conditions(condition_id)
 );
 

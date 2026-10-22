@@ -3,7 +3,8 @@ let currentStalls = [];
 let currentProducts = [];
 let currentCategories = [];
 let allCategories = []; // ALL categories (used by the dropdowns)
-
+let currentConditions = [];
+let currentEcoTips = [];
 
 function byId(id) {
   return document.getElementById(id);
@@ -29,14 +30,15 @@ function getListOptions(prefix) {
   return {
     search: byId(prefix + "-search").value,
     filter: byId(prefix + "-filter").value,
-    sort: byId(prefix + "-sort").value
+    sort: byId(prefix + "-sort").value,
   };
 }
 
 function makeOptions(items, valueKey, labelKey, selectedValue) {
   let html = "";
   items.forEach(function (item) {
-    const selected = String(item[valueKey]) === String(selectedValue) ? " selected" : "";
+    const selected =
+      String(item[valueKey]) === String(selectedValue) ? " selected" : "";
     html += `<option value="${escapeHtml(item[valueKey])}"${selected}>${escapeHtml(item[labelKey])}</option>`;
   });
   return html;
@@ -45,7 +47,9 @@ function makeOptions(items, valueKey, labelKey, selectedValue) {
 function fillSelect(selectId, items, valueKey, labelKey, firstText) {
   const select = byId(selectId);
   const oldValue = select.value;
-  select.innerHTML = `<option value="">${firstText}</option>` + makeOptions(items, valueKey, labelKey, oldValue);
+  select.innerHTML =
+    `<option value="">${firstText}</option>` +
+    makeOptions(items, valueKey, labelKey, oldValue);
 }
 
 function listenToTableClicks(tbodyId, handlers) {
@@ -75,7 +79,6 @@ byId("back-btn").addEventListener("click", function () {
   window.history.back();
 });
 
-
 /* ========== backend here =========== */
 
 const api = WasteLessAPI.request; // from /js/api.js
@@ -101,37 +104,61 @@ function loadDashboard() {
 
 function loadFeedback() {
   const sort = byId("feedback-sort").value; // "", "newest", "oldest"
-  api("GET", listUrl("/api/admin/feedback", { sort: sort })).then(renderFeedback).catch(showApiError);
+  api("GET", listUrl("/api/admin/feedback", { sort: sort }))
+    .then(renderFeedback)
+    .catch(showApiError);
 }
 
 function loadAccounts() {
   const options = getListOptions("account"); // { search, filter, sort }
-  fillSelect("account-filter", ACCOUNT_STATUSES, "value", "label", "Filter/Category");
-  api("GET", listUrl("/api/admin/accounts", options)).then(renderAccounts).catch(showApiError);
+  fillSelect(
+    "account-filter",
+    ACCOUNT_STATUSES,
+    "value",
+    "label",
+    "Filter/Category",
+  );
+  api("GET", listUrl("/api/admin/accounts", options))
+    .then(renderAccounts)
+    .catch(showApiError);
 }
 
 function loadStalls() {
   const options = getListOptions("stall");
-  api("GET", listUrl("/api/admin/stalls", options)).then(renderStalls).catch(showApiError);
+  api("GET", listUrl("/api/admin/stalls", options))
+    .then(renderStalls)
+    .catch(showApiError);
 }
 
 function loadProducts() {
   const options = getListOptions("product"); // options.filter = a category_id
-  api("GET", listUrl("/api/admin/products", options)).then(renderProducts).catch(showApiError);
+  api("GET", listUrl("/api/admin/products", options))
+    .then(renderProducts)
+    .catch(showApiError);
 }
 
 function loadCategories() {
   const options = getListOptions("category");
-  api("GET", listUrl("/api/admin/packaging", options)).then(renderCategories).catch(showApiError);
+  api("GET", listUrl("/api/admin/packaging", options))
+    .then(renderCategories)
+    .catch(showApiError);
+}
+
+function loadEcoTips() {
+  api("GET", "/api/admin/eco/conditions")
+    .then(renderConditions)
+    .catch(showApiError);
+  api("GET", "/api/admin/eco/tips").then(renderEcoTips).catch(showApiError);
 }
 
 // Dropdown lists need ALL categories and ALL stalls (not the searched/filtered ones)
 function loadDropdownOptions() {
   api("GET", "/api/packaging").then(renderCategoryOptions).catch(showApiError); // packaging categories
-  api("GET", "/api/categories").then(renderFoodCategoryOptions).catch(showApiError); // Meals, Snacks, ...
+  api("GET", "/api/categories")
+    .then(renderFoodCategoryOptions)
+    .catch(showApiError); // Meals, Snacks, ...
   api("GET", "/api/admin/stalls").then(renderStallOptions).catch(showApiError);
 }
-
 
 /* ======================================================================================= */
 
@@ -145,10 +172,13 @@ function renderFeedback(messages) {
   byId("feedback-count").textContent = messages.length;
   let html = "";
   messages.forEach(function (m) {
-    const tags = Array.isArray(m.tags) ? m.tags : String(m.tags || "").split(",");
+    const tags = Array.isArray(m.tags)
+      ? m.tags
+      : String(m.tags || "").split(",");
     let tagHtml = "";
     tags.forEach(function (tag) {
-      if (tag.trim() !== "") tagHtml += `<span>[${escapeHtml(tag.trim())}]</span> `;
+      if (tag.trim() !== "")
+        tagHtml += `<span>[${escapeHtml(tag.trim())}]</span> `;
     });
     html += `<article>
       <h3>${escapeHtml(m.subject)}</h3>
@@ -243,23 +273,82 @@ function renderCategories(categories) {
   byId("category-table-body").innerHTML = rows;
 }
 
+function multiline(value) {
+  return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
+function renderConditions(conditions) {
+  currentConditions = conditions;
+  let rows = "";
+  conditions.forEach(function (c) {
+    const threshold =
+      c.threshold === null
+        ? "(under the weekly limit)"
+        : c.threshold + " " + c.unit;
+    rows += `<tr>
+      <td>${escapeHtml(c.condition_name)}</td>
+      <td>${escapeHtml(threshold)}</td>
+      <td>${escapeHtml(c.tip_text)}</td>
+      <td><button type="button" data-action="edit" data-id="${escapeHtml(c.condition_id)}">Edit</button></td>
+    </tr>`;
+  });
+  byId("condition-table-body").innerHTML = rows;
+}
+
+function renderEcoTips(tips) {
+  currentEcoTips = tips;
+  let rows = "";
+  tips.forEach(function (t) {
+    rows += `<tr>
+      <td>${escapeHtml(t.packaging_name)}</td>
+      <td>${multiline(t.effects)}</td>
+      <td>${t.tip_text ? escapeHtml(t.tip_text) : "(no tip yet: the general tip is used)"}</td>
+      <td><button type="button" data-action="edit" data-id="${escapeHtml(t.packaging_id)}">Edit</button></td>
+    </tr>`;
+  });
+  byId("ecotip-table-body").innerHTML = rows;
+}
+
 // "categories" here = packaging categories (Tetra Pak, Polystyrene, ...)
 function renderCategoryOptions(categories) {
   allCategories = categories;
-  fillSelect("product-filter", categories, "packaging_id", "packaging_name", "Filter/Category");
-  fillSelect("product-form-category", categories, "packaging_id", "packaging_name", "-- Select packaging category --");
+  fillSelect(
+    "product-filter",
+    categories,
+    "packaging_id",
+    "packaging_name",
+    "Filter/Category",
+  );
+  fillSelect(
+    "product-form-category",
+    categories,
+    "packaging_id",
+    "packaging_name",
+    "-- Select packaging category --",
+  );
   renderProducts(currentProducts); // redraw so the row dropdowns get their options
 }
 
 // Food categories (Meals, Snacks, ...) for the product form
 function renderFoodCategoryOptions(categories) {
-  fillSelect("product-form-foodcat", categories, "category_id", "category_name", "-- Select category --");
+  fillSelect(
+    "product-form-foodcat",
+    categories,
+    "category_id",
+    "category_name",
+    "-- Select category --",
+  );
 }
 
 function renderStallOptions(stalls) {
-  fillSelect("product-form-stall", stalls, "stall_id", "business_name", "-- Select stall --");
+  fillSelect(
+    "product-form-stall",
+    stalls,
+    "stall_id",
+    "business_name",
+    "-- Select stall --",
+  );
 }
-
 
 /* ===================================================================================================== */
 
@@ -267,7 +356,7 @@ const sectionLoaders = {
   account: loadAccounts,
   stall: loadStalls,
   product: loadProducts,
-  category: loadCategories
+  category: loadCategories,
 };
 
 Object.keys(sectionLoaders).forEach(function (name) {
@@ -277,7 +366,6 @@ Object.keys(sectionLoaders).forEach(function (name) {
 });
 
 byId("feedback-sort").addEventListener("change", loadFeedback);
-
 
 /* ====================================================================================== */
 
@@ -319,26 +407,60 @@ function handleFormSubmit(formId, idField, url, reloadFunction) {
 }
 
 handleFormSubmit("stall-form", "stall_id", "/api/admin/stalls", loadStalls);
-handleFormSubmit("product-form", "product_id", "/api/admin/products", loadProducts);
-handleFormSubmit("category-form", "packaging_id", "/api/admin/packaging", loadCategories);
+handleFormSubmit(
+  "product-form",
+  "product_id",
+  "/api/admin/products",
+  loadProducts,
+);
+handleFormSubmit(
+  "category-form",
+  "packaging_id",
+  "/api/admin/packaging",
+  function () {
+    loadCategories();
+    loadEcoTips();
+  },
+);
+handleFormSubmit(
+  "condition-form",
+  "condition_id",
+  "/api/admin/eco/conditions",
+  loadEcoTips,
+); // edit only
+handleFormSubmit(
+  "ecotip-form",
+  "packaging_id",
+  "/api/admin/eco/tips",
+  loadEcoTips,
+); // edit only
 
 // Delete a record, then refresh its table + the dashboard totals
 function deleteRecord(url, reloadFunction) {
   api("DELETE", url)
-    .then(function () { reloadFunction(); loadDashboard(); loadDropdownOptions(); })
+    .then(function () {
+      reloadFunction();
+      loadDashboard();
+      loadDropdownOptions();
+    })
     .catch(showApiError);
 }
 
-byId("stall-add-button").addEventListener("click", function () { openForm("stall-form"); });
-byId("product-add-button").addEventListener("click", function () { openForm("product-form"); });
-byId("category-add-button").addEventListener("click", function () { openForm("category-form"); });
+byId("stall-add-button").addEventListener("click", function () {
+  openForm("stall-form");
+});
+byId("product-add-button").addEventListener("click", function () {
+  openForm("product-form");
+});
+byId("category-add-button").addEventListener("click", function () {
+  openForm("category-form");
+});
 
 document.addEventListener("click", function (event) {
   if (event.target.dataset.action === "close-dialog") {
     event.target.closest("dialog").close();
   }
 });
-
 
 /* =============================================================================================== */
 
@@ -348,8 +470,11 @@ listenToTableClicks("stall-table-body", {
   },
   delete: function (id) {
     if (!confirm("Delete this stall?")) return;
-    deleteRecord("/api/admin/stalls/" + id, function () { loadStalls(); loadProducts(); });
-  }
+    deleteRecord("/api/admin/stalls/" + id, function () {
+      loadStalls();
+      loadProducts();
+    });
+  },
 });
 
 listenToTableClicks("product-table-body", {
@@ -358,8 +483,11 @@ listenToTableClicks("product-table-body", {
   },
   delete: function (id) {
     if (!confirm("Delete this product?")) return;
-    deleteRecord("/api/admin/products/" + id, function () { loadProducts(); loadCategories(); });
-  }
+    deleteRecord("/api/admin/products/" + id, function () {
+      loadProducts();
+      loadCategories();
+    });
+  },
 });
 
 listenToTableClicks("category-table-body", {
@@ -368,21 +496,51 @@ listenToTableClicks("category-table-body", {
   },
   delete: function (id) {
     if (!confirm("Delete this packaging category?")) return;
-    deleteRecord("/api/admin/packaging/" + id, loadCategories);
-  }
+    deleteRecord("/api/admin/packaging/" + id, function () {
+      loadCategories();
+      loadEcoTips();
+    });
+  },
+});
+
+listenToTableClicks("condition-table-body", {
+  edit: function (id) {
+    const condition = findById(currentConditions, "condition_id", id);
+    openForm("condition-form", condition);
+    const hasThreshold = condition.threshold !== null; // "Good Work" has none
+    byId("condition-form-threshold-row").hidden = !hasThreshold;
+    byId("condition-form").elements.threshold.required = hasThreshold;
+    byId("condition-form-unit").textContent = condition.unit;
+  },
+});
+
+listenToTableClicks("ecotip-table-body", {
+  edit: function (id) {
+    openForm("ecotip-form", findById(currentEcoTips, "packaging_id", id));
+  },
 });
 
 listenToTableClicks("account-table-body", {
   approve: function (id) {
     api("POST", "/api/admin/accounts/" + id + "/approve")
-      .then(function () { loadAccounts(); loadStalls(); loadDashboard(); loadDropdownOptions(); })
+      .then(function () {
+        loadAccounts();
+        loadStalls();
+        loadDashboard();
+        loadDropdownOptions();
+      })
       .catch(showApiError);
   },
   decline: function (id) {
     api("POST", "/api/admin/accounts/" + id + "/decline")
-      .then(function () { loadAccounts(); loadStalls(); loadDashboard(); loadDropdownOptions(); })
+      .then(function () {
+        loadAccounts();
+        loadStalls();
+        loadDashboard();
+        loadDropdownOptions();
+      })
       .catch(showApiError);
-  }
+  },
 });
 
 // Changing the Packaging Category dropdown inside a product row
@@ -390,11 +548,15 @@ byId("product-table-body").addEventListener("change", function (event) {
   if (event.target.dataset.action !== "change-category") return;
   const productId = event.target.dataset.id;
   const newCategoryId = event.target.value;
-  api("PUT", "/api/admin/products/" + productId, { packaging_id: newCategoryId })
+  api("PUT", "/api/admin/products/" + productId, {
+    packaging_id: newCategoryId,
+  })
     .then(loadCategories) // item counts change
-    .catch(function (err) { showApiError(err); loadProducts(); });
+    .catch(function (err) {
+      showApiError(err);
+      loadProducts();
+    });
 });
-
 
 /* ============================================================================================ */
 
@@ -405,4 +567,5 @@ loadAccounts();
 loadStalls();
 loadProducts();
 loadCategories();
+loadEcoTips();
 loadDropdownOptions();
