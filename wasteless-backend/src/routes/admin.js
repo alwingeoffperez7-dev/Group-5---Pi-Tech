@@ -381,11 +381,7 @@ router.delete(
 const UNITS = {
   high_overall: "pieces / week",
   category_share: "% of the week",
-  increase: "% more than last week",
-  continuous: "weeks in a row",
-  reduction: "% less than last week",
 };
-const PERCENT_MAX = { category_share: 100, reduction: 100 }; // can't be over 100%
 
 router.get(
   "/eco/conditions",
@@ -397,28 +393,29 @@ router.get(
   }),
 );
 
+// good_week has no threshold of its own (it just means "under the weekly limit"),
+// so for that row only the text is saved.
 router.put(
   "/eco/conditions/:id",
   wrap(async (req, res) => {
-    required(req.body, ["threshold", "tip_text"]);
+    required(req.body, ["tip_text"]);
     const [[cond]] = await pool.query(
-      "SELECT condition_code FROM conditions WHERE condition_id = ?",
+      "SELECT condition_code, threshold FROM conditions WHERE condition_id = ?",
       [req.params.id],
     );
     if (!cond) throw new HttpError(404, "Condition not found");
-    const threshold = Number(req.body.threshold);
-    const minPieces = Number(req.body.min_pieces ?? 0);
-    const max = PERCENT_MAX[cond.condition_code] || 100000;
-    const errors = {};
-    if (!Number.isInteger(threshold) || threshold < 1 || threshold > max)
-      errors.threshold = `Threshold must be a whole number from 1 to ${max}`;
-    if (!Number.isInteger(minPieces) || minPieces < 0)
-      errors.min_pieces = "Min. pieces must be a whole number, 0 or more";
-    if (Object.keys(errors).length)
-      throw new HttpError(400, Object.values(errors).join(". ") + ".", errors);
+    let threshold = null;
+    if (cond.threshold !== null) {
+      threshold = Number(req.body.threshold);
+      const max = cond.condition_code === "category_share" ? 100 : 100000; // a share can't be over 100%
+      if (!Number.isInteger(threshold) || threshold < 1 || threshold > max) {
+        const message = `Threshold must be a whole number from 1 to ${max}`;
+        throw new HttpError(400, message + ".", { threshold: message });
+      }
+    }
     await pool.query(
-      "UPDATE conditions SET threshold = ?, min_pieces = ?, tip_text = ? WHERE condition_id = ?",
-      [threshold, minPieces, String(req.body.tip_text).trim(), req.params.id],
+      "UPDATE conditions SET threshold = ?, tip_text = ? WHERE condition_id = ?",
+      [threshold, String(req.body.tip_text).trim(), req.params.id],
     );
     res.json({ condition_id: Number(req.params.id) });
   }),

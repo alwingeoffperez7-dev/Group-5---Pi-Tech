@@ -281,10 +281,13 @@ function renderConditions(conditions) {
   currentConditions = conditions;
   let rows = "";
   conditions.forEach(function (c) {
+    const threshold =
+      c.threshold === null
+        ? "(under the weekly limit)"
+        : c.threshold + " " + c.unit;
     rows += `<tr>
       <td>${escapeHtml(c.condition_name)}</td>
-      <td>${escapeHtml(c.threshold)} ${escapeHtml(c.unit)}</td>
-      <td>${escapeHtml(c.min_pieces)}</td>
+      <td>${escapeHtml(threshold)}</td>
       <td>${escapeHtml(c.tip_text)}</td>
       <td><button type="button" data-action="edit" data-id="${escapeHtml(c.condition_id)}">Edit</button></td>
     </tr>`;
@@ -504,6 +507,9 @@ listenToTableClicks("condition-table-body", {
   edit: function (id) {
     const condition = findById(currentConditions, "condition_id", id);
     openForm("condition-form", condition);
+    const hasThreshold = condition.threshold !== null; // "Good Work" has none
+    byId("condition-form-threshold-row").hidden = !hasThreshold;
+    byId("condition-form").elements.threshold.required = hasThreshold;
     byId("condition-form-unit").textContent = condition.unit;
   },
 });

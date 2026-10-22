@@ -180,8 +180,7 @@ CREATE TABLE conditions (
   condition_id    INT AUTO_INCREMENT PRIMARY KEY,
   condition_code  VARCHAR(30)  NOT NULL UNIQUE,
   condition_name  VARCHAR(120) NOT NULL,
-  threshold       INT NOT NULL,
-  min_pieces      INT NOT NULL DEFAULT 0,
+  threshold       INT NULL,
   tip_text        VARCHAR(500) NOT NULL
 );
 

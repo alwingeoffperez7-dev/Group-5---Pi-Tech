@@ -212,7 +212,6 @@
             <tr>
               <th>Condition</th>
               <th>Threshold</th>
-              <th>Min. Pieces</th>
               <th>Eco-Tip</th>
               <th>Action/Edit</th>
             </tr>
@@ -339,18 +338,12 @@
             >Condition <input type="text" name="condition_name" readonly
           /></label>
         </p>
-        <p>
+        <!-- hidden for "Good Work", which has no threshold -->
+        <p id="condition-form-threshold-row">
           <label
-            >Threshold
-            <input type="number" name="threshold" min="1" step="1" required
+            >Threshold <input type="number" name="threshold" min="1" step="1"
           /></label>
           <span id="condition-form-unit"></span>
-        </p>
-        <p>
-          <label
-            >Min. Pieces
-            <input type="number" name="min_pieces" min="0" step="1" required
-          /></label>
         </p>
         <p>
           <label

@@ -5,118 +5,80 @@ const { evaluate } = require("./eco-tip");
 const conds = [
   {
     condition_code: "high_overall",
-    condition_name: "High Overall Waste",
+    condition_name: "High Plastic Waste",
     threshold: 90,
-    min_pieces: 0,
     tip_text: "overall",
   },
   {
     condition_code: "category_share",
-    condition_name: "High Category Share",
-    threshold: 40,
-    min_pieces: 20,
+    condition_name: "Top Plastic Categories",
+    threshold: 20,
     tip_text: "generic",
   },
   {
-    condition_code: "increase",
-    condition_name: "Increasing Plastic Waste",
-    threshold: 10,
-    min_pieces: 20,
-    tip_text: "up",
-  },
-  {
-    condition_code: "continuous",
-    condition_name: "Continuous High Usage",
-    threshold: 2,
-    min_pieces: 0,
-    tip_text: "cont",
-  },
-  {
-    condition_code: "reduction",
-    condition_name: "Reduction Observed",
-    threshold: 10,
-    min_pieces: 20,
-    tip_text: "down",
+    condition_code: "good_week",
+    condition_name: "Good Work",
+    threshold: null,
+    tip_text: "congrats",
   },
 ];
 const packaging = [
   {
     packaging_id: 1,
-    packaging_name: "Tetra Pak",
-    effects: "A\nB",
-    tip_text: "dispenser",
+    packaging_name: "A",
+    effects: "a1\na2",
+    tip_text: "tip A",
   },
-  { packaging_id: 2, packaging_name: "Wrapper", effects: null, tip_text: null },
+  { packaging_id: 2, packaging_name: "B", effects: "b1", tip_text: "tip B" },
+  { packaging_id: 3, packaging_name: "C", effects: null, tip_text: null },
+  { packaging_id: 4, packaging_name: "D", effects: "d1", tip_text: "tip D" },
+  { packaging_id: 5, packaging_name: "E", effects: "e1", tip_text: "tip E" },
 ];
-const codes = (r) => r.alerts.map((a) => a.code);
+const sold = (...pieces) =>
+  pieces
+    .map((n, i) => ({ packaging_id: i + 1, pieces: n }))
+    .filter((r) => r.pieces);
+const names = (r) => r.categories.map((x) => x.packaging_name);
 
-test("quiet week: no alerts", () => {
-  // 50% each, but only 15 pieces each (< 20), same total as last week
-  const r = evaluate(conds, packaging, [
-    { wk: 0, packaging_id: 1, pieces: 15 },
-    { wk: 0, packaging_id: 2, pieces: 15 },
-    { wk: 1, packaging_id: 1, pieces: 30 },
-  ]);
-  assert.deepStrictEqual(codes(r), []);
-  assert.strictEqual(r.week_total, 30);
+test("under the weekly limit: congratulate, no categories", () => {
+  const r = evaluate(conds, packaging, sold(60, 29)); // 89 < 90, even though A is 67%
+  assert.strictEqual(r.level, "positive");
+  assert.strictEqual(r.tip, "congrats");
+  assert.deepStrictEqual(r.categories, []);
 });
 
-test("category share needs 40% AND 20 pieces", () => {
-  const r = evaluate(conds, packaging, [
-    { wk: 0, packaging_id: 1, pieces: 20 },
-    { wk: 0, packaging_id: 2, pieces: 30 },
-    { wk: 1, packaging_id: 1, pieces: 50 },
-  ]);
-  // 20/50 = 40% (counts, exactly at threshold), 30/50 = 60%
-  assert.deepStrictEqual(codes(r), ["category_share", "category_share"]);
-  assert.deepStrictEqual(r.alerts[0].effects, ["A", "B"]);
-  assert.strictEqual(r.alerts[1].tip, "generic"); // no tip for that category -> generic tip
-  assert.strictEqual(r.breakdown[0].percent, 40);
-});
-
-test("over the limit this week only -> high_overall; two weeks -> continuous instead", () => {
-  const once = evaluate(conds, packaging, [
-    { wk: 0, packaging_id: 1, pieces: 45 },
-    { wk: 0, packaging_id: 2, pieces: 45 },
-    { wk: 1, packaging_id: 1, pieces: 85 },
-  ]);
-  assert.deepStrictEqual(
-    codes(once).filter((c) => c !== "category_share"),
-    ["high_overall"],
-  );
-  const twice = evaluate(conds, packaging, [
-    { wk: 0, packaging_id: 1, pieces: 90 },
-    { wk: 1, packaging_id: 1, pieces: 95 },
-  ]);
-  assert.deepStrictEqual(
-    codes(twice).filter((c) => c !== "category_share"),
-    ["continuous"],
-  );
-});
-
-test("increase / reduction compare with last week (needs 20+ pieces last week)", () => {
-  const up = evaluate(conds, packaging, [
-    { wk: 0, packaging_id: 1, pieces: 11 },
-    { wk: 0, packaging_id: 2, pieces: 11 },
-    { wk: 1, packaging_id: 1, pieces: 20 },
-  ]);
-  assert.deepStrictEqual(codes(up), ["increase"]); // 22 vs 20 = +10%
-  const down = evaluate(conds, packaging, [
-    { wk: 0, packaging_id: 1, pieces: 9 },
-    { wk: 0, packaging_id: 2, pieces: 9 },
-    { wk: 1, packaging_id: 1, pieces: 20 },
-  ]);
-  assert.deepStrictEqual(codes(down), ["reduction"]); // 18 vs 20 = -10%
-  assert.strictEqual(down.alerts[0].level, "positive");
-  const tooSmall = evaluate(conds, packaging, [
-    { wk: 0, packaging_id: 1, pieces: 5 },
-    { wk: 1, packaging_id: 1, pieces: 19 },
-  ]);
-  assert.deepStrictEqual(codes(tooSmall), []);
-});
-
-test("no sales at all", () => {
+test("no sales at all: congratulate", () => {
   const r = evaluate(conds, packaging, []);
-  assert.deepStrictEqual(codes(r), []);
-  assert.strictEqual(r.breakdown[0].percent, 0);
+  assert.strictEqual(r.level, "positive");
+  assert.strictEqual(r.week_total, 0);
+});
+
+test("exactly at the limit counts as a warning", () => {
+  const r = evaluate(conds, packaging, sold(90));
+  assert.strictEqual(r.level, "warning");
+  assert.deepStrictEqual(names(r), ["A"]);
+});
+
+test("only one category reaches 20%: only its effects", () => {
+  const r = evaluate(conds, packaging, sold(85, 3, 2)); // A 94%, B 3%, C 2%
+  assert.deepStrictEqual(names(r), ["A"]);
+  assert.deepStrictEqual(r.categories[0].effects, ["a1", "a2"]);
+  assert.strictEqual(r.categories[0].tip, "tip A");
+});
+
+test("exactly 20% counts", () => {
+  const r = evaluate(conds, packaging, sold(80, 20)); // A 80%, B 20%
+  assert.deepStrictEqual(names(r), ["A", "B"]);
+  assert.strictEqual(r.categories[1].percent, 20);
+});
+
+test("four categories reach 20%: only the top 3, most pieces first", () => {
+  const r = evaluate(conds, packaging, sold(21, 30, 24, 25)); // B 30, D 25, C 24, A 21
+  assert.deepStrictEqual(names(r), ["B", "D", "C"]);
+});
+
+test("a category without its own tip uses the general tip", () => {
+  const r = evaluate(conds, packaging, sold(0, 0, 100));
+  assert.strictEqual(r.categories[0].tip, "generic");
+  assert.deepStrictEqual(r.categories[0].effects, []);
 });

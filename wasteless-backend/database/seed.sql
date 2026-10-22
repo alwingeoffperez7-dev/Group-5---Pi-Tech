@@ -26,17 +26,13 @@ INSERT INTO staff (canteen_id, full_name, email, password_hash, role) VALUES
   (1, 'Juan Dela Cruz', 'juan@example.com', '59ebb65c714fce8453f68baf89df98e7:fb494b5144831aace8b5c314ec6eed05c4b20ba4b29bd08cfb9e1c7626edd8a9725b9151f89cd0b1146dc1f961ce45341a92ed07673ea4bbe5798866ed1f9c15', 'vendor'),
   (NULL, 'Coop Admin', 'admin@wasteless.local', '93bd0e8b98f5bf5d063b8b405324a71c:5b1f7aa004cac319103500e194606a2911fd52b5ccc82c28f873765f90f679ac3556d7abe87c11888815a463eff561257e03bc5b802d811d0c5fb88e01bb6802', 'admin');
 
-INSERT INTO conditions (condition_code, condition_name, threshold, min_pieces, tip_text) VALUES
-  ('high_overall', 'High Overall Waste', 90, 0,
+INSERT INTO conditions (condition_code, condition_name, threshold, tip_text) VALUES
+  ('high_overall', 'High Plastic Waste', 90,
    'Reduce single-use items where you can, and work with suppliers that offer less or more sustainable packaging.'),
-  ('category_share', 'High Category Share', 40, 20,
+  ('category_share', 'Top Plastic Categories', 20,
    'Look for products in this category that come with less packaging, or offer an alternative.'),
-  ('increase', 'Increasing Plastic Waste', 10, 20,
-   'Check which products caused the increase and whether they have lower-packaging alternatives.'),
-  ('continuous', 'Continuous High Usage', 2, 0,
-   'Review your packaging options and talk to your suppliers about alternatives that create less plastic waste.'),
-  ('reduction', 'Reduction Observed', 10, 20,
-   'Great job! Keep up the practices that are reducing your plastic waste.');
+  ('good_week', 'Good Work', NULL,
+   'Great job! Your stall kept its plastic waste under the weekly limit. Keep up the good work!');
 
 INSERT INTO eco_tip (packaging_id, condition_id, effects, tip_text)
 SELECT pk.packaging_id, (SELECT condition_id FROM conditions WHERE condition_code = 'category_share'), t.effects, t.tip_text

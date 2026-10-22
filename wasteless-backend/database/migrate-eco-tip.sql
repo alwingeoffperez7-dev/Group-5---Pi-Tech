@@ -7,18 +7,15 @@ DROP TABLE IF EXISTS notification, eco_tip, conditions;
 -- "Plastic waste" = pieces sold in the last 7 days (1 item sold = 1 piece).
 -- The admin edits the thresholds and tips on the admin page (Eco-Tips tab).
 -- =====================================================================
--- One row per rule. condition_code is what the code looks for, so don't rename it.
---   high_overall    total pieces this week >= threshold (pieces)
---   category_share  one packaging category >= threshold % of this week's pieces, and >= min_pieces
---   increase        this week >= threshold % more than last week (last week needs >= min_pieces)
---   continuous      high_overall reached for threshold weeks in a row
---   reduction       this week >= threshold % less than last week (last week needs >= min_pieces)
+-- One row per Eco-Tip rule. condition_code is what the code looks for, so don't rename it.
+--   high_overall    this week's pieces >= threshold (pieces)  -> warning pop-up
+--   category_share  categories with >= threshold % of this week's pieces (top 3) -> their effects + tips
+--   good_week       under the high_overall limit -> congratulation (no threshold of its own)
 CREATE TABLE conditions (
   condition_id    INT AUTO_INCREMENT PRIMARY KEY,
   condition_code  VARCHAR(30)  NOT NULL UNIQUE,
   condition_name  VARCHAR(120) NOT NULL,
-  threshold       INT NOT NULL,
-  min_pieces      INT NOT NULL DEFAULT 0,
+  threshold       INT NULL,
   tip_text        VARCHAR(500) NOT NULL
 );
 
@@ -49,19 +46,16 @@ CREATE TABLE notification (
   FOREIGN KEY (product_id)  REFERENCES product(product_id)
 );
 
--- Eco-Tip rules + tips (from Condition_Tip.pdf). The admin can change them in the Eco-Tips tab.
+-- Eco-Tip rules (team decision 2026-10-22). The admin can change them in the Eco-Tips tab.
 -- 90 pieces/week = about the busiest 1 in 10 weeks of the demo stalls (they average ~70).
-INSERT INTO conditions (condition_code, condition_name, threshold, min_pieces, tip_text) VALUES
-  ('high_overall', 'High Overall Waste', 90, 0,
+-- 20% because there are 5 packaging categories (20% = an even share).
+INSERT INTO conditions (condition_code, condition_name, threshold, tip_text) VALUES
+  ('high_overall', 'High Plastic Waste', 90,
    'Reduce single-use items where you can, and work with suppliers that offer less or more sustainable packaging.'),
-  ('category_share', 'High Category Share', 40, 20,
+  ('category_share', 'Top Plastic Categories', 20,
    'Look for products in this category that come with less packaging, or offer an alternative.'),
-  ('increase', 'Increasing Plastic Waste', 10, 20,
-   'Check which products caused the increase and whether they have lower-packaging alternatives.'),
-  ('continuous', 'Continuous High Usage', 2, 0,
-   'Review your packaging options and talk to your suppliers about alternatives that create less plastic waste.'),
-  ('reduction', 'Reduction Observed', 10, 20,
-   'Great job! Keep up the practices that are reducing your plastic waste.');
+  ('good_week', 'Good Work', NULL,
+   'Great job! Your stall kept its plastic waste under the weekly limit. Keep up the good work!');
 
 INSERT INTO eco_tip (packaging_id, condition_id, effects, tip_text)
 SELECT pk.packaging_id, (SELECT condition_id FROM conditions WHERE condition_code = 'category_share'), t.effects, t.tip_text

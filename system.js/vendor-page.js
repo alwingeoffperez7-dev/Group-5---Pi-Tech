@@ -194,56 +194,57 @@ async function loadDashboard() {
   );
 }
 
-let defaultBannerText = null;
-
+// ---------- Eco-Tip pop-up ----------
+// The backend checks this week's plastic waste against the rules (admin page > Eco-Tips).
+// Over the weekly limit -> the pop-up opens (on every dashboard visit) with the effects and
+// tips of the top plastic categories. Under the limit -> the banner congratulates instead.
 async function loadEcoTips() {
   const data = await WasteLessAPI.getEcoTips();
-  const warnings = data.alerts.filter((a) => a.level !== "positive");
-  const positive = data.alerts.find((a) => a.level === "positive");
+  const warning = data.level === "warning";
 
   const banner = document.getElementById("ecoTipBanner");
   const bannerText = document.getElementById("ecoTipBannerText");
   const openBtn = document.getElementById("ecoTipOpenBtn");
   if (bannerText) {
-    if (defaultBannerText === null) defaultBannerText = bannerText.textContent;
-    bannerText.textContent = positive
-      ? positive.title + ". " + positive.tip
-      : warnings.length
-        ? `Your stall has ${warnings.length} Eco-Tip warning(s) this week.`
-        : defaultBannerText;
+    bannerText.textContent = warning
+      ? `Your stall is over the weekly plastic limit (${data.week_total} of ${data.limit} pieces).`
+      : data.title + ". " + data.tip;
   }
-  if (banner) banner.classList.toggle("positive", Boolean(positive));
-  if (openBtn) openBtn.hidden = !warnings.length;
+  if (banner) banner.classList.toggle("positive", !warning);
+  if (openBtn) openBtn.hidden = !warning;
 
-  document.getElementById("ecoTipTotal").textContent = data.week_total;
-  document.getElementById("ecoTipBreakdown").innerHTML = data.breakdown
+  document.getElementById("ecoTipTitle").textContent = "WARNING: " + data.title;
+  document.getElementById("ecoTipMessage").textContent = data.tip;
+  document.getElementById("ecoTipCategories").innerHTML = data.categories
     .map(
-      (b) =>
-        `<li>${escapeHtml(b.packaging_name)}: <strong>${b.pieces}</strong> pieces (${b.percent}%)</li>`,
-    )
-    .join("");
-  document.getElementById("ecoTipTitle").textContent = warnings.length
-    ? "WARNING: " + warnings[0].title
-    : "Eco-Tip";
-  document.getElementById("ecoTipAlerts").innerHTML = warnings
-    .map(
-      (a) => `
-    <section class="eco-alert ${a.level}">
-      <h3>${a.level === "high" ? "HIGH PRIORITY: " : ""}${escapeHtml(a.title)}</h3>
+      (c) => `
+    <section class="eco-category">
+      <h3>${escapeHtml(c.packaging_name)}: ${c.pieces} pieces (${c.percent}%)</h3>
       ${
-        a.effects && a.effects.length
+        c.effects.length
           ? `<p>Negative community and environmental effects:</p>
-        <ul>${a.effects.map((e) => `<li>${escapeHtml(e)}</li>`).join("")}</ul>`
+        <ul>${c.effects.map((e) => `<li>${escapeHtml(e)}</li>`).join("")}</ul>`
           : ""
       }
-      <p class="eco-tip-text"><strong>Eco-Tip:</strong> ${escapeHtml(a.tip)}</p>
+      <p class="eco-tip-text"><strong>Eco-Tip:</strong> ${escapeHtml(c.tip)}</p>
     </section>`,
     )
     .join("");
 
-  const dialog = document.getElementById("ecoTipDialog");
   const onDashboard = !document.getElementById("page-dashboard").hidden; // still there when the data arrives
-  if (warnings.length && onDashboard && !dialog.open) dialog.showModal();
+  if (warning && onDashboard) openEcoTip();
+  else if (!warning) closeEcoTip();
+}
+
+function openEcoTip() {
+  const popup = document.getElementById("ecoTipPopup");
+  popup.hidden = false;
+  popup.scrollIntoView({ block: "center" });
+  document.getElementById("ecoTipCloseBtn").focus();
+}
+
+function closeEcoTip() {
+  document.getElementById("ecoTipPopup").hidden = true;
 }
 
 // ---------- Download Report (PDF, once every 7 days) ----------
@@ -457,13 +458,13 @@ function setupEventListeners() {
   if (closeModalBtn) closeModalBtn.addEventListener("click", closeForm);
   if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeForm);
 
-  const ecoTipDialog = document.getElementById("ecoTipDialog");
   const ecoTipCloseBtn = document.getElementById("ecoTipCloseBtn");
   const ecoTipOpenBtn = document.getElementById("ecoTipOpenBtn");
-  if (ecoTipCloseBtn)
-    ecoTipCloseBtn.addEventListener("click", () => ecoTipDialog.close());
-  if (ecoTipOpenBtn)
-    ecoTipOpenBtn.addEventListener("click", () => ecoTipDialog.showModal());
+  if (ecoTipCloseBtn) ecoTipCloseBtn.addEventListener("click", closeEcoTip);
+  if (ecoTipOpenBtn) ecoTipOpenBtn.addEventListener("click", openEcoTip);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeEcoTip();
+  });
 
   // Graph range dropdown (7 / 14 / 30 days)
   const packagingRange = document.getElementById("packagingRange");
