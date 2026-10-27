@@ -1,0 +1,904 @@
+/* ==========================================================================
+   WasteLess — shared stylesheet
+   Link it:  <link rel="stylesheet" href="../system.css/wasteless.css">
+
+   CONTENTS
+   1. Design tokens          6. Components (buttons, forms, chips, tables,
+   2. Icons (Lucide)            dialogs, cards)
+   3. Reset and base         7. Auth pages (login, register)
+   4. Typography             8. Vendor portal
+   5. Layout helpers         9. Responsive, reduced motion
+
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+:root {
+  /* Surfaces */
+  --color-background: #EAF2FF;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F4F8FF;
+
+  /* Brand */
+  --color-primary: #0F172A;
+  --color-secondary: #2563EB;
+
+  /* Accent (fills only, never text or edges) */
+  --color-accent: #7DA8FF;
+  --color-accent-light: #C7DDFF;
+
+  /* Text */
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #334155;
+  --color-text-muted: #5B6B85;
+  --color-text-on-dark: #FFFFFF;
+
+  /* Lines and feedback */
+  --color-border: #C7DDFF;
+  --color-border-strong: #6B7FA3;
+  --color-focus: #2563EB;
+  --color-danger: #B42318;
+  --color-success: #1D7A4F;
+
+  /* Derived (no new hues) */
+  --color-focus-ring: color-mix(in srgb, var(--color-focus) 25%, transparent);
+  --color-danger-ring: color-mix(in srgb, var(--color-danger) 25%, transparent);
+  --color-on-dark-hover: color-mix(in srgb, var(--color-text-on-dark) 10%, transparent);
+  --color-scrim: color-mix(in srgb, var(--color-primary) 50%, transparent);
+
+  /* Spacing (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Radius */
+  --radius-sm: 0.375rem;   /* chips */
+  --radius-md: 0.5rem;     /* buttons, inputs, thumbnails */
+  --radius-lg: 1rem;       /* cards, dialogs, banners */
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --text-display: 2rem;        /* page title */
+  --text-heading: 1.375rem;    /* section heading */
+  --text-subheading: 1rem;     /* card title */
+  --text-body: 0.875rem;
+  --text-caption: 0.75rem;     /* helper text, labels */
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.25;
+  --leading-body: 1.5;
+  --tracking-label: 0.04em;
+
+  /* Sizing */
+  --control-height: 2.5rem;
+  --control-height-sm: 2rem;
+  --icon-size: 1.25rem;
+  --sidebar-width: 15rem;
+  --content-max: 75rem;
+
+  /* Elevation: layer surfaces first; shadow only for overlays */
+  --shadow-overlay: 0 4px 16px rgb(15 23 42 / 0.12);
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --ease: ease-out;
+
+  --icon-dashboard: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='7' height='9' x='3' y='3' rx='1'/%3E%3Crect width='7' height='5' x='14' y='3' rx='1'/%3E%3Crect width='7' height='9' x='14' y='12' rx='1'/%3E%3Crect width='7' height='5' x='3' y='16' rx='1'/%3E%3C/svg%3E");
+  --icon-package: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7.5 4.27 9 5.15'/%3E%3Cpath d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/%3E%3Cpath d='m3.3 7 8.7 5 8.7-5'/%3E%3Cpath d='M12 22V12'/%3E%3C/svg%3E");
+  --icon-message: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
+  --icon-logout: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' x2='9' y1='12' y2='12'/%3E%3C/svg%3E");
+  --icon-download: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' x2='12' y1='15' y2='3'/%3E%3C/svg%3E");
+  --icon-refresh: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3Cpath d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16'/%3E%3Cpath d='M8 16H3v5'/%3E%3C/svg%3E");
+  --icon-x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+  --icon-store: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3Cpath d='M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4'/%3E%3Cpath d='M2 7h20'/%3E%3Cpath d='M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7'/%3E%3C/svg%3E");
+  --icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B85' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Shared icon renderer.*/
+.sidebar-nav a::before,
+.logout-link::before,
+#downloadReportBtn::before,
+#refresh::before,
+.close-btn::before {
+  content: "";
+  flex: none;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.sidebar-nav a[href="#dashboard"] { --icon: var(--icon-dashboard); }
+.sidebar-nav a[href="#listing"]   { --icon: var(--icon-package); }
+.sidebar-nav a[href="#feedback"]  { --icon: var(--icon-message); }
+.logout-link                      { --icon: var(--icon-logout); }
+#downloadReportBtn                { --icon: var(--icon-download); }
+#refresh                          { --icon: var(--icon-refresh); }
+.close-btn                        { --icon: var(--icon-x); }
+
+/* ==========================================================================
+   3. RESET AND BASE
+   ========================================================================== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+/* Needed to because component display rules would otherwise override the
+   hidden attribute that the page scripts toggle. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font: var(--weight-regular) var(--text-body) / var(--leading-body) var(--font-sans);
+}
+
+h1, h2, h3, p, pre { margin: 0; }
+img, canvas { display: block; max-width: 100%; }
+
+a {
+  color: var(--color-secondary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+a:hover { color: var(--color-primary); }
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+hr {
+  margin: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   4. TYPOGRAPHY
+   ========================================================================== */
+h1,
+.page-title {
+  font-size: var(--text-display);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+h3,
+.card h2 {
+  font-size: var(--text-subheading);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+small,
+.field-hint,
+.stat-note,
+.chart-status,
+.modal-subtitle {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+/* Field labels, table headers, stat titles */
+label,
+th,
+.stat-card h3 {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   5. LAYOUT HELPERS
+   ========================================================================== */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ==========================================================================
+   6. COMPONENTS
+   ========================================================================== */
+
+/* ---- Cards ---- */
+.card,
+.stat-card {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.card > h2 { margin-bottom: var(--space-4); }
+.card form { display: grid; gap: var(--space-4); }
+
+/* ---- Buttons ----*/
+.btn,
+#loginForm button,
+#registerForm button {
+  --btn-bg: var(--color-surface);
+  --btn-fg: var(--color-text-secondary);
+  --btn-border: var(--color-border-strong);
+  --btn-bg-hover: var(--color-surface-alt);
+  --btn-fg-hover: var(--color-secondary);
+  --btn-border-hover: var(--color-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--btn-height, var(--control-height));
+  padding: 0 var(--btn-px, var(--space-4));
+  border: 1.5px solid var(--btn-border);
+  border-radius: var(--radius-md);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font: var(--weight-semibold) var(--btn-size, var(--text-body)) / var(--leading-tight) var(--font-sans);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease),
+              color var(--motion-fast) var(--ease);
+}
+.btn:hover:not(:disabled),
+#loginForm button:hover:not(:disabled),
+#registerForm button:hover:not(:disabled) {
+  background: var(--btn-bg-hover);
+  color: var(--btn-fg-hover);
+  border-color: var(--btn-border-hover);
+}
+.btn:active:not(:disabled),
+#loginForm button:active:not(:disabled),
+#registerForm button:active:not(:disabled) { transform: translateY(1px); }
+
+.btn:disabled,
+#loginForm button:disabled,
+#registerForm button:disabled {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn.primary,
+#loginForm button[value="vendor"],
+#registerForm button[type="submit"] {
+  --btn-bg: var(--color-secondary);
+  --btn-fg: var(--color-text-on-dark);
+  --btn-border: var(--color-secondary);
+  --btn-bg-hover: var(--color-primary);
+  --btn-fg-hover: var(--color-text-on-dark);
+  --btn-border-hover: var(--color-primary);
+}
+.btn.secondary,
+#loginForm button[value="admin"] {
+  --btn-fg: var(--color-secondary);
+  --btn-border: var(--color-secondary);
+  --btn-fg-hover: var(--color-primary);
+  --btn-border-hover: var(--color-primary);
+}
+/* .btn.outline and #loginForm button[type="button"] use the defaults above. */
+.btn.text-danger {
+  --btn-fg: var(--color-danger);
+  --btn-fg-hover: var(--color-danger);
+  --btn-border-hover: var(--color-danger);
+}
+.btn-sm {
+  --btn-height: var(--control-height-sm);
+  --btn-px: var(--space-3);
+  --btn-size: var(--text-caption);
+}
+
+.close-btn {
+  display: grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0;            
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease);
+}
+.close-btn:hover { background: var(--color-surface-alt); color: var(--color-primary); }
+
+/* ---- Form controls ---- */
+label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font: var(--weight-regular) var(--text-body) / var(--leading-body) var(--font-sans);
+  text-transform: none;
+  letter-spacing: normal;
+  transition: border-color var(--motion-fast) var(--ease),
+              box-shadow var(--motion-fast) var(--ease);
+}
+textarea {
+  padding: var(--space-3);
+  min-height: 5.5rem;
+  resize: vertical;
+}
+select {
+  appearance: none;
+  padding-right: calc(var(--space-3) * 2 + var(--icon-size));
+  background-image: var(--icon-chevron-down);
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: var(--icon-size);
+  cursor: pointer;
+}
+input[type="file"] {
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button {
+  margin-right: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: var(--weight-semibold) var(--text-caption) / var(--leading-tight) var(--font-sans);
+  cursor: pointer;
+}
+::placeholder { color: var(--color-text-muted); opacity: 1; }
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) { border-color: var(--color-secondary); }
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+/* Error state: after interaction (:user-invalid) or set manually */
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid,
+.is-invalid,
+[aria-invalid="true"] { border-color: var(--color-danger); }
+input:user-invalid:focus,
+select:user-invalid:focus,
+textarea:user-invalid:focus,
+.is-invalid:focus,
+[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--color-danger-ring); }
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* ---- Messages ---- */
+.form-msg,
+#loginFeedback,
+#registerFeedback {
+  font: inherit;
+  white-space: pre-wrap;
+  color: var(--color-danger);
+}
+.form-msg.ok { color: var(--color-success); }
+#loginFeedback,
+#registerFeedback { color: var(--color-text-secondary); text-align: center; }
+.form-msg:empty,
+#loginFeedback:empty,
+#registerFeedback:empty { display: none; }
+
+/* ---- Status chip (submission list) ---- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px currentColor;
+  color: var(--color-text-muted);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+.status-badge.pending,
+.status-badge.open,
+.status-badge.new { color: var(--color-secondary); }
+.status-badge.resolved,
+.status-badge.reviewed,
+.status-badge.replied,
+.status-badge.closed { color: var(--color-success); }
+.status-badge.rejected { color: var(--color-danger); }
+
+/* ---- Tables ---- */
+.table-responsive {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+table {
+  width: 100%;
+  min-width: 56rem;
+  border: 0;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+th {
+  background: var(--color-surface-alt);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--color-surface-alt); }
+td:nth-child(4) { min-width: 14rem; }
+td:last-child { white-space: nowrap; }
+td .btn + .btn { margin-left: var(--space-2); }
+.product-thumb {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+.low-stock { color: var(--color-danger); font-weight: var(--weight-semibold); }
+.empty-row {
+  padding: var(--space-5);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* ---- Dialogs (native <dialog> and the eco-tip overlay) ---- */
+.product-modal {
+  width: min(40rem, calc(100% - var(--space-5)));
+  max-height: calc(100dvh - var(--space-5));
+  margin: auto;
+  padding: var(--space-5);
+  overflow: auto;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-overlay);
+}
+.product-modal::backdrop { background: var(--color-scrim); }
+.modal-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.modal-subtitle { margin: var(--space-1) 0 var(--space-5); }
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.form-grid .full-width { grid-column: 1 / -1; }
+.image-preview {
+  max-width: 10rem;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+#productForm { display: grid; gap: var(--space-4); }
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.eco-tip-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1000;
+  width: min(35rem, calc(100% - var(--space-5)));
+  max-height: calc(100dvh - var(--space-5));
+  overflow: auto;
+  transform: translate(-50%, -50%);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay), 0 0 0 100vmax var(--color-scrim);
+}
+.eco-tip-popup > * + * { margin-top: var(--space-4); }
+#ecoTipTitle { color: var(--color-danger); }
+.eco-category {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.eco-category > * + * { margin-top: var(--space-2); }
+.eco-category ul { margin: 0; padding-left: var(--space-5); }
+.eco-tip-popup .btn { margin-top: var(--space-5); }
+
+/* ==========================================================================
+   7. AUTH PAGES (login.html, register.html)
+   ========================================================================== */
+body > section {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* PLACE SYSTEM LOGO HERE
+   Auth pages: add <div class="brand-logo"><!-- PLACE SYSTEM LOGO HERE --></div>
+   as the first child of the card (above the <h2>). Do not substitute a logo. */
+.brand-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+.brand-logo img { max-height: 3rem; width: auto; }
+
+body > section > div {                       /* the card */
+  width: min(100%, 27.5rem);
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+body > section > div:has(#registerForm) { width: min(100%, 40rem); }
+body > section > div > div:first-child { margin-bottom: var(--space-5); }  /* title + rule */
+body > section h2 { text-align: center; }
+body > section > div:has(#registerForm) h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+body > section > div:has(#registerForm) h2::before {
+  content: "";
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: var(--icon-store) center / contain no-repeat;
+}
+
+#loginForm,
+#registerForm { display: grid; gap: var(--space-4); }
+#loginForm > div,
+#registerForm > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+#loginForm hr { margin: 0; }
+#loginForm button,
+#registerForm button { width: 100%; }
+
+/* Register: two-column field grid. */
+#registerForm > div > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+#registerForm > div > div > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+#registerForm > div > div > div:empty { display: none; }
+/* The [Store Icon] placeholder is shown beside the title instead (see above). */
+#registerForm > div > div > div:first-child { display: none; }
+
+body > footer {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   8. VENDOR PORTAL (vendor-page.html)
+   ========================================================================== */
+.app-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+}
+
+/* ---- Sidebar ---- */
+.vendor-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
+}
+.vendor-sidebar :focus-visible { outline-color: var(--color-accent); }
+
+/* PLACE SYSTEM LOGO HERE
+   Replace the placeholder inside .sidebar-logo (currently the emoji span
+   .logo-icon) with the real logo, e.g. <img class="logo-icon" src="..." alt="">.
+   The slot below reserves a 2rem square next to the wordmark. */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  font-size: var(--text-subheading);
+}
+.logo-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+}
+
+.sidebar-nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sidebar-nav a,
+.logout-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-accent-light);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transition: background-color var(--motion-fast) var(--ease),
+              color var(--motion-fast) var(--ease);
+}
+.sidebar-nav a:hover,
+.logout-link:hover {
+  background: var(--color-on-dark-hover);
+  color: var(--color-text-on-dark);
+}
+.sidebar-nav a.active {
+  background: var(--color-secondary);
+  color: var(--color-text-on-dark);
+}
+.sidebar-footer { margin-top: auto; }
+
+/* ---- Header and content ---- */
+.main-wrapper {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.vendor-header {
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.stall-badge { display: flex; flex-direction: column; gap: var(--space-1); }
+.stall-id {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+}
+.container {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+.page-title { margin-bottom: var(--space-1); }
+.section-header .page-title { margin-bottom: 0; }
+
+/* ---- Dashboard ---- */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-4);
+}
+.stat-card h3 { margin-bottom: var(--space-3); }
+.stat-value {
+  font-size: var(--text-display);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+}
+.package-breakdown {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.package-breakdown li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+.package-breakdown li + li { border-top: 1px solid var(--color-border); }
+
+/* Chart.js draws at a fixed pixel size (responsive: false), so the card
+   scrolls sideways on narrow screens instead of squashing the graph. */
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-x: auto;
+}
+.chart-card > h2 { margin-bottom: 0; }
+.chart-card label { flex-direction: row; align-items: center; width: fit-content; }
+.chart-card select { width: auto; }
+.chart-card canvas { max-width: none; }
+
+/* Eco-tip banner: neutral by default; success when .positive; danger while
+   the "View Eco-Tip" button is visible (over the weekly limit). */
+.eco-tip-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-light);
+}
+.eco-tip-banner > span { flex: 1 1 20rem; }
+.eco-tip-banner.positive {
+  background: var(--color-surface);
+  border-color: var(--color-success);
+}
+.eco-tip-banner.positive strong { color: var(--color-success); }
+.eco-tip-banner:has(#ecoTipOpenBtn:not([hidden])) {
+  background: var(--color-surface);
+  border-color: var(--color-danger);
+}
+.eco-tip-banner:has(#ecoTipOpenBtn:not([hidden])) strong { color: var(--color-danger); }
+
+/* ---- Product listing ---- */
+.filter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.filter-toolbar label { flex: 1 1 12rem; max-width: 20rem; }
+.listing-msg {
+  min-height: var(--space-5);
+  margin-bottom: var(--space-2);
+  color: var(--color-success);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---- Feedback and reports ---- */
+.feedback-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.submission-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.submission-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+}
+.submission-item + .submission-item { border-top: 1px solid var(--color-border); }
+
+/* ==========================================================================
+   9. RESPONSIVE AND REDUCED MOTION
+   ========================================================================== */
+@media (max-width: 56.25em) {              /* 900px */
+  .app-layout { grid-template-columns: minmax(0, 1fr); }
+  .vendor-sidebar {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+  .sidebar-nav { order: 3; width: 100%; overflow-x: auto; }
+  .sidebar-nav ul { flex-direction: row; }
+  .sidebar-nav a { white-space: nowrap; }
+  .sidebar-footer { margin: 0 0 0 auto; }
+  .vendor-header { padding: var(--space-4); }
+  .container { padding: var(--space-4); }
+  .feedback-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 37.5em) {               /* 600px */
+  .form-grid,
+  #registerForm > div > div { grid-template-columns: minmax(0, 1fr); }
+  body > section { padding: var(--space-5) var(--space-3); }
+  body > section > div,
+  .card,
+  .stat-card,
+  .product-modal,
+  .eco-tip-popup { padding: var(--space-4); }
+  .action-buttons { width: 100%; }
+  .action-buttons .btn { flex: 1 1 auto; }
+  .filter-toolbar label { max-width: none; }
+  .form-actions .btn { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
