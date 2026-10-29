@@ -122,6 +122,6 @@ Group-5---Pi-Tech/
 - **Access control:** vendors only ever see and change their own stall. Admin pages need an admin login. A stall that the admin declines or removes is logged out immediately.
 - **Login lockout:** 5 wrong passwords → that email is locked for 15 minutes.
 - **Uploads:** images only (JPG, PNG, WEBP, GIF, up to 2 MB). The server picks the file extension, so an upload can never run as a web page.
-- **Security headers** on every page: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and a Content Security Policy (scripts/styles/images only from this server, plus Chart.js from cdnjs).
+- **Security headers** on every page: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, and a Content Security Policy (scripts/styles/images only from this server, plus Chart.js from cdnjs and the Inter font from Google Fonts).
 - **SQL injection:** every query uses placeholders (`?`), never pasted-in text.
 - **Weekly PDF report:** one download per stall every 7 days, enforced by the server.

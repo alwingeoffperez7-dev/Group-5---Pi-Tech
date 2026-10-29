@@ -25,7 +25,7 @@ Those scripts find elements by their **`id`**, **`class`**, **`name`** and **`da
 - **Graphs:** the vendor graph's size comes from the `width`/`height` attributes on `<canvas id="packagingChart">`. Change those numbers instead of resizing the canvas with CSS, or it gets blurry. The landing graph (`#waste-chart`) fills `#chart-container`, so size the container.
 - **Adding a stylesheet to a page:** put the file in `system.css/` and link it in the page's `<head>`:
   `<link rel="stylesheet" href="../system.css/landing.css" />`
-- **External fonts / CDNs (e.g. Google Fonts) are blocked** by the site's security policy. To allow them, ask the backend person to add the address to the `Content-Security-Policy` in `wasteless-backend/src/server.js`. Fonts saved inside `system.css/` work without any change.
+- **Google Fonts are allowed** (the `@import` in `wasteless.css` works). **Other external fonts / CDNs are blocked** by the site's security policy. To allow one, ask the backend person to add the address to the `Content-Security-Policy` in `wasteless-backend/src/server.js`. Fonts saved inside `system.css/` work without any change.
 - **Don't add `<script>` tags that load from other websites** for the same reason.
 - After changing CSS, press **Ctrl + F5** to see it (the browser caches the old file).
 
