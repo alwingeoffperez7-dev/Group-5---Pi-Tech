@@ -13,12 +13,14 @@ app.use((req, res, next) => {
     'X-Content-Type-Options': 'nosniff',          // browser must trust our Content-Type (no guessing)
     'X-Frame-Options': 'DENY',                    // page can't be put inside another site's frame
     'Referrer-Policy': 'same-origin',
-    // Only load scripts/styles/images from this server (+ Chart.js from cdnjs).
+    // Only load scripts/styles/images from this server (+ Chart.js from cdnjs,
+    // + the Inter font from Google Fonts: its CSS from googleapis, the font files from gstatic).
     // 'unsafe-inline' is needed because the HTML pages use inline onclick handlers.
     'Content-Security-Policy': [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
       "connect-src 'self'",
       "object-src 'none'",
