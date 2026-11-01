@@ -1,14 +1,13 @@
 /* ==========================================================================
-   WasteLess — shared stylesheet
    Link it:  <link rel="stylesheet" href="../system.css/wasteless.css">
+             (login + register: add it in <head>)
 
    CONTENTS
    1. Design tokens          6. Components (buttons, forms, chips, tables,
    2. Icons (Lucide)            dialogs, cards)
    3. Reset and base         7. Auth pages (login, register)
-   4. Typography             8. Vendor portal
+   4. Typography             8. Vendor portal, 8b. Landing page, 8c. Admin page
    5. Layout helpers         9. Responsive, reduced motion
-
    ========================================================================== */
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
@@ -23,7 +22,7 @@
   --color-surface-alt: #F4F8FF;
 
   /* Brand */
-  --color-primary: #0F172A;
+  --color-primary: #344e89;
   --color-secondary: #2563EB;
 
   /* Accent (fills only, never text or edges) */
@@ -66,6 +65,7 @@
   /* Typography */
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --text-display: 2rem;        /* page title */
+  --text-hero: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);  /* landing hero only */
   --text-heading: 1.375rem;    /* section heading */
   --text-subheading: 1rem;     /* card title */
   --text-body: 0.875rem;
@@ -92,6 +92,9 @@
   --motion-base: 200ms;
   --ease: ease-out;
 
+  /* ======================================================================
+     2. ICONS: Lucide (lucide.dev, ISC licence), one set, 24px grid, 2px stroke.
+     ====================================================================== */
   --icon-dashboard: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='7' height='9' x='3' y='3' rx='1'/%3E%3Crect width='7' height='5' x='14' y='3' rx='1'/%3E%3Crect width='7' height='9' x='14' y='12' rx='1'/%3E%3Crect width='7' height='5' x='3' y='16' rx='1'/%3E%3C/svg%3E");
   --icon-package: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7.5 4.27 9 5.15'/%3E%3Cpath d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/%3E%3Cpath d='m3.3 7 8.7 5 8.7-5'/%3E%3Cpath d='M12 22V12'/%3E%3C/svg%3E");
   --icon-message: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
@@ -99,13 +102,20 @@
   --icon-download: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' x2='12' y1='15' y2='3'/%3E%3C/svg%3E");
   --icon-refresh: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8'/%3E%3Cpath d='M21 3v5h-5'/%3E%3Cpath d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16'/%3E%3Cpath d='M8 16H3v5'/%3E%3C/svg%3E");
   --icon-x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+  --icon-users: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3Cpath d='M16 3.13a4 4 0 0 1 0 7.75'/%3E%3C/svg%3E");
+  --icon-layers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z'/%3E%3Cpath d='m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65'/%3E%3Cpath d='m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65'/%3E%3C/svg%3E");
+  --icon-leaf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z'/%3E%3Cpath d='M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12'/%3E%3C/svg%3E");
+  --icon-arrow-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 19-7-7 7-7'/%3E%3Cpath d='M19 12H5'/%3E%3C/svg%3E");
+  /* --icon-store is a background image on the register title: stroke baked to --color-secondary. */
   --icon-store: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3Cpath d='M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4'/%3E%3Cpath d='M2 7h20'/%3E%3Cpath d='M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7'/%3E%3C/svg%3E");
+  /* Select chevron is a background image, so its stroke is baked in: keep it equal to --color-text-muted. */
   --icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B85' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
-/* Shared icon renderer.*/
 .sidebar-nav a::before,
 .logout-link::before,
+#sidebar nav button::before,
+#back-btn::before,
 #downloadReportBtn::before,
 #refresh::before,
 .close-btn::before {
@@ -124,6 +134,13 @@
 #downloadReportBtn                { --icon: var(--icon-download); }
 #refresh                          { --icon: var(--icon-refresh); }
 .close-btn                        { --icon: var(--icon-x); }
+#sidebar [data-section="dashboard"]  { --icon: var(--icon-dashboard); }
+#sidebar [data-section="accounts"]   { --icon: var(--icon-users); }
+#sidebar [data-section="stalls"]     { --icon: var(--icon-store); }
+#sidebar [data-section="products"]   { --icon: var(--icon-package); }
+#sidebar [data-section="categories"] { --icon: var(--icon-layers); }
+#sidebar [data-section="eco"]        { --icon: var(--icon-leaf); }
+#back-btn                            { --icon: var(--icon-arrow-left); }
 
 /* ==========================================================================
    3. RESET AND BASE
@@ -132,8 +149,6 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-/* Needed to because component display rules would otherwise override the
-   hidden attribute that the page scripts toggle. */
 [hidden] { display: none !important; }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -185,7 +200,8 @@ h2 {
   line-height: var(--leading-tight);
 }
 h3,
-.card h2 {
+.card h2,
+#feedback-panel > h2 {
   font-size: var(--text-subheading);
   font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
@@ -194,6 +210,8 @@ small,
 .field-hint,
 .stat-note,
 .chart-status,
+#chart-status,
+#summary-status,
 .modal-subtitle {
   font-size: var(--text-caption);
   color: var(--color-text-muted);
@@ -202,6 +220,7 @@ small,
 /* Field labels, table headers, stat titles */
 label,
 th,
+#summary-list dt,
 .stat-card h3 {
   font-size: var(--text-caption);
   font-weight: var(--weight-semibold);
@@ -238,7 +257,13 @@ th,
 
 /* ---- Cards ---- */
 .card,
-.stat-card {
+.stat-card,
+#chart-container,
+#summary-card,
+#stat-cards > div,
+#chart-1,
+#chart-2,
+#feedback-panel {
   padding: var(--space-5);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -247,8 +272,12 @@ th,
 .card > h2 { margin-bottom: var(--space-4); }
 .card form { display: grid; gap: var(--space-4); }
 
-/* ---- Buttons ----*/
+/* ---- Buttons ---- */
 .btn,
+[id^="section-"] button,
+dialog[id$="-dialog"] button,
+#login-link,
+#register-link,
 #loginForm button,
 #registerForm button {
   --btn-bg: var(--color-surface);
@@ -269,12 +298,17 @@ th,
   color: var(--btn-fg);
   font: var(--weight-semibold) var(--btn-size, var(--text-body)) / var(--leading-tight) var(--font-sans);
   text-align: center;
+  text-decoration: none;
   cursor: pointer;
   transition: background-color var(--motion-fast) var(--ease),
               border-color var(--motion-fast) var(--ease),
               color var(--motion-fast) var(--ease);
 }
 .btn:hover:not(:disabled),
+[id^="section-"] button:hover:not(:disabled),
+dialog[id$="-dialog"] button:hover:not(:disabled),
+#login-link:hover,
+#register-link:hover,
 #loginForm button:hover:not(:disabled),
 #registerForm button:hover:not(:disabled) {
   background: var(--btn-bg-hover);
@@ -282,6 +316,10 @@ th,
   border-color: var(--btn-border-hover);
 }
 .btn:active:not(:disabled),
+[id^="section-"] button:active:not(:disabled),
+dialog[id$="-dialog"] button:active:not(:disabled),
+#login-link:active,
+#register-link:active,
 #loginForm button:active:not(:disabled),
 #registerForm button:active:not(:disabled) { transform: translateY(1px); }
 
@@ -296,6 +334,12 @@ th,
 }
 
 .btn.primary,
+#stall-add-button,
+#product-add-button,
+#category-add-button,
+[id^="section-"] button[data-action="approve"],
+dialog[id$="-dialog"] button[type="submit"],
+#register-link,
 #loginForm button[value="vendor"],
 #registerForm button[type="submit"] {
   --btn-bg: var(--color-secondary);
@@ -312,19 +356,22 @@ th,
   --btn-fg-hover: var(--color-primary);
   --btn-border-hover: var(--color-primary);
 }
-/* .btn.outline and #loginForm button[type="button"] use the defaults above. */
-.btn.text-danger {
+.btn.text-danger,
+[id^="section-"] button[data-action="delete"],
+[id^="section-"] button[data-action="decline"] {
   --btn-fg: var(--color-danger);
   --btn-fg-hover: var(--color-danger);
   --btn-border-hover: var(--color-danger);
 }
-.btn-sm {
+.btn-sm,
+[id^="section-"] td button {
   --btn-height: var(--control-height-sm);
   --btn-px: var(--space-3);
   --btn-size: var(--text-caption);
 }
 
-.close-btn {
+.close-btn,
+#back-btn {
   display: grid;
   place-items: center;
   width: var(--control-height);
@@ -338,7 +385,8 @@ th,
   cursor: pointer;
   transition: background-color var(--motion-fast) var(--ease);
 }
-.close-btn:hover { background: var(--color-surface-alt); color: var(--color-primary); }
+.close-btn:hover,
+#back-btn:hover { background: var(--color-surface-alt); color: var(--color-primary); }
 
 /* ---- Form controls ---- */
 label {
@@ -429,6 +477,11 @@ textarea:disabled {
   color: var(--color-text-muted);
   cursor: not-allowed;
 }
+input[readonly],
+textarea[readonly] {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
 
 /* ---- Messages ---- */
 .form-msg,
@@ -445,7 +498,8 @@ textarea:disabled {
 #loginFeedback:empty,
 #registerFeedback:empty { display: none; }
 
-/* ---- Status chip (submission list) ---- */
+/* ---- Status chip (submission list) ----
+   Adjust the state names below to the status values your backend sends. */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -494,9 +548,9 @@ th {
 }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: var(--color-surface-alt); }
-td:nth-child(4) { min-width: 14rem; }
+.product-section td:nth-child(4) { min-width: 14rem; }
 td:last-child { white-space: nowrap; }
-td .btn + .btn { margin-left: var(--space-2); }
+td button + button { margin-left: var(--space-2); }
 .product-thumb {
   width: 3rem;
   height: 3rem;
@@ -511,7 +565,8 @@ td .btn + .btn { margin-left: var(--space-2); }
 }
 
 /* ---- Dialogs (native <dialog> and the eco-tip overlay) ---- */
-.product-modal {
+.product-modal,
+dialog[id$="-dialog"] {
   width: min(40rem, calc(100% - var(--space-5)));
   max-height: calc(100dvh - var(--space-5));
   margin: auto;
@@ -523,7 +578,8 @@ td .btn + .btn { margin-left: var(--space-2); }
   color: var(--color-text-primary);
   box-shadow: var(--shadow-overlay);
 }
-.product-modal::backdrop { background: var(--color-scrim); }
+.product-modal::backdrop,
+dialog[id$="-dialog"]::backdrop { background: var(--color-scrim); }
 .modal-header-row {
   display: flex;
   align-items: center;
@@ -586,7 +642,7 @@ body > section {
 
 /* PLACE SYSTEM LOGO HERE
    Auth pages: add <div class="brand-logo"><!-- PLACE SYSTEM LOGO HERE --></div>
-   as the first child of the card (above the <h2>). Do not substitute a logo. */
+   as the first child of the card (above the <h2>). Don't substitute a logo. */
 .brand-logo {
   display: flex;
   justify-content: center;
@@ -664,7 +720,8 @@ body > footer {
 }
 
 /* ---- Sidebar ---- */
-.vendor-sidebar {
+.vendor-sidebar,
+#sidebar {
   position: sticky;
   top: 0;
   align-self: start;
@@ -676,7 +733,8 @@ body > footer {
   background: var(--color-primary);
   color: var(--color-text-on-dark);
 }
-.vendor-sidebar :focus-visible { outline-color: var(--color-accent); }
+.vendor-sidebar :focus-visible,
+#sidebar :focus-visible { outline-color: var(--color-accent); }
 
 /* PLACE SYSTEM LOGO HERE
    Replace the placeholder inside .sidebar-logo (currently the emoji span
@@ -706,7 +764,8 @@ body > footer {
   list-style: none;
 }
 .sidebar-nav a,
-.logout-link {
+.logout-link,
+#sidebar nav button {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -720,11 +779,18 @@ body > footer {
               color var(--motion-fast) var(--ease);
 }
 .sidebar-nav a:hover,
-.logout-link:hover {
+.logout-link:hover,
+#sidebar nav button:hover {
   background: var(--color-on-dark-hover);
   color: var(--color-text-on-dark);
 }
-.sidebar-nav a.active {
+.sidebar-nav a.active,
+body:has(#section-dashboard:not([hidden])) #sidebar [data-section="dashboard"],
+body:has(#section-accounts:not([hidden])) #sidebar [data-section="accounts"],
+body:has(#section-stalls:not([hidden])) #sidebar [data-section="stalls"],
+body:has(#section-products:not([hidden])) #sidebar [data-section="products"],
+body:has(#section-categories:not([hidden])) #sidebar [data-section="categories"],
+body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
   background: var(--color-secondary);
   color: var(--color-text-on-dark);
 }
@@ -782,8 +848,6 @@ body > footer {
 }
 .package-breakdown li + li { border-top: 1px solid var(--color-border); }
 
-/* Chart.js draws at a fixed pixel size (responsive: false), so the card
-   scrolls sideways on narrow screens instead of squashing the graph. */
 .chart-card {
   display: flex;
   flex-direction: column;
@@ -791,7 +855,9 @@ body > footer {
   overflow-x: auto;
 }
 .chart-card > h2 { margin-bottom: 0; }
+#chart-container label,
 .chart-card label { flex-direction: row; align-items: center; width: fit-content; }
+#chart-container select,
 .chart-card select { width: auto; }
 .chart-card canvas { max-width: none; }
 
@@ -857,11 +923,308 @@ body > footer {
 .submission-item + .submission-item { border-top: 1px solid var(--color-border); }
 
 /* ==========================================================================
+   8b. LANDING PAGE (landing.html)
+   ========================================================================== */
+body > main { flex: 1; }
+
+/* ---- Header and navigation ----
+   PLACE SYSTEM LOGO HERE (#header-logo and #hero-logo)
+   Replace the "LOGO" text with the real logo, e.g. <img src="..." alt="WasteLess">.
+   The dashed outline only marks the empty slot and disappears once an <img>
+   is inside. Do not substitute a logo. */
+#site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) max(var(--space-4), calc((100% - var(--content-max)) / 2));
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+#header-logo,
+#hero-logo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border: 1.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+}
+#header-logo {
+  height: var(--control-height);
+  min-width: var(--control-height);
+  padding: 0 var(--space-3);
+}
+#header-logo:has(> img),
+#hero-logo:has(> img) { padding: 0; border: 0; }
+#header-logo img { height: 100%; width: auto; }
+#hero-logo img { width: 100%; height: auto; }
+#header-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+}
+#header-nav { display: flex; gap: var(--space-2); }
+
+/* ---- Hero ---- */
+#hero,
+#data-summary {
+  width: min(100% - 2 * var(--space-4), var(--content-max));
+  margin-inline: auto;
+}
+#hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-6);
+  padding-block: var(--space-7);
+}
+#hero h1 {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-semibold);
+  letter-spacing: normal;
+  color: var(--color-text-secondary);
+}
+#hero-brand {
+  font-size: var(--text-hero);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+#hero-subtitle {
+  max-width: 32rem;
+  margin-top: var(--space-3);
+  font-size: var(--text-subheading);
+  color: var(--color-text-secondary);
+}
+#hero-logo { width: 12rem; aspect-ratio: 1; }
+
+/* ---- Data summary ---- */
+#data-summary { padding-bottom: var(--space-7); }
+#data-summary > h2 { margin-bottom: var(--space-4); }
+#data-summary-content {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+/* Chart.js is responsive her it sizes itself to this positioned container. */
+#chart-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+#chart-status:empty,
+#summary-status:empty { display: none; }
+#summary-card hr { margin: var(--space-3) 0 var(--space-4); }
+#summary-list { margin: 0; }
+#summary-list dd {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-heading);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+#summary-list dd + dt { margin-top: var(--space-4); }
+
+/* ==========================================================================
+   8c. ADMIN PAGE (admin-page.html)
+   ========================================================================== */
+body:has(> #sidebar) {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+}
+#sidebar { grid-row: 1 / span 2; }
+#sidebar ~ main { grid-column: 2; grid-row: 1; min-width: 0; }
+#sidebar ~ footer { grid-column: 2; grid-row: 2; }
+
+/* PLACE SYSTEM LOGO HERE (#logo)
+   Replace the "[Logo]" text with the real logo, e.g. <img src="..." alt="WasteLess">.
+   The dashed outline only marks the empty slot. Do not substitute a logo. */
+#logo {
+  display: grid;
+  place-items: center;
+  height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1.5px dashed var(--color-accent-light);
+  border-radius: var(--radius-md);
+  color: var(--color-accent-light);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+}
+#logo:has(> img) { height: auto; padding: 0; border: 0; }
+#logo img { max-height: 2.5rem; width: auto; }
+
+#sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+#sidebar nav button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ---- Top bar ---- */
+main > header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+#back-btn { order: -1; }
+#page-title {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-semibold);
+  letter-spacing: normal;
+}
+
+/* ---- Sections ---- */
+main > [id^="section-"] {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: var(--space-6);
+}
+
+/* List pages: search, filter, count, sort and add button on one wrapping row,
+   then the table on its own roww. */
+#section-accounts,
+#section-stalls,
+#section-products,
+#section-categories {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+[id^="section-"] > input[type="search"] { flex: 1 1 14rem; width: auto; max-width: 22rem; }
+[id^="section-"] > select { flex: 0 1 13rem; width: auto; }
+[id^="section-"] > span {
+  margin-left: auto;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+}
+[id^="section-"] > table {
+  display: block;                 /* scrolls sideways on narrow screens */
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+td select {
+  width: auto;
+  min-width: 10rem;
+  min-height: var(--control-height-sm);
+}
+
+/* Eco-Tips */
+#section-eco { gap: var(--space-3); }
+#section-eco > p { color: var(--color-text-secondary); }
+#section-eco > table + h2 { margin-top: var(--space-5); }
+
+/* Dashboard */
+#section-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+#stat-cards {
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+#stat-cards > div {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+#stat-cards > div > span {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-display);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--color-text-primary);
+}
+#chart-1,
+#chart-2 {
+  grid-column: 1;
+  position: relative;
+  min-height: 16rem;
+}
+#feedback-panel {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+#feedback-panel > p { font-size: var(--text-caption); color: var(--color-text-muted); }
+#feedback-panel select { width: auto; align-self: flex-start; }
+#feedback-list { max-height: 32rem; overflow-y: auto; }
+#feedback-list article { padding: var(--space-3) 0; }
+#feedback-list article + article { border-top: 1px solid var(--color-border); }
+#feedback-list article > * + * { margin-top: var(--space-1); }
+#feedback-list article p { color: var(--color-text-secondary); }
+#feedback-list article span {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  color: var(--color-secondary);
+}
+
+/* ---- Edit dialogs ---- */
+dialog[id$="-dialog"] { width: min(30rem, calc(100% - var(--space-5))); }
+dialog[id$="-dialog"] form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+dialog[id$="-dialog"] form > h2,
+dialog[id$="-dialog"] form > p { flex: 1 1 100%; margin: 0; }
+dialog[id$="-dialog"] form > button[type="button"] { order: 1; }   /* Cancel */
+dialog[id$="-dialog"] form > button[type="submit"] { order: 2; }   /* Save */
+#condition-form-threshold-row { display: flex; align-items: flex-end; gap: var(--space-3); }
+#condition-form-threshold-row label { flex: 1; }
+#condition-form-unit {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
    9. RESPONSIVE AND REDUCED MOTION
    ========================================================================== */
 @media (max-width: 56.25em) {              /* 900px */
   .app-layout { grid-template-columns: minmax(0, 1fr); }
-  .vendor-sidebar {
+  .vendor-sidebar,
+  #sidebar {
     position: static;
     height: auto;
     flex-direction: row;
@@ -870,13 +1233,25 @@ body > footer {
     gap: var(--space-3);
     padding: var(--space-3) var(--space-4);
   }
-  .sidebar-nav { order: 3; width: 100%; overflow-x: auto; }
-  .sidebar-nav ul { flex-direction: row; }
-  .sidebar-nav a { white-space: nowrap; }
+  .sidebar-nav,
+  #sidebar nav { order: 3; width: 100%; overflow-x: auto; }
+  .sidebar-nav ul,
+  #sidebar nav { flex-direction: row; }
+  .sidebar-nav a,
+  #sidebar nav button { width: auto; white-space: nowrap; }
   .sidebar-footer { margin: 0 0 0 auto; }
   .vendor-header { padding: var(--space-4); }
   .container { padding: var(--space-4); }
   .feedback-grid { grid-template-columns: minmax(0, 1fr); }
+  #data-summary-content { grid-template-columns: minmax(0, 1fr); }
+  body:has(> #sidebar) { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; }
+  #sidebar { grid-row: auto; }
+  #sidebar ~ main,
+  #sidebar ~ footer { grid-column: 1; grid-row: auto; }
+  main > header { padding: var(--space-4); }
+  main > [id^="section-"] { padding: var(--space-4); }
+  #section-dashboard { grid-template-columns: minmax(0, 1fr); }
+  #feedback-panel { grid-column: 1; grid-row: auto; }
 }
 
 @media (max-width: 37.5em) {               /* 600px */
@@ -886,8 +1261,21 @@ body > footer {
   body > section > div,
   .card,
   .stat-card,
+  #chart-container,
+  #summary-card,
+  #stat-cards > div,
+  #chart-1,
+  #chart-2,
+  #feedback-panel,
   .product-modal,
+  dialog[id$="-dialog"],
   .eco-tip-popup { padding: var(--space-4); }
+  #site-header { flex-wrap: wrap; }
+  #header-title { order: 3; flex-basis: 100%; }
+  #header-nav { margin-left: auto; }
+  #hero { grid-template-columns: minmax(0, 1fr); padding-block: var(--space-6); }
+  #hero-logo { width: 8rem; }
+  #stat-cards { grid-template-columns: minmax(0, 1fr); }
   .action-buttons { width: 100%; }
   .action-buttons .btn { flex: 1 1 auto; }
   .filter-toolbar label { max-width: none; }
