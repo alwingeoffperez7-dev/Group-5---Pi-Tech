@@ -20,7 +20,7 @@
           <ul>
             <li><a href="#dashboard" class="active">Dashboard</a></li>
             <li><a href="#listing">Product Listing</a></li>
-            <li><a href="#feedback">Feedback &amp; Reports</a></li>
+            <li><a href="#feedback">Feedback</a></li>
           </ul>
         </nav>
         <div class="sidebar-footer">
@@ -45,11 +45,20 @@
 
             <!-- Dashboard Summary Cards -->
             <section class="dashboard-stats">
-              <div class="stat-card">
+              <div class="stats-left-group">
+               <div class="stat-card">
                 <h3>Products</h3>
-                <p class="stat-value" id="count">00</p>
-                <p class="stat-note">Listed in your stall</p>
+                  <p class="stat-value" id="count">00</p>
+                  <p class="stat-note">Listed in your stall</p>
+               </div>
+
+               <div class="stat-card">
+                <h3>Sold Items</h3>
+                  <p class="stat-value" id="sold-count">00</p> 
+                  <p class="stat-note">Successfully sold</p>
+               </div>
               </div>
+
               <div class="stat-card">
                 <h3>Package Category</h3>
                 <!-- products per packaging category, filled by vendor-page.js -->
@@ -155,6 +164,7 @@
                       <th>Packaging Category</th>
                       <th>Price</th>
                       <th>Stock</th>
+                      <th>Sold</th>
                       <th>Category</th>
                       <th>Action/Edit</th>
                     </tr>
@@ -288,9 +298,9 @@
             </dialog>
           </div>
 
-          <!-- ===== PAGE: Feedback & Reports ===== -->
+          <!-- ===== PAGE: Feedback ===== -->
           <div class="page" id="page-feedback" hidden>
-            <h1 class="page-title">Feedback &amp; Reports</h1>
+            <h1 class="page-title">Feedback</h1>
 
             <section class="feedback-grid">
               <div class="card">

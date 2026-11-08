@@ -828,6 +828,20 @@ body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   gap: var(--space-4);
 }
+
+.stats-left-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.stats-left-group .stat-card:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.stats-left-group .stat-card:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none; 
+}
 .stat-card h3 { margin-bottom: var(--space-3); }
 .stat-value {
   font-size: var(--text-display);
