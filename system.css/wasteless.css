@@ -1429,3 +1429,128 @@ dialog[id$="-dialog"] form > button[type="submit"] { order: 2; }   /* Save */
     scroll-behavior: auto !important;
   }
 }
+
+
+#section-dashboard {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(260px, 1fr);
+}
+
+#stat-cards {
+  grid-column: 1 / span 2;
+}
+
+#chart-1 {
+  grid-column: 1;
+}
+
+#chart-2 {
+  grid-column: 2;
+}
+
+#feedback-panel {
+  grid-column: 3;
+  grid-row: 1 / span 3;
+}
+
+#chart-1 h2,
+#chart-2 h2 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-heading);
+}
+
+.chart-empty {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-5) 0;
+}
+
+.chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chart-label,
+.chart-value {
+  font-size: var(--text-caption);
+  overflow-wrap: anywhere;
+}
+
+.chart-track {
+  height: 12px;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.chart-bar {
+  height: 100%;
+  background: var(--color-secondary);
+  border-radius: var(--radius-full);
+}
+
+@media (max-width: 900px) {
+  #section-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #stat-cards,
+  #chart-1,
+  #chart-2,
+  #feedback-panel {
+    grid-column: 1;
+  }
+
+  #feedback-panel {
+    grid-row: auto;
+  }
+}
+
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.dashboard-stats .stat-card {
+  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.dashboard-stats .stat-card h3 {
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.dashboard-stats .stat-value {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.dashboard-stats .stat-note {
+  margin-top: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.dashboard-stats .package-breakdown {
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+@media (max-width: 768px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+}

@@ -97,10 +97,91 @@ const ACCOUNT_STATUSES = ["Pending", "Approved", "Declined"].map(function (s) {
   return { value: s, label: s };
 });
 
+
 function loadDashboard() {
   api("GET", "/api/admin/stats").then(renderDashboardStats).catch(showApiError);
-  // TODO (frontend/charts): draw your charts inside #chart-1 and #chart-2
+
+  api("GET", "/api/admin/packaging").then(renderPackagingChart).catch(function () {
+    renderDashboardChart("chart-1", "Products by Packaging Category", [
+      { name: "Plastic", count: 12 },
+      { name: "Paper", count: 8 },
+      { name: "Biodegradable", count: 15 },
+      { name: "Glass", count: 5 }
+    ]);
+  });
+
+  api("GET", "/api/admin/products").then(renderProductCategoryChart).catch(function () {
+    renderDashboardChart("chart-2", "Products by Food Category", [
+      { name: "Snacks", count: 10 },
+      { name: "Drinks", count: 14 },
+      { name: "Meals", count: 7 },
+      { name: "Desserts", count: 9 }
+    ]);
+  });
 }
+
+function renderPackagingChart(categories) {
+  const items = categories
+    .map(function (category) {
+      return {
+        name: category.packaging_name,
+        count: Number(category.item_count)
+      };
+    })
+    .filter(function (item) {
+      return item.count > 0;
+    });
+
+  renderDashboardChart("chart-1", "Products by Packaging Category", items);
+}
+
+function renderProductCategoryChart(products) {
+  const counts = {};
+
+  products.forEach(function (product) {
+    const name = product.category_name || "Uncategorized";
+    counts[name] = (counts[name] || 0) + 1;
+  });
+
+  const items = Object.entries(counts).map(function (entry) {
+    return {
+      name: entry[0],
+      count: entry[1]
+    };
+  });
+
+  renderDashboardChart("chart-2", "Products by Food Category", items);
+}
+
+function renderDashboardChart(elementId, title, items) {
+  const container = byId(elementId);
+
+  if (items.length === 0) {
+    container.innerHTML = `<h2>${title}</h2><p class="chart-empty">No data available yet.</p>`;
+    return;
+  }
+
+  const maxCount = Math.max(...items.map(function (item) {
+    return item.count;
+  }));
+
+  let rows = "";
+
+  items.forEach(function (item) {
+    const width = Math.round((item.count / maxCount) * 100);
+
+    rows += `<div class="chart-row">
+      <div class="chart-label">${escapeHtml(item.name)}</div>
+      <div class="chart-track">
+        <div class="chart-bar" style="width: ${width}%"></div>
+      </div>
+      <div class="chart-value">${item.count}</div>
+    </div>`;
+  });
+
+  container.innerHTML = `<h2>${title}</h2><div class="chart-bars">${rows}</div>`;
+}
+// to do
 
 function loadFeedback() {
   const sort = byId("feedback-sort").value; // "", "newest", "oldest"

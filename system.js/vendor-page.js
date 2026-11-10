@@ -111,8 +111,10 @@ function renderDashboard() {
   const pad = (n) => (n < 10 ? `0${n}` : String(n));
   const countBadge = document.getElementById("count");
   const breakdown = document.getElementById("packageBreakdown");
+  const soldItems = document.getElementById("vendor-sold-items");
 
   if (countBadge) countBadge.textContent = pad(products.length);
+
   if (breakdown) {
     breakdown.innerHTML = packagingList
       .map((pk) => {
@@ -122,6 +124,11 @@ function renderDashboard() {
         return `<li>${escapeHtml(pk.packaging_name)}: <strong>${n}</strong></li>`;
       })
       .join("");
+  }
+
+  if (soldItems) {
+    soldItems.textContent =
+      stallData.summary?.plastic_items_sold_this_week ?? 0;
   }
 }
 

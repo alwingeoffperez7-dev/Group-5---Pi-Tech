@@ -46,38 +46,52 @@
 
             <!-- Dashboard Summary Cards -->
             <section class="dashboard-stats">
-              <div class="stat-card">
-                <h3>Products</h3>
-                <p class="stat-value" id="count">00</p>
-                <p class="stat-note">Listed in your stall</p>
-              </div>
-              <div class="stat-card">
-                <h3>Package Category</h3>
-                <!-- products per packaging category, filled by vendor-page.js -->
-                <ul class="package-breakdown" id="packageBreakdown"></ul>
-              </div>
-            </section>
+  <div class="stat-card">
+    <h3>Products</h3>
+    <p class="stat-value" id="count">00</p>
+    <p class="stat-note">Listed in your stall</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>Plastic Items Sold This Week</h3>
+    <p class="stat-value" id="vendor-sold-items">0</p>
+    <p class="stat-note">Plastic-packaged items sold</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>Package Category</h3>
+    <ul class="package-breakdown" id="packageBreakdown"></ul>
+  </div>
+</section>
 
             <!-- Dashboard graph: items sold per packaging category -->
-            <section class="card chart-card">
-              <h2>Packaging Used (items sold)</h2>
-              <label
-                >Show
-                <select id="packagingRange">
-                  <option value="7">Last 7 days</option>
-                  <option value="14">Last 14 days</option>
-                  <option value="30">Last 30 days</option>
-                </select>
-              </label>
-              <canvas
-                id="packagingChart"
-                width="720"
-                height="320"
-                role="img"
-                aria-label="Line graph of items sold per day for each packaging category"
-              ></canvas>
-              <p class="chart-status" id="packagingChartStatus"></p>
-            </section>
+            <section class="dashboard-stats">
+  <div class="stat-card">
+    <h3>Stall ID</h3>
+    <p class="stat-value" id="vendor-stall-id">Loading...</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>Stall Name</h3>
+    <p class="stat-value" id="vendor-stall-name">Loading...</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>Total Products</h3>
+    <p class="stat-value" id="count">00</p>
+    <p class="stat-note">Listed in your stall</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>Sold Items</h3>
+    <p class="stat-value" id="vendor-sold-items">0</p>
+  </div>
+
+  <div class="stat-card">
+    <h3>Package Category</h3>
+    <ul class="package-breakdown" id="packageBreakdown"></ul>
+  </div>
+</section>
 
             <!-- Eco Tip Banner: congratulates when under the weekly limit ("positive" class) -->
             <aside class="eco-tip-banner" id="ecoTipBanner">
