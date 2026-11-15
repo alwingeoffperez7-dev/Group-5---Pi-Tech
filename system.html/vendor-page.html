@@ -9,9 +9,7 @@
     <link rel="icon" type="image/png" href="logo.png">
   </head>
   <body>
-    <!-- App Layout Wrapper for Sidebar & Main Content -->
     <div class="app-layout">
-      <!-- Sidebar Navigation -->
       <aside class="vendor-sidebar">
         <div class="sidebar-logo">
           <span class="logo-icon" aria-hidden="true"><img src="logo.png" alt="Wasteless logo" style="width: 35px; height: 35px;"></span>
@@ -29,7 +27,6 @@
         </div>
       </aside>
 
-      <!-- Main Content Wrapper -->
       <div class="main-wrapper">
         <!-- Header: which stall is logged in -->
         <header class="vendor-header">
@@ -37,14 +34,35 @@
             <span id="stallIdLabel" class="stall-id">Stall ID #0000</span>
             <h2 id="stall">STALL NAME</h2>
           </div>
+
+          <!-- NEW: Notification bell (top-right in wireframe) -->
+          <div class="notif-wrapper">
+            <button type="button" id="notifBtn" class="notif-btn" aria-label="Notifications" aria-expanded="false">
+              🔔 <span id="notifBadge" class="notif-badge" hidden>0</span>
+            </button>
+
+            <!-- NEW: Notifications panel (Page 5 of the wireframe) -->
+            <div id="notifPanel" class="notif-panel" hidden>
+              <h3 class="notif-title">Notifications</h3>
+              <ul id="notifList" class="notif-list">
+                <!-- Each item: title/message + a "Read" button -->
+                <li class="notif-item" data-notif-id="">
+                  <div class="notif-text">
+                    <strong class="notif-subject">Subject</strong>
+                    <p class="notif-message">Message</p>
+                  </div>
+                  <button type="button" class="btn outline btn-sm notif-read-btn">Read</button>
+                </li>
+              </ul>
+            </div>
+          </div>
         </header>
 
         <main class="container">
-          <!-- ===== PAGE: Dashboard ===== -->
+          <!-- ===== PAGE: Dashboard (unchanged) ===== -->
           <div class="page" id="page-dashboard">
             <h1 class="page-title">Dashboard</h1>
 
-            <!-- Dashboard Summary Cards -->
             <section class="dashboard-stats">
   <div class="stat-card">
     <h3>Products</h3>
@@ -64,7 +82,6 @@
   </div>
 </section>
 
-            <!-- Dashboard graph: items sold per packaging category -->
             <section class="dashboard-stats">
   <div class="stat-card">
     <h3>Stall ID</h3>
@@ -93,7 +110,6 @@
   </div>
 </section>
 
-            <!-- Eco Tip Banner: congratulates when under the weekly limit ("positive" class) -->
             <aside class="eco-tip-banner" id="ecoTipBanner">
               <strong>EcoTip 101</strong>
               <span id="ecoTipBannerText"
@@ -111,8 +127,6 @@
               </button>
             </aside>
 
-            <!-- Eco-Tip pop-up (a div; style it as an overlay). Opens on every dashboard visit
-                 while the stall is over the weekly limit. -->
             <div
               class="eco-tip-popup"
               id="ecoTipPopup"
@@ -169,26 +183,74 @@
                       <th>Product Description</th>
                       <th>Packaging Category</th>
                       <th>Price</th>
-                      <th>Stock</th>
+                      <th>Stock</th>   <!-- NEW -->
+                      <th>Sold</th>
                       <th>Category</th>
-                      <th>Action/Edit</th>
+                      <th>Action</th>  <!-- Edit removed: rows are edited inline -->
                     </tr>
                   </thead>
                   <tbody id="rows">
-                    <!-- Dynamic rows injected via vendor-page.js -->
+                    <!-- Dynamic rows injected via vendor-page.js.
+                         Each row must follow the structure in #rowTemplate below. -->
                   </tbody>
                 </table>
               </div>
+
+              <!-- NEW: row structure for inline editing (no Edit button / no pop-up).
+                   Every cell is a live input; +/- buttons change Stock and Sold. -->
+              <template id="rowTemplate">
+                <tr data-product-id="">
+                  <td class="cell-id"></td>
+                  <td class="cell-image"><img class="row-img" width="60" alt="Product image" /></td>
+                  <td><input class="inline-input" data-field="product_name" /></td>
+                  <td><textarea class="inline-input" data-field="description" rows="2"></textarea></td>
+                  <td><select class="inline-input" data-field="packaging_id"></select></td>
+                  <td><input class="inline-input" data-field="unit_price" type="number" min="0" step="0.01" /></td>
+
+                  <!-- NEW: Stock with − / + -->
+                  <td>
+                    <div class="qty-control">
+                      <button type="button" class="qty-btn" data-qty="minus" data-field="stock_qty" aria-label="Decrease stock">−</button>
+                      <input class="inline-input qty-input" data-field="stock_qty" type="number" min="0" step="1" />
+                      <button type="button" class="qty-btn" data-qty="plus" data-field="stock_qty" aria-label="Increase stock">+</button>
+                    </div>
+                  </td>
+
+                  <!-- Sold with − / + -->
+                  <td>
+                    <div class="qty-control">
+                      <button type="button" class="qty-btn" data-qty="minus" data-field="stock" aria-label="Decrease sold">−</button>
+                      <input class="inline-input qty-input" data-field="stock" type="number" min="0" step="1" />
+                      <button type="button" class="qty-btn" data-qty="plus" data-field="stock" aria-label="Increase sold">+</button>
+                    </div>
+                  </td>
+
+                  <td>
+                    <select class="inline-input" data-field="category">
+                      <option>Meals</option>
+                      <option>Snacks</option>
+                      <option>Drinks</option>
+                      <option>Desserts</option>
+                    </select>
+                  </td>
+
+                  <!-- Save + Delete (as in wireframe) -->
+                  <td class="cell-actions">
+                    <button type="button" class="btn outline btn-sm row-save-btn">Save</button>
+                    <button type="button" class="btn btn-sm row-delete-btn">Delete</button>
+                  </td>
+                </tr>
+              </template>
             </section>
 
-            <!-- Add / Edit Product pop-up -->
+            <!-- Add Product pop-up (now ADD only; editing happens in the table) -->
             <dialog
               class="product-modal"
               id="productFormContainer"
               aria-labelledby="formTitle"
             >
               <div class="modal-header-row">
-                <h2 id="formTitle">Edit Product</h2>
+                <h2 id="formTitle">Add Product</h2>
                 <button
                   type="button"
                   id="closeModalBtn"
@@ -235,7 +297,6 @@
                   <div class="form-group">
                     <label
                       >Packaging Category
-                      <!-- options filled from the database by vendor-page.js -->
                       <select
                         name="packaging_id"
                         id="formPackaging"
@@ -255,9 +316,22 @@
                         required
                     /></label>
                   </div>
+                  <!-- NEW: Stock -->
                   <div class="form-group">
                     <label
                       >Stock
+                      <input
+                        name="stock_qty"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="0"
+                        required
+                    /></label>
+                  </div>
+                  <div class="form-group">
+                    <label
+                      >Sold
                       <input
                         name="stock"
                         type="number"
@@ -296,14 +370,14 @@
                     Cancel
                   </button>
                   <button type="submit" id="saveBtn" class="btn primary">
-                    Save Changes
+                    Add Product
                   </button>
                 </div>
               </form>
             </dialog>
           </div>
 
-          <!-- ===== PAGE: Feedback & Reports ===== -->
+          <!-- ===== PAGE: Feedback & Reports (unchanged) ===== -->
           <div class="page" id="page-feedback" hidden>
             <h1 class="page-title">Feedback &amp; Reports</h1>
 
@@ -357,9 +431,7 @@
 
               <div class="card">
                 <h2>My Submissions</h2>
-                <ul id="subs" class="submission-list">
-                  <!-- Dynamic submissions list -->
-                </ul>
+                <ul id="subs" class="submission-list"></ul>
               </div>
             </section>
           </div>
@@ -367,10 +439,30 @@
       </div>
     </div>
 
-    <!-- Script Import -->
-    <!-- Chart.js (dashboard graphs), same version as the landing page -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="/js/api.js"></script>
     <script src="../system.js/vendor-page.js"></script>
+
+    <!-- NEW: UI-only behaviour for the +/- buttons and the notification bell -->
+    <script>
+      // +/- buttons inside the table (works for rows added later too)
+      document.getElementById("rows").addEventListener("click", (e) => {
+        const btn = e.target.closest(".qty-btn");
+        if (!btn) return;
+        const input = btn.parentElement.querySelector(".qty-input");
+        const step = btn.dataset.qty === "plus" ? 1 : -1;
+        input.value = Math.max(0, (parseInt(input.value, 10) || 0) + step);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+
+      // Bell toggles the notifications panel
+      const notifBtn = document.getElementById("notifBtn");
+      const notifPanel = document.getElementById("notifPanel");
+      notifBtn.addEventListener("click", () => {
+        notifPanel.hidden = !notifPanel.hidden;
+        notifBtn.setAttribute("aria-expanded", String(!notifPanel.hidden));
+      });
+    </script>
   </body>
 </html>
+
