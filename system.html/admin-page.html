@@ -145,6 +145,47 @@
 
       <!-- products -->
       <section id="section-products" class="page" hidden>
+        <!-- Notification bell: lives inside this section, so it only shows on Product Management -->
+        <div class="notif-wrap">
+          <button
+            type="button"
+            id="notif-btn"
+            aria-label="Notifications"
+            aria-expanded="false"
+            aria-controls="notif-panel"
+          >
+            &#128276;<span id="notif-count" hidden>0</span>
+          </button>
+
+          <!-- Notifications pop-up -->
+          <div
+            id="notif-panel"
+            role="dialog"
+            aria-labelledby="notif-title"
+            hidden
+          >
+            <h3 id="notif-title">My Notifications</h3>
+            <ul id="notif-list">
+              <!-- sample items for styling; replace with real data from JS/backend -->
+              <li class="notif-item">
+                <div class="notif-text">
+                  <strong class="notif-subject">Stall 000: Product 1</strong>
+                  <p class="notif-message">Message to vendor</p>
+                </div>
+                <span class="notif-status pending">Pending</span>
+              </li>
+              <li class="notif-item">
+                <div class="notif-text">
+                  <strong class="notif-subject">Stall 000: Product 2</strong>
+                  <p class="notif-message">Message to vendor</p>
+                </div>
+                <span class="notif-status completed">Completed</span>
+              </li>
+            </ul>
+            <p id="notif-empty" hidden>No notifications yet.</p>
+          </div>
+        </div>
+
         <input type="search" id="product-search" placeholder="Search" />
         <select id="product-filter">
           <option value="">Filter/Category</option>
@@ -166,7 +207,7 @@
               <th>Product Name</th>
               <th>Packaging Category</th>
               <th>Stall ID</th>
-              <th>Action/Edit</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="product-table-body"></tbody>
@@ -197,7 +238,7 @@
               <th>Description</th>
               <th>Example</th>
               <th>Item Count</th>
-              <th>Action/Edit</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="category-table-body"></tbody>
@@ -215,7 +256,7 @@
               <th>Condition</th>
               <th>Threshold</th>
               <th>Eco-Tip</th>
-              <th>Action/Edit</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="condition-table-body"></tbody>
@@ -303,6 +344,44 @@
         </p>
         <button type="submit">Save</button>
         <button type="button" data-action="close-dialog">Cancel</button>
+      </form>
+    </dialog>
+
+    <!-- Notify Vendors pop-up (opened by the Notify button in each product row) -->
+    <dialog id="notify-dialog">
+      <form id="notify-form">
+        <h2>Notify Vendors</h2>
+        <input type="hidden" name="product_id" />
+        <input type="hidden" name="stall_id" />
+        <p>
+          <label
+            >Stall
+            <input type="text" name="stall_label" id="notify-stall" readonly
+          /></label>
+        </p>
+        <p>
+          <label
+            >Product name
+            <input
+              type="text"
+              name="product_name"
+              id="notify-product"
+              readonly
+          /></label>
+        </p>
+        <p>
+          <label
+            >Comments
+            <textarea
+              name="comments"
+              rows="5"
+              maxlength="500"
+              required
+            ></textarea>
+          </label>
+        </p>
+        <button type="button" data-action="close-dialog">Cancel</button>
+        <button type="submit">Notify</button>
       </form>
     </dialog>
 
@@ -401,5 +480,62 @@
 
     <script src="/js/api.js"></script>
     <script src="../system.js/admin-page.js"></script>
+
+    <!-- Notifications bell + Notify Vendors pop-up (Product Management only) -->
+    <script>
+      (function () {
+        var notifBtn = document.getElementById("notif-btn");
+        var notifPanel = document.getElementById("notif-panel");
+        var productBody = document.getElementById("product-table-body");
+        var notifyDialog = document.getElementById("notify-dialog");
+        var notifyForm = document.getElementById("notify-form");
+
+        function closeNotifPanel() {
+          notifPanel.hidden = true;
+          notifBtn.setAttribute("aria-expanded", "false");
+        }
+
+        // Bell opens / closes the notifications list
+        notifBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var willOpen = notifPanel.hidden;
+          notifPanel.hidden = !willOpen;
+          notifBtn.setAttribute("aria-expanded", String(willOpen));
+        });
+
+        // Click outside closes it
+        document.addEventListener("click", function (e) {
+          if (!notifPanel.hidden && !notifPanel.contains(e.target)) {
+            closeNotifPanel();
+          }
+        });
+
+        // Close it when the admin switches to another section
+        document.querySelectorAll("#sidebar [data-section]").forEach(function (b) {
+          b.addEventListener("click", closeNotifPanel);
+        });
+
+        // Notify button in a product row (works for rows added later)
+        productBody.addEventListener("click", function (e) {
+          var btn = e.target.closest('[data-action="notify"]');
+          if (!btn) return;
+          notifyForm.reset();
+          notifyForm.elements.product_id.value = btn.dataset.productId || "";
+          notifyForm.elements.stall_id.value = btn.dataset.stallId || "";
+          document.getElementById("notify-stall").value = (
+            "Stall " + (btn.dataset.stallId || "") + " " + (btn.dataset.stallName || "")
+          ).trim();
+          document.getElementById("notify-product").value = btn.dataset.productName || "";
+          notifyDialog.showModal();
+        });
+
+        // Send (placeholder: connect to your backend in api.js)
+        notifyForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          // TODO: send notifyForm data to the backend, then add it to #notif-list
+          notifyDialog.close();
+        });
+      })();
+    </script>
   </body>
 </html>
