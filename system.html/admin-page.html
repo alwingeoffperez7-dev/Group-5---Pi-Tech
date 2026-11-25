@@ -188,21 +188,34 @@
       </section>
 
 
-      <!-- Notify Vendor Button Template -->
-      <template id="notify-vendor-button-template">
-
-        <button
-          type="button"
-          data-action="notify-vendor"
-        >
-          Notify
-        </button>
-
-      </template>
-
 
       <!-- products -->
       <section id="section-products" class="page" hidden>
+        <!-- Notification bell: lives inside this section, so it only shows on Product Management -->
+        <div class="notif-wrap">
+          <button
+            type="button"
+            id="notif-btn"
+            aria-label="Notifications"
+            aria-expanded="false"
+            aria-controls="notif-panel"
+          >
+            &#128276;<span id="notif-count" hidden>0</span>
+          </button>
+
+          <!-- Notifications pop-up -->
+          <div
+            id="notif-panel"
+            role="dialog"
+            aria-labelledby="notif-title"
+            hidden
+          >
+            <h3 id="notif-title">My Notifications</h3>
+            <ul id="notif-list">
+            </ul>
+            <p id="notif-empty" hidden>No notifications yet.</p>
+          </div>
+        </div>
 
         <input type="search" id="product-search" placeholder="Search" />
 
@@ -231,7 +244,7 @@
               <th>Product Name</th>
               <th>Packaging Category</th>
               <th>Stall ID</th>
-              <th>Action/Edit</th>
+              <th>Action</th>
             </tr>
           </thead>
 
@@ -272,7 +285,7 @@
               <th>Description</th>
               <th>Example</th>
               <th>Item Count</th>
-              <th>Action/Edit</th>
+              <th>Action</th>
             </tr>
           </thead>
 
@@ -297,7 +310,7 @@
               <th>Condition</th>
               <th>Threshold</th>
               <th>Eco-Tip</th>
-              <th>Action/Edit</th>
+              <th>Action</th>
             </tr>
           </thead>
 
@@ -377,65 +390,6 @@
     </dialog>
 
 
-    <!-- NOTIFY VENDORS DIALOG -->
-    <dialog id="notify-dialog">
-
-      <form id="notify-form">
-
-        <h2>Notify Vendors</h2>
-
-        <input type="hidden" name="stall_id" />
-
-        <p>
-          <label>
-            Selected Vendor
-            <input
-              type="text"
-              id="notify-vendor-name"
-              readonly
-              placeholder="Selected vendor will appear here"
-            />
-          </label>
-        </p>
-
-        <p>
-          <label>
-            Product Name
-            <input
-              type="text"
-              name="product_name"
-              id="notify-product-name"
-              placeholder="Enter product name"
-              required
-            />
-          </label>
-        </p>
-
-        <p>
-          <label>
-            Comments
-            <textarea
-              name="comments"
-              id="notify-comments"
-              rows="5"
-              placeholder="Write your notification here..."
-              required
-            ></textarea>
-          </label>
-        </p>
-
-        <button type="submit">
-          Notify
-        </button>
-
-        <button type="button" data-action="close-dialog">
-          Cancel
-        </button>
-
-      </form>
-
-    </dialog>
-
 
     <!-- PRODUCT DIALOG -->
     <dialog id="product-dialog">
@@ -496,8 +450,44 @@
 
     </dialog>
 
+    <!-- Notify Vendors pop-up (opened by the Notify button in each product row) -->
+    <dialog id="notify-dialog">
+      <form id="notify-form">
+        <h2>Notify Vendors</h2>
+        <input type="hidden" name="product_id" />
+        <input type="hidden" name="stall_id" />
+        <p>
+          <label
+            >Stall
+            <input type="text" name="stall_label" id="notify-stall" readonly
+          /></label>
+        </p>
+        <p>
+          <label
+            >Product name
+            <input
+              type="text"
+              name="product_name"
+              id="notify-product"
+              readonly
+          /></label>
+        </p>
+        <p>
+          <label
+            >Comments
+            <textarea
+              name="comments"
+              rows="5"
+              maxlength="500"
+              required
+            ></textarea>
+          </label>
+        </p>
+        <button type="button" data-action="close-dialog">Cancel</button>
+        <button type="submit">Notify</button>
+      </form>
+    </dialog>
 
-    <!-- CATEGORY DIALOG -->
     <dialog id="category-dialog">
 
       <form id="category-form">
