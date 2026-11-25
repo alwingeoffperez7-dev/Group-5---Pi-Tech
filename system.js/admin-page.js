@@ -664,7 +664,7 @@ function renderNotifications(list) {
         <strong class="notif-subject">Stall ${escapeHtml(n.stall_id)} ${escapeHtml(n.stall_name)}: ${escapeHtml(n.product_name || "")}</strong>
         <p class="notif-message">${escapeHtml(n.message)}</p>
       </div>
-      <span class="notif-status ${status}">${n.is_read ? "Read" : "Not read yet"}</span>
+      <span class="notif-status ${status}" title="${n.is_read ? "The vendor has read it" : "The vendor hasn't read it yet"}">${n.is_read ? "Completed" : "Pending"}</span>
     </li>`;
   }).join("");
   byId("notif-list").innerHTML = items;

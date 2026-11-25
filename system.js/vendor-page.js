@@ -370,6 +370,8 @@ function fillRow(tr, prod) {
   const img = tr.querySelector(".row-img");
   if (prod.image_url) { img.src = prod.image_url; img.hidden = false; img.alt = prod.product_name; }
   else { img.removeAttribute("src"); img.hidden = true; }
+  tr.querySelector(".row-img-none").hidden = Boolean(prod.image_url);
+  tr.querySelector(".row-img-btn").setAttribute("aria-label", `Change image of ${prod.product_name}`);
 
   const field = (name) => tr.querySelector(`[data-field="${name}"]:not(button)`);
   field("product_name").value = prod.product_name;
@@ -433,6 +435,23 @@ async function saveCell(input) {
   } catch (err) {
     fillRow(tr, prod); // put the old value back
     alert(err.message + (Object.values(err.details || {}).length ? "\n" + Object.values(err.details).join("\n") : ""));
+  }
+}
+
+// A new image was picked in the table: upload it as the product's image.
+async function saveImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const tr = input.closest("tr");
+  const fd = new FormData();
+  fd.append("image", file);
+  try {
+    updateProduct(await WasteLessAPI.editProduct(rowProduct(tr).product_id, fd));
+    showListingMsg("Image saved.");
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    input.value = ""; // so picking the same file again still counts as a change
   }
 }
 
@@ -559,10 +578,13 @@ function setupEventListeners() {
   const rows = document.getElementById("rows");
   if (rows) {
     rows.addEventListener("change", (e) => {
+      if (e.target.matches(".row-image-input")) return saveImage(e.target);
       const input = e.target.closest(".inline-input");
       if (input && input.dataset.field) saveCell(input);
     });
     rows.addEventListener("click", (e) => {
+      const imgBtn = e.target.closest(".row-img-btn");
+      if (imgBtn) return imgBtn.closest("td").querySelector(".row-image-input").click();
       const qty = e.target.closest(".qty-btn");
       if (qty) return stepQuantity(qty);
       const del = e.target.closest(".row-delete-btn");

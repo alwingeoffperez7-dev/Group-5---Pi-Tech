@@ -260,7 +260,8 @@ router.post('/:id/sales', wrap(async (req, res) => {
 }));
 
 // DELETE /api/products/:id/sales/last   (Sold "−" button)
-// Undoes this product's most recent sale from TODAY (older sales are kept) and puts it back in stock.
+// Undoes this product's most recent sale from the last 7 days (the same days the Sold
+// column counts; older weeks are kept as they are) and puts it back in stock.
 router.delete('/:id/sales/last', wrap(async (req, res) => {
   const conn = await pool.getConnection();
   try {
@@ -272,10 +273,11 @@ router.delete('/:id/sales/last', wrap(async (req, res) => {
     if (!p) throw new HttpError(404, 'Product not found');
     const [[sale]] = await conn.query(
       `SELECT sale_id, quantity_sold FROM sales_record
-       WHERE product_id = ? AND sold_at >= CURDATE() ORDER BY sold_at DESC, sale_id DESC LIMIT 1`,
+       WHERE product_id = ? AND sold_at >= CURDATE() - INTERVAL 6 DAY
+       ORDER BY sold_at DESC, sale_id DESC LIMIT 1`,
       [p.product_id]
     );
-    if (!sale) throw new HttpError(400, 'No sale of this product today to undo.');
+    if (!sale) throw new HttpError(400, 'No sale of this product in the last 7 days to undo.');
     await conn.query('DELETE FROM sales_record WHERE sale_id = ?', [sale.sale_id]);
     await conn.query('UPDATE product SET stock = stock + ? WHERE product_id = ?', [sale.quantity_sold, p.product_id]);
     await conn.query(

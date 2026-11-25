@@ -188,7 +188,14 @@
               <template id="rowTemplate">
                 <tr data-product-id="">
                   <td class="cell-id"></td>
-                  <td class="cell-image"><img class="row-img" width="60" alt="Product image" /></td>
+                  <!-- Image: click it to pick a new one (saved right away; JPG/PNG/WEBP/GIF, max 2 MB) -->
+                  <td class="cell-image">
+                    <button type="button" class="row-img-btn" title="Change image">
+                      <img class="row-img" width="60" alt="Product image" />
+                      <span class="row-img-none">Add image</span>
+                    </button>
+                    <input type="file" class="row-image-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
+                  </td>
                   <td><input class="inline-input" data-field="product_name" /></td>
                   <td><textarea class="inline-input" data-field="description" rows="2"></textarea></td>
                   <td><select class="inline-input" data-field="packaging_id"></select></td>
@@ -203,7 +210,7 @@
                     </div>
                   </td>
 
-                  <!-- Sold this week with − / + ("+" records a sale and takes 1 from stock, "−" undoes today's last sale) -->
+                  <!-- Sold this week with − / + ("+" records a sale and takes 1 from stock, "−" undoes the last sale of the past 7 days) -->
                   <td>
                     <div class="qty-control">
                       <button type="button" class="qty-btn" data-qty="minus" data-field="sold" aria-label="Undo a sale">−</button>

@@ -110,7 +110,7 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | `id="q"`, `id="filterCat"`, `id="refresh"` | search box, category filter, Refresh |
 | `id="listingMsg"` | "Product added successfully!" message |
 | `id="rows"` | the table body (filled by the script; keep the 10 `<th>` columns in the same order: ID, Image, Name, Description, Packaging Category, Price, Stock, Sold, Category, Action) |
-| `<template id="rowTemplate">` | the structure of every table row (the script copies it per product). Keep: `class="cell-id"`, `class="row-img"`, the cells with `class="inline-input"` + `data-field` = `product_name`, `description`, `packaging_id`, `unit_price`, `stock`, `category`; the Sold `<input data-field="sold" readonly>`; the `.qty-btn` buttons with `data-qty="minus"/"plus"` + `data-field="stock"` or `"sold"`; and `class="row-delete-btn"`. A changed cell saves by itself (no Save button) |
+| `<template id="rowTemplate">` | the structure of every table row (the script copies it per product). Keep: `class="cell-id"`, the image cell (`class="row-img-btn"` button with `class="row-img"` + `class="row-img-none"` "Add image", and the hidden `<input type="file" class="row-image-input">`: clicking the image picks a new one, saved right away), the cells with `class="inline-input"` + `data-field` = `product_name`, `description`, `packaging_id`, `unit_price`, `stock`, `category`; the Sold `<input data-field="sold" readonly>`; the `.qty-btn` buttons with `data-qty="minus"/"plus"` + `data-field="stock"` or `"sold"`; and `class="row-delete-btn"`. A changed cell saves by itself (no Save button) |
 
 **Notification bell** (messages from the admin)
 
