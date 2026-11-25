@@ -65,6 +65,7 @@ app.use('/api/stall/report', requireRole('vendor'), require('./routes/report'));
 app.use('/api/stall', requireRole('vendor'), require('./routes/stall'));
 app.use('/api/products', requireRole('vendor'), require('./routes/products'));
 app.use('/api/feedback', requireRole('vendor'), require('./routes/feedback'));
+app.use('/api/notifications', requireRole('vendor'), require('./routes/notifications'));
 
 // Admin API
 app.use('/api/admin', requireRole('admin'), require('./routes/admin'));

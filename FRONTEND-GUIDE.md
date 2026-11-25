@@ -109,21 +109,29 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | `id="openAddModalBtn"` | + Add Product |
 | `id="q"`, `id="filterCat"`, `id="refresh"` | search box, category filter, Refresh |
 | `id="listingMsg"` | "Product added successfully!" message |
-| `id="rows"` | the table body (filled by the script; keep the 9 `<th>` columns in the same order: ID, Image, Name, Description, Packaging Category, Price, Stock, Category, Action) |
+| `id="rows"` | the table body (filled by the script; keep the 10 `<th>` columns in the same order: ID, Image, Name, Description, Packaging Category, Price, Stock, Sold, Category, Action) |
+| `<template id="rowTemplate">` | the structure of every table row (the script copies it per product). Keep: `class="cell-id"`, `class="row-img"`, the cells with `class="inline-input"` + `data-field` = `product_name`, `description`, `packaging_id`, `unit_price`, `stock`, `category`; the Sold `<input data-field="sold" readonly>`; the `.qty-btn` buttons with `data-qty="minus"/"plus"` + `data-field="stock"` or `"sold"`; and `class="row-delete-btn"`. A changed cell saves by itself (no Save button) |
 
-**Add / Edit Product pop-up**
+**Notification bell** (messages from the admin)
+
+| Keep this | What it is |
+|---|---|
+| `id="notifBtn"`, `id="notifBadge"` | the bell and its unread count (hidden when 0) |
+| `id="notifPanel"`, `id="notifList"`, `id="notifEmpty"` | the pop-up list. The script adds one `<li class="notif-item">` per message (`.notif-subject`, `.notif-message`, and a `.notif-read-btn` button or a `.notif-status` "Read"); read ones also get `class="read"` |
+
+**Add Product pop-up** (editing happens in the table)
 
 | Keep this | What it is |
 |---|---|
 | `<dialog id="productFormContainer">` | the pop-up itself |
-| `id="formTitle"`, `class="modal-subtitle"` | "Add Product" / "Edit Product" and the "Stall 7 …" line |
+| `id="formTitle"`, `class="modal-subtitle"` | "Add Product" and the "Stall 7 …" line |
 | `id="closeModalBtn"`, `id="cancelEdit"`, `id="saveBtn"` | ×, Cancel, Save |
 | `id="productForm"` | the form |
 | `name="product_id"` (hidden), `name="product_name"`, `name="category"` + `id="formCat"`, `name="description"`, `name="packaging_id"` + `id="formPackaging"`, `name="unit_price"`, `name="stock"`, `name="image"` + `id="imageInput"` | the fields (the `name`s are what the server receives) |
 | `id="imagePreview"` | image preview `<img>` |
 | `id="productMsg"` | error messages inside the pop-up |
 
-**Feedback & Reports**
+**Feedback**
 
 | Keep this | What it is |
 |---|---|
@@ -170,7 +178,9 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 
 Cancel buttons need `data-action="close-dialog"`.
 
-**Buttons the script creates inside table rows** use `data-action="edit"`, `"delete"`, `"approve"`, `"decline"`, plus `data-id`, and the row dropdown uses `data-action="change-category"`. You can style them with CSS like `button[data-action="delete"] { … }`.
+**Notify vendors** (Product Management): `id="notif-btn"` + `id="notif-count"` (bell + unread count), `id="notif-panel"` / `id="notif-list"` / `id="notif-empty"` (sent messages, filled by the script), `<dialog id="notify-dialog">` / `id="notify-form"` with `name="product_id"`, `name="stall_id"` (hidden), `id="notify-stall"`, `id="notify-product"` (read-only) and `name="comments"`. The Stall Management panel `id="notification-list"` shows the same list.
+
+**Buttons the script creates inside table rows** use `data-action="notify"` (products), `"edit"`, `"delete"`, `"approve"`, `"decline"`, plus `data-id`, and the row dropdown uses `data-action="change-category"`. You can style them with CSS like `button[data-action="delete"] { … }`.
 
 ### `cookie-policy.html`
 Plain page with no script. Change anything (the IDs are only there to make styling easy).

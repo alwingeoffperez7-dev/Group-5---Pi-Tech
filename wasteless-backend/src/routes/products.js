@@ -1,15 +1,20 @@
-// Product Listing page: list, search, filter, add, edit, delete.
+// Product Listing page: list, search, filter, add, edit (cell by cell), delete,
+// and the Sold +/- buttons (record / undo a sale).
 const express = require('express');
 const pool = require('../db');
 const { upload, HttpError, wrap, discardUpload } = require('../middleware');
+const { rejectBottledWater } = require('../rules');
 
 const router = express.Router();
 
 // Columns the front end gets for each product.
+// sold = pieces sold in the last 7 days, today included (same week as the dashboard and Eco-Tip).
 const SELECT_PRODUCT = `
   SELECT p.product_id, p.canteen_id AS stall_id, c.business_name AS stall_name,
          p.product_name, p.description, p.category_id, cat.category_name,
          p.packaging_id, pk.packaging_name, p.unit, p.unit_price, p.stock, p.reorder_threshold,
+         (SELECT COALESCE(SUM(s.quantity_sold), 0) FROM sales_record s
+          WHERE s.product_id = p.product_id AND s.sold_at >= CURDATE() - INTERVAL 6 DAY) AS sold,
          (p.stock <= p.reorder_threshold) AS is_low_stock,
          p.image_path, p.created_at, p.updated_at
   FROM product p
@@ -20,6 +25,7 @@ const SELECT_PRODUCT = `
 function toJson(row) {
   return {
     ...row,
+    sold: Number(row.sold),
     is_low_stock: Boolean(row.is_low_stock),
     image_url: row.image_path ? `/uploads/${row.image_path}` : null
   };
@@ -56,6 +62,7 @@ async function validate(body, existing) {
     out.product_name = String(name ?? '').trim();
     if (!out.product_name) errors.product_name = 'Product name is required';
     else if (out.product_name.length > 120) errors.product_name = 'Product name is too long (max 120)';
+    else rejectBottledWater(out.product_name);
   }
 
   if (body.description !== undefined) {
@@ -214,6 +221,76 @@ router.put('/:id', upload.single('image'), wrap(async (req, res) => {
 
   const product = await findProduct(pool, req.canteenId, existing.product_id);
   res.json(toJson(product));
+}));
+
+// POST /api/products/:id/sales   (Sold "+" button)   body: { quantity } (default 1)
+// Records a sale now and takes it out of stock. Can't sell more than is in stock.
+router.post('/:id/sales', wrap(async (req, res) => {
+  const quantity = req.body && req.body.quantity !== undefined ? Number(req.body.quantity) : 1;
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
+    throw new HttpError(400, 'Quantity must be a whole number from 1 to 1000');
+  }
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [[p]] = await conn.query(
+      'SELECT product_id, stock, unit_price FROM product WHERE product_id = ? AND canteen_id = ? AND is_active = 1 FOR UPDATE',
+      [req.params.id, req.canteenId]
+    );
+    if (!p) throw new HttpError(404, 'Product not found');
+    if (p.stock < quantity) throw new HttpError(400, `Not enough stock: only ${p.stock} left. Add stock first.`);
+    await conn.query(
+      'INSERT INTO sales_record (product_id, user_id, quantity_sold, unit_price) VALUES (?, ?, ?, ?)',
+      [p.product_id, req.staffId, quantity, p.unit_price]
+    );
+    await conn.query('UPDATE product SET stock = stock - ? WHERE product_id = ?', [quantity, p.product_id]);
+    await conn.query(
+      `INSERT INTO stocklog (product_id, staff_id, log_type, stock_before, stock_after, notes)
+       VALUES (?, ?, 'sale', ?, ?, 'Sold from Product Listing')`,
+      [p.product_id, req.staffId, p.stock, p.stock - quantity]
+    );
+    await conn.commit();
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+  res.status(201).json(toJson(await findProduct(pool, req.canteenId, req.params.id)));
+}));
+
+// DELETE /api/products/:id/sales/last   (Sold "−" button)
+// Undoes this product's most recent sale from TODAY (older sales are kept) and puts it back in stock.
+router.delete('/:id/sales/last', wrap(async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [[p]] = await conn.query(
+      'SELECT product_id, stock FROM product WHERE product_id = ? AND canteen_id = ? AND is_active = 1 FOR UPDATE',
+      [req.params.id, req.canteenId]
+    );
+    if (!p) throw new HttpError(404, 'Product not found');
+    const [[sale]] = await conn.query(
+      `SELECT sale_id, quantity_sold FROM sales_record
+       WHERE product_id = ? AND sold_at >= CURDATE() ORDER BY sold_at DESC, sale_id DESC LIMIT 1`,
+      [p.product_id]
+    );
+    if (!sale) throw new HttpError(400, 'No sale of this product today to undo.');
+    await conn.query('DELETE FROM sales_record WHERE sale_id = ?', [sale.sale_id]);
+    await conn.query('UPDATE product SET stock = stock + ? WHERE product_id = ?', [sale.quantity_sold, p.product_id]);
+    await conn.query(
+      `INSERT INTO stocklog (product_id, staff_id, log_type, stock_before, stock_after, notes)
+       VALUES (?, ?, 'adjustment', ?, ?, 'Sale undone from Product Listing')`,
+      [p.product_id, req.staffId, p.stock, p.stock + sale.quantity_sold]
+    );
+    await conn.commit();
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+  res.json(toJson(await findProduct(pool, req.canteenId, req.params.id)));
 }));
 
 // DELETE /api/products/:id   (Delete pop-up → "Delete")

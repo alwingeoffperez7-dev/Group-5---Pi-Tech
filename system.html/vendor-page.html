@@ -19,7 +19,7 @@
           <ul>
             <li><a href="#dashboard" class="active">Dashboard</a></li>
             <li><a href="#listing">Product Listing</a></li>
-            <li><a href="#feedback">Feedback &amp; Reports</a></li>
+            <li><a href="#feedback">Feedback</a></li>
           </ul>
         </nav>
         <div class="sidebar-footer">
@@ -45,15 +45,9 @@
             <div id="notifPanel" class="notif-panel" hidden>
               <h3 class="notif-title">Notifications</h3>
               <ul id="notifList" class="notif-list">
-                <!-- Each item: title/message + a "Read" button -->
-                <li class="notif-item" data-notif-id="">
-                  <div class="notif-text">
-                    <strong class="notif-subject">Subject</strong>
-                    <p class="notif-message">Message</p>
-                  </div>
-                  <button type="button" class="btn outline btn-sm notif-read-btn">Read</button>
-                </li>
+                <!-- Filled by vendor-page.js: one .notif-item per notification from the admin -->
               </ul>
+              <p id="notifEmpty" class="notif-empty" hidden>No notifications yet.</p>
             </div>
           </div>
         </header>
@@ -71,9 +65,9 @@
   </div>
 
   <div class="stat-card">
-    <h3>Plastic Items Sold This Week</h3>
+    <h3>Items Sold This Week</h3>
     <p class="stat-value" id="vendor-sold-items">0</p>
-    <p class="stat-note">Plastic-packaged items sold</p>
+    <p class="stat-note">Last 7 days, from Product Listing</p>
   </div>
 
   <div class="stat-card">
@@ -82,33 +76,26 @@
   </div>
 </section>
 
-            <section class="dashboard-stats">
-  <div class="stat-card">
-    <h3>Stall ID</h3>
-    <p class="stat-value" id="vendor-stall-id">Loading...</p>
-  </div>
-
-  <div class="stat-card">
-    <h3>Stall Name</h3>
-    <p class="stat-value" id="vendor-stall-name">Loading...</p>
-  </div>
-
-  <div class="stat-card">
-    <h3>Total Products</h3>
-    <p class="stat-value" id="count">00</p>
-    <p class="stat-note">Listed in your stall</p>
-  </div>
-
-  <div class="stat-card">
-    <h3>Sold Items</h3>
-    <p class="stat-value" id="vendor-sold-items">0</p>
-  </div>
-
-  <div class="stat-card">
-    <h3>Package Category</h3>
-    <ul class="package-breakdown" id="packageBreakdown"></ul>
-  </div>
-</section>
+            <!-- Dashboard graph: items sold per packaging category -->
+            <section class="card chart-card">
+              <h2>Packaging Used (items sold)</h2>
+              <label
+                >Show
+                <select id="packagingRange">
+                  <option value="7">Last 7 days</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+              </label>
+              <canvas
+                id="packagingChart"
+                width="720"
+                height="320"
+                role="img"
+                aria-label="Line graph of items sold per day for each packaging category"
+              ></canvas>
+              <p class="chart-status" id="packagingChartStatus"></p>
+            </section>
 
             <aside class="eco-tip-banner" id="ecoTipBanner">
               <strong>EcoTip 101</strong>
@@ -210,18 +197,18 @@
                   <!-- NEW: Stock with − / + -->
                   <td>
                     <div class="qty-control">
-                      <button type="button" class="qty-btn" data-qty="minus" data-field="stock_qty" aria-label="Decrease stock">−</button>
-                      <input class="inline-input qty-input" data-field="stock_qty" type="number" min="0" step="1" />
-                      <button type="button" class="qty-btn" data-qty="plus" data-field="stock_qty" aria-label="Increase stock">+</button>
+                      <button type="button" class="qty-btn" data-qty="minus" data-field="stock" aria-label="Decrease stock">−</button>
+                      <input class="inline-input qty-input" data-field="stock" type="number" min="0" step="1" aria-label="Stock" />
+                      <button type="button" class="qty-btn" data-qty="plus" data-field="stock" aria-label="Increase stock">+</button>
                     </div>
                   </td>
 
-                  <!-- Sold with − / + -->
+                  <!-- Sold this week with − / + ("+" records a sale and takes 1 from stock, "−" undoes today's last sale) -->
                   <td>
                     <div class="qty-control">
-                      <button type="button" class="qty-btn" data-qty="minus" data-field="stock" aria-label="Decrease sold">−</button>
-                      <input class="inline-input qty-input" data-field="stock" type="number" min="0" step="1" />
-                      <button type="button" class="qty-btn" data-qty="plus" data-field="stock" aria-label="Increase sold">+</button>
+                      <button type="button" class="qty-btn" data-qty="minus" data-field="sold" aria-label="Undo a sale">−</button>
+                      <input class="qty-input" data-field="sold" type="number" readonly aria-label="Sold this week" />
+                      <button type="button" class="qty-btn" data-qty="plus" data-field="sold" aria-label="Record a sale">+</button>
                     </div>
                   </td>
 
@@ -234,9 +221,8 @@
                     </select>
                   </td>
 
-                  <!-- Save + Delete (as in wireframe) -->
+                  <!-- Changes save as soon as a cell is changed (like a spreadsheet); only Delete here -->
                   <td class="cell-actions">
-                    <button type="button" class="btn outline btn-sm row-save-btn">Save</button>
                     <button type="button" class="btn btn-sm row-delete-btn">Delete</button>
                   </td>
                 </tr>
@@ -321,18 +307,6 @@
                     <label
                       >Stock
                       <input
-                        name="stock_qty"
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="0"
-                        required
-                    /></label>
-                  </div>
-                  <div class="form-group">
-                    <label
-                      >Sold
-                      <input
                         name="stock"
                         type="number"
                         min="0"
@@ -377,9 +351,9 @@
             </dialog>
           </div>
 
-          <!-- ===== PAGE: Feedback & Reports (unchanged) ===== -->
+          <!-- ===== PAGE: Feedback ===== -->
           <div class="page" id="page-feedback" hidden>
-            <h1 class="page-title">Feedback &amp; Reports</h1>
+            <h1 class="page-title">Feedback</h1>
 
             <section class="feedback-grid">
               <div class="card">
@@ -443,26 +417,6 @@
     <script src="/js/api.js"></script>
     <script src="../system.js/vendor-page.js"></script>
 
-    <!-- NEW: UI-only behaviour for the +/- buttons and the notification bell -->
-    <script>
-      // +/- buttons inside the table (works for rows added later too)
-      document.getElementById("rows").addEventListener("click", (e) => {
-        const btn = e.target.closest(".qty-btn");
-        if (!btn) return;
-        const input = btn.parentElement.querySelector(".qty-input");
-        const step = btn.dataset.qty === "plus" ? 1 : -1;
-        input.value = Math.max(0, (parseInt(input.value, 10) || 0) + step);
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      });
-
-      // Bell toggles the notifications panel
-      const notifBtn = document.getElementById("notifBtn");
-      const notifPanel = document.getElementById("notifPanel");
-      notifBtn.addEventListener("click", () => {
-        notifPanel.hidden = !notifPanel.hidden;
-        notifBtn.setAttribute("aria-expanded", String(!notifPanel.hidden));
-      });
-    </script>
   </body>
 </html>
 

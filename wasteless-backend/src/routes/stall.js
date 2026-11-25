@@ -31,7 +31,7 @@ router.get(
      FROM sales_record s
      JOIN product p ON p.product_id = s.product_id
      WHERE p.canteen_id = ?
-       AND YEARWEEK(s.sold_at, 1) = YEARWEEK(CURDATE(), 1)`,
+       AND s.sold_at >= CURDATE() - INTERVAL 6 DAY`, // last 7 days, same as the Sold column + Eco-Tip
       [req.canteenId],
     );
 

@@ -4,6 +4,7 @@
 const express = require("express");
 const pool = require("../db");
 const { HttpError, wrap } = require("../middleware");
+const { rejectBottledWater } = require("../rules");
 
 const router = express.Router();
 
@@ -246,6 +247,7 @@ router.post(
       "stall_id",
     ]);
     await checkProductRefs(req.body);
+    if (req.body.product_name !== undefined) rejectBottledWater(req.body.product_name);
     const [r] = await pool.query(
       `INSERT INTO product (canteen_id, category_id, packaging_id, product_name, unit_price) VALUES (?, ?, ?, ?, 0)`,
       [
@@ -274,6 +276,7 @@ router.put(
     );
     if (!sent.length) throw new HttpError(400, "Nothing to update");
     await checkProductRefs(req.body);
+    if (req.body.product_name !== undefined) rejectBottledWater(req.body.product_name);
     const [r] = await pool.query(
       `UPDATE product SET ${sent.map((k) => `${cols[k]} = ?`).join(", ")} WHERE product_id = ? AND is_active = 1`,
       [
@@ -454,6 +457,51 @@ router.put(
       ],
     );
     res.json({ packaging_id: pk.packaging_id });
+  }),
+);
+
+// ---------- Notify vendors (Product Management > Notify) ----------
+// The admin writes a comment about one product; it goes to that product's stall
+// and shows in the vendor's notification bell (GET /api/notifications).
+router.get(
+  "/notifications",
+  wrap(async (req, res) => {
+    const [rows] = await pool.query(
+      `SELECT n.notification_id, n.canteen_id AS stall_id, c.business_name AS stall_name,
+              n.product_id, p.product_name, n.message, n.is_read, n.created_at
+       FROM notification n
+       JOIN canteen c ON c.canteen_id = n.canteen_id
+       LEFT JOIN product p ON p.product_id = n.product_id
+       WHERE n.notif_type = 'admin'
+       ORDER BY n.created_at DESC, n.notification_id DESC
+       LIMIT 100`,
+    );
+    res.json(rows.map((r) => ({ ...r, is_read: Boolean(r.is_read) })));
+  }),
+);
+
+// POST /api/admin/notifications   { product_id, comments }
+router.post(
+  "/notifications",
+  wrap(async (req, res) => {
+    const message = String(req.body.comments ?? req.body.message ?? "").trim();
+    if (!message) {
+      throw new HttpError(400, "Please write a comment for the vendor.", { comments: "Required" });
+    }
+    if (message.length > 500) {
+      throw new HttpError(400, "The comment is too long (max 500 characters).", { comments: "Max 500" });
+    }
+    const [[p]] = await pool.query(
+      "SELECT product_id, canteen_id FROM product WHERE product_id = ? AND is_active = 1",
+      [req.body.product_id ?? null],
+    );
+    if (!p) throw new HttpError(404, "Product not found");
+    const [r] = await pool.query(
+      `INSERT INTO notification (canteen_id, product_id, notif_type, message)
+       VALUES (?, ?, 'admin', ?)`,
+      [p.canteen_id, p.product_id, message],
+    );
+    res.status(201).json({ notification_id: r.insertId });
   }),
 );
 

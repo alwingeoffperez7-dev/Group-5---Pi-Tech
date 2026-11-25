@@ -99,6 +99,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       loadSubmissions(),
       loadDashboard(),
       loadReportStatus(),
+      loadNotifications(),
     ]);
     await loadProducts();
   } catch (err) {
@@ -358,36 +359,125 @@ function initCategories() {
   }
 }
 
-// Render Products Table
+// ---------- Product table (edited cell by cell, like a spreadsheet) ----------
+// Each row is a copy of <template id="rowTemplate">. A changed cell is saved right away
+// (PUT with just that field). Stock +/- changes the stock; Sold +/- records / undoes a sale.
+
+// Fill one row's cells from a product (also used to undo a cell the server refused).
+function fillRow(tr, prod) {
+  tr.dataset.productId = prod.product_id;
+  tr.querySelector(".cell-id").textContent = prod.product_id;
+  const img = tr.querySelector(".row-img");
+  if (prod.image_url) { img.src = prod.image_url; img.hidden = false; img.alt = prod.product_name; }
+  else { img.removeAttribute("src"); img.hidden = true; }
+
+  const field = (name) => tr.querySelector(`[data-field="${name}"]:not(button)`);
+  field("product_name").value = prod.product_name;
+  field("description").value = prod.description || "";
+  field("unit_price").value = Number(prod.unit_price).toFixed(2);
+  field("stock").value = prod.stock;
+  field("sold").value = prod.sold;
+  field("stock").classList.toggle("low-stock", prod.is_low_stock);
+  field("stock").title = prod.is_low_stock ? "Low stock" : "";
+
+  const packaging = field("packaging_id");
+  packaging.innerHTML = packagingList
+    .map((pk) => `<option value="${pk.packaging_id}">${escapeHtml(pk.packaging_name)}</option>`)
+    .join("");
+  packaging.value = prod.packaging_id;
+
+  const category = field("category");
+  category.innerHTML = categories.map((c) => `<option>${escapeHtml(c)}</option>`).join("");
+  category.value = prod.category;
+}
+
 function renderProducts(dataToRender) {
   const tbody = document.getElementById("rows");
-  if (!tbody) return;
+  const template = document.getElementById("rowTemplate");
+  if (!tbody || !template) return;
 
   tbody.innerHTML = "";
-
   if (dataToRender.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="empty-row">No products found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="empty-row">No products found.</td></tr>`;
     return;
   }
-
   dataToRender.forEach((prod) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${prod.product_id}</td>
-      <td>${prod.image_url ? `<img class="product-thumb" src="${escapeHtml(prod.image_url)}" width="48" height="48" alt="${escapeHtml(prod.product_name)}">` : "No image"}</td>
-      <td><strong>${escapeHtml(prod.product_name)}</strong></td>
-      <td>${escapeHtml(prod.description) || "—"}</td>
-      <td>${escapeHtml(prod.packaging_name)}</td>
-      <td>₱${Number(prod.unit_price).toFixed(2)}</td>
-      <td class="${prod.is_low_stock ? "low-stock" : ""}">${prod.stock}${prod.is_low_stock ? " (low)" : ""}</td>
-      <td>${escapeHtml(prod.category)}</td>
-      <td>
-        <button class="btn outline btn-sm" onclick="editProduct(${prod.product_id})">Edit</button>
-        <button class="btn outline btn-sm text-danger" onclick="deleteProduct(${prod.product_id})">Delete</button>
-      </td>
-    `;
+    const tr = template.content.firstElementChild.cloneNode(true);
+    fillRow(tr, prod);
     tbody.appendChild(tr);
   });
+}
+
+// Keep the local copy + that row up to date after the server answers.
+function updateProduct(prod) {
+  prod = { ...prod, category: prod.category_name };
+  products = products.map((p) => (p.product_id === prod.product_id ? prod : p));
+  const tr = document.querySelector(`#rows tr[data-product-id="${prod.product_id}"]`);
+  if (tr) fillRow(tr, prod);
+  renderDashboard();
+}
+
+function rowProduct(tr) {
+  return products.find((p) => String(p.product_id) === tr.dataset.productId);
+}
+
+// A cell was changed: save just that field.
+async function saveCell(input) {
+  const tr = input.closest("tr");
+  const prod = rowProduct(tr);
+  const fd = new FormData();
+  fd.append(input.dataset.field, input.value);
+  try {
+    updateProduct(await WasteLessAPI.editProduct(prod.product_id, fd));
+    showListingMsg("Saved.");
+  } catch (err) {
+    fillRow(tr, prod); // put the old value back
+    alert(err.message + (Object.values(err.details || {}).length ? "\n" + Object.values(err.details).join("\n") : ""));
+  }
+}
+
+// Stock +/- (change the number, then save) and Sold +/- (record / undo a sale).
+async function stepQuantity(btn) {
+  const tr = btn.closest("tr");
+  const prod = rowProduct(tr);
+  const plus = btn.dataset.qty === "plus";
+  btn.disabled = true;
+  try {
+    if (btn.dataset.field === "sold") {
+      updateProduct(plus ? await WasteLessAPI.recordSale(prod.product_id) : await WasteLessAPI.undoSale(prod.product_id));
+      loadStall().then(renderDashboard).catch(console.error); // "Items Sold This Week" card
+      loadEcoTips().catch(console.error);
+    } else {
+      const input = tr.querySelector('input[data-field="stock"]');
+      input.value = Math.max(0, (parseInt(input.value, 10) || 0) + (plus ? 1 : -1));
+      await saveCell(input);
+    }
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---------- Notification bell (messages from the admin) ----------
+async function loadNotifications() {
+  const data = await WasteLessAPI.getNotifications();
+  const badge = document.getElementById("notifBadge");
+  const list = document.getElementById("notifList");
+  const empty = document.getElementById("notifEmpty");
+  if (badge) { badge.textContent = data.unread; badge.hidden = !data.unread; }
+  if (empty) empty.hidden = data.notifications.length > 0;
+  if (!list) return;
+  list.innerHTML = data.notifications.map((n) => `
+    <li class="notif-item${n.is_read ? " read" : ""}" data-notif-id="${n.notification_id}">
+      <div class="notif-text">
+        <strong class="notif-subject">${escapeHtml(n.product_name || "Message from the admin")}</strong>
+        <p class="notif-message">${escapeHtml(n.message)}</p>
+        <small class="stat-note">${escapeHtml(formatWhen(n.created_at))}</small>
+      </div>
+      ${n.is_read ? `<span class="notif-status">Read</span>`
+        : `<button type="button" class="btn outline btn-sm notif-read-btn">Read</button>`}
+    </li>`).join("");
 }
 
 // Render Submissions List
@@ -465,6 +555,49 @@ function setupEventListeners() {
   if (closeModalBtn) closeModalBtn.addEventListener("click", closeForm);
   if (cancelEditBtn) cancelEditBtn.addEventListener("click", closeForm);
 
+  // Product table: cells save on change; +/- buttons; Delete
+  const rows = document.getElementById("rows");
+  if (rows) {
+    rows.addEventListener("change", (e) => {
+      const input = e.target.closest(".inline-input");
+      if (input && input.dataset.field) saveCell(input);
+    });
+    rows.addEventListener("click", (e) => {
+      const qty = e.target.closest(".qty-btn");
+      if (qty) return stepQuantity(qty);
+      const del = e.target.closest(".row-delete-btn");
+      if (del) window.deleteProduct(Number(del.closest("tr").dataset.productId));
+    });
+  }
+
+  // Notification bell: open/close the list, mark one as read
+  const notifBtn = document.getElementById("notifBtn");
+  const notifPanel = document.getElementById("notifPanel");
+  if (notifBtn && notifPanel) {
+    notifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      notifPanel.hidden = !notifPanel.hidden;
+      notifBtn.setAttribute("aria-expanded", String(!notifPanel.hidden));
+      if (!notifPanel.hidden) loadNotifications().catch(console.error);
+    });
+    document.addEventListener("click", (e) => {
+      if (!notifPanel.hidden && !notifPanel.contains(e.target)) {
+        notifPanel.hidden = true;
+        notifBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+    notifPanel.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".notif-read-btn");
+      if (!btn) return;
+      try {
+        await WasteLessAPI.markNotificationRead(btn.closest(".notif-item").dataset.notifId);
+        await loadNotifications();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  }
+
   const ecoTipCloseBtn = document.getElementById("ecoTipCloseBtn");
   const ecoTipOpenBtn = document.getElementById("ecoTipOpenBtn");
   if (ecoTipCloseBtn) ecoTipCloseBtn.addEventListener("click", closeEcoTip);
@@ -489,26 +622,19 @@ function setupEventListeners() {
     });
   }
 
-  // Product Form Submission -> POST (add) or PUT (edit)
+  // Add Product form -> POST (editing happens in the table now)
   if (productForm) {
     productForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const formData = new FormData(productForm);
-      const id = formData.get("product_id");
       formData.delete("product_id");
       if (!formData.get("image") || !formData.get("image").size)
         formData.delete("image");
 
       try {
-        if (id) {
-          await WasteLessAPI.editProduct(id, formData);
-        } else {
-          await WasteLessAPI.addProduct(formData);
-        }
+        await WasteLessAPI.addProduct(formData);
         productFormContainer.close();
-        showListingMsg(
-          id ? "Product updated successfully!" : "Product added successfully!",
-        );
+        showListingMsg("Product added successfully!");
         await loadProducts();
       } catch (err) {
         showError("productMsg", err);
@@ -558,27 +684,7 @@ function setupEventListeners() {
   }
 }
 
-// Global functions for table row actions
-window.editProduct = function (productId) {
-  const prod = products.find((p) => p.product_id === productId);
-  if (!prod) return;
-
-  const productForm = document.getElementById("productForm");
-  if (!productForm) return;
-
-  openProductModal(prod);
-  productForm.product_id.value = prod.product_id;
-  productForm.product_name.value = prod.product_name;
-  productForm.category.value = prod.category;
-  productForm.description.value = prod.description || "";
-  productForm.packaging_id.value = prod.packaging_id;
-  productForm.unit_price.value = prod.unit_price;
-  productForm.stock.value = prod.stock;
-  currentImageUrl = prod.image_url;
-  showImagePreview(prod.image_url);
-};
-
-// Image shown under the file input (current image when editing, or the newly picked file)
+// Image shown under the file input (the newly picked file)
 let currentImageUrl = null;
 function showImagePreview(url) {
   const img = document.getElementById("imagePreview");
@@ -588,22 +694,17 @@ function showImagePreview(url) {
   else img.removeAttribute("src");
 }
 
-// Open the Add / Edit Product pop-up (prod = null for Add).
-// Clears it first, so leftovers from last time (or an Esc close) never show.
-function openProductModal(prod) {
+// Open the Add Product pop-up, cleared first (no leftovers from last time or an Esc close).
+function openProductModal() {
   const modal = document.getElementById("productFormContainer");
   const form = document.getElementById("productForm");
   form.reset();
-  form.product_id.value = "";
+  if (form.product_id) form.product_id.value = "";
   document.getElementById("productMsg").textContent = "";
   currentImageUrl = null;
   showImagePreview(null);
-  document.getElementById("formTitle").textContent = prod
-    ? "Edit Product"
-    : "Add Product";
-  document.getElementById("saveBtn").textContent = prod
-    ? "Save Changes"
-    : "Save Product";
+  document.getElementById("formTitle").textContent = "Add Product";
+  document.getElementById("saveBtn").textContent = "Save Product";
   modal.showModal();
 }
 

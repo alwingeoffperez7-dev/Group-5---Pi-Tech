@@ -323,7 +323,7 @@ function renderProducts(products) {
       </td>
       <td>${escapeHtml(p.stall_id)}</td>
       <td>
-        <button type="button" data-action="edit" data-id="${escapeHtml(p.product_id)}">Edit</button>
+        <button type="button" data-action="notify" data-id="${escapeHtml(p.product_id)}">Notify</button>
         <button type="button" data-action="delete" data-id="${escapeHtml(p.product_id)}">Delete</button>
       </td>
     </tr>`;
@@ -559,8 +559,16 @@ listenToTableClicks("stall-table-body", {
 });
 
 listenToTableClicks("product-table-body", {
-  edit: function (id) {
-    openForm("product-form", findById(currentProducts, "product_id", id));
+  // Notify (replaces Edit): write a comment about this product for its stall's vendor
+  notify: function (id) {
+    const p = findById(currentProducts, "product_id", id);
+    const form = byId("notify-form");
+    form.reset();
+    form.elements.product_id.value = p.product_id;
+    form.elements.stall_id.value = p.stall_id;
+    byId("notify-stall").value = "Stall " + p.stall_id + " " + p.stall_name;
+    byId("notify-product").value = p.product_name;
+    byId("notify-dialog").showModal();
   },
   delete: function (id) {
     if (!confirm("Delete this product?")) return;
@@ -641,6 +649,67 @@ byId("product-table-body").addEventListener("change", function (event) {
 
 /* ============================================================================================ */
 
+/* ========== Notify vendors + "My Notifications" (sent by the admin) ========== */
+
+function loadNotifications() {
+  api("GET", "/api/admin/notifications").then(renderNotifications).catch(showApiError);
+}
+
+// Same list in the Product Management bell (#notif-list) and the Stall Management panel (#notification-list).
+function renderNotifications(list) {
+  const items = list.map(function (n) {
+    const status = n.is_read ? "completed" : "pending";
+    return `<li class="notif-item">
+      <div class="notif-text">
+        <strong class="notif-subject">Stall ${escapeHtml(n.stall_id)} ${escapeHtml(n.stall_name)}: ${escapeHtml(n.product_name || "")}</strong>
+        <p class="notif-message">${escapeHtml(n.message)}</p>
+      </div>
+      <span class="notif-status ${status}">${n.is_read ? "Read" : "Not read yet"}</span>
+    </li>`;
+  }).join("");
+  byId("notif-list").innerHTML = items;
+  byId("notif-empty").hidden = list.length > 0;
+  const unread = list.filter(function (n) { return !n.is_read; }).length;
+  byId("notif-count").textContent = unread;
+  byId("notif-count").hidden = !unread;
+  const panel = byId("notification-list");
+  if (panel) panel.innerHTML = list.length ? "<ul>" + items + "</ul>" : "<p>No notifications sent yet.</p>";
+}
+
+// Bell opens / closes the list; a click outside or switching sections closes it
+function closeNotifPanel() {
+  byId("notif-panel").hidden = true;
+  byId("notif-btn").setAttribute("aria-expanded", "false");
+}
+byId("notif-btn").addEventListener("click", function (e) {
+  e.stopPropagation();
+  const open = byId("notif-panel").hidden;
+  byId("notif-panel").hidden = !open;
+  byId("notif-btn").setAttribute("aria-expanded", String(open));
+});
+document.addEventListener("click", function (e) {
+  if (!byId("notif-panel").hidden && !byId("notif-panel").contains(e.target)) closeNotifPanel();
+});
+document.querySelectorAll("[data-section]").forEach(function (b) {
+  b.addEventListener("click", closeNotifPanel);
+});
+
+// Notify pop-up -> POST /api/admin/notifications
+byId("notify-form").addEventListener("submit", async function (event) {
+  event.preventDefault();
+  const form = event.target;
+  try {
+    await api("POST", "/api/admin/notifications", {
+      product_id: form.elements.product_id.value,
+      comments: form.elements.comments.value,
+    });
+  } catch (err) {
+    return showApiError(err);
+  }
+  byId("notify-dialog").close();
+  loadNotifications();
+});
+
 showSection("dashboard");
 loadDashboard();
 loadFeedback();
@@ -649,4 +718,5 @@ loadStalls();
 loadProducts();
 loadCategories();
 loadEcoTips();
+loadNotifications();
 loadDropdownOptions();
