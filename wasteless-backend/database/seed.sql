@@ -13,7 +13,7 @@ INSERT INTO packaging_category (packaging_name, description, example) VALUES
   ('Polystyrene (PS)', 'Light, rigid, or foam plastic frequently used for disposable coffee cups, takeout clamshells, foam packaging, and plastic cutlery.', 'Yakult, Cup of Instant Noodles'),
   ('Plastic Container', 'Rigid plastic tubs, bottles, jars, and clamshells designed to hold food, liquids, or household products.', 'Container ng take-out ng Pancit Canton'),
   ('Plastic Wrapper', 'Soft, flexible plastic film or bags used to wrap individual products, snack foods, grocery items, or multi-packs.', 'Chips, Biscuit, Sachet'),
-  ('Plastic Lid / Cap', 'Small, rigid plastic closures from bottles, jars, and tubs designed to seal container openings.', NULL);
+  ('Plastic Lid / Cap', 'Small, rigid plastic closures from bottles, jars, and tubs designed to seal container openings.', 'Iced Coffee, Milk Tea, Cup Lids');
 
 -- Sample stall (canteen_id = 1). Replace with your real vendors.
 INSERT INTO canteen (business_name, business_email, contact_person, contact_email, contact_number, location)

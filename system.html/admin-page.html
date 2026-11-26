@@ -88,12 +88,22 @@
               <h2>Vendor feedback</h2>
               <p class="card-sub"><span id="feedback-count">0</span> messages</p>
             </div>
-            <label><span class="sr-only">Sort</span>
-          <select id="feedback-sort">
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
-            </label>
+            <div class="feedback-controls">
+              <label><span class="sr-only">Filter by status</span>
+                <select id="feedback-filter">
+                  <option value="">All statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Replied">Replied</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              </label>
+              <label><span class="sr-only">Sort</span>
+                <select id="feedback-sort">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                </select>
+              </label>
+            </div>
           </div>
           <div id="feedback-list"></div>
         </aside>
@@ -121,6 +131,7 @@
               <th>Business Email</th>
               <th>Contact Person</th>
               <th>Contact Number</th>
+              <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -165,11 +176,6 @@
           </aside>
         </div>
       </section>
-
-      <!-- Notify button used in the stall rows -->
-      <template id="notify-vendor-button-template">
-        <button type="button" data-action="notify-vendor">Notify</button>
-      </template>
 
       <!-- products -->
       <section id="section-products" class="page" hidden>
@@ -248,7 +254,7 @@
         </table>
 
         <h2>Tips per Packaging Category</h2>
-        <p>Shown when a category reaches the "High Category Share" condition.</p>
+        <p>Shown when a category reaches the "Top Plastic Categories" condition.</p>
         <table border="1">
           <thead>
             <tr>
@@ -324,7 +330,7 @@
         </p>
         <p>
           <label>Product name
-            <input type="text" name="product_name" id="notify-product-name" placeholder="Product 1 (filled automatically)" required />
+            <input type="text" name="product_name" id="notify-product-name" readonly placeholder="Product 1 (filled automatically)" required />
           </label>
         </p>
         </div>
@@ -390,6 +396,35 @@
       </form>
     </dialog>
 
+
+    <!-- FEEDBACK REPLY DIALOG -->
+    <dialog id="feedback-reply-dialog">
+      <form id="feedback-reply-form">
+        <h2>Reply to Vendor Feedback</h2>
+        <input type="hidden" name="feedback_id" />
+        <p><strong id="feedback-reply-subject"></strong></p>
+        <p id="feedback-reply-message" class="card-sub"></p>
+        <img id="feedback-reply-attachment" class="image-preview" alt="Vendor attachment" hidden />
+        <p>
+          <label>Status
+            <select name="status" id="feedback-reply-status">
+              <option value="Pending">Pending</option>
+              <option value="Replied">Replied</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </label>
+        </p>
+        <p>
+          <label>Admin reply
+            <textarea name="admin_reply" id="feedback-reply-text" rows="4" maxlength="1000" placeholder="Write your reply to the vendor..."></textarea>
+          </label>
+        </p>
+        <div class="dialog-actions">
+          <button type="button" data-action="close-dialog" class="btn outline">Cancel</button>
+          <button type="submit" class="btn primary">Save Reply</button>
+        </div>
+      </form>
+    </dialog>
 
     <script src="/js/api.js"></script>
     <script src="../system.js/admin-page.js"></script>

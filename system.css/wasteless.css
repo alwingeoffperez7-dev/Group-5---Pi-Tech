@@ -1556,540 +1556,6 @@ dialog[id$="-dialog"] form > button[type="submit"] { order: 2; }   /* Save */
   }
 }
 
-
-#section-dashboard {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(260px, 1fr);
-}
-
-#stat-cards {
-  grid-column: 1 / span 2;
-}
-
-#chart-1 {
-  grid-column: 1;
-}
-
-#chart-2 {
-  grid-column: 2;
-}
-
-#feedback-panel {
-  grid-column: 3;
-  grid-row: 1 / span 3;
-}
-
-#chart-1 h2,
-#chart-2 h2 {
-  margin-bottom: var(--space-4);
-  font-size: var(--text-heading);
-}
-
-.chart-empty {
-  color: var(--color-text-muted);
-  text-align: center;
-  padding: var(--space-5) 0;
-}
-
-.chart-bars {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.chart-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 2fr auto;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.chart-label,
-.chart-value {
-  font-size: var(--text-caption);
-  overflow-wrap: anywhere;
-}
-
-.chart-track {
-  height: 12px;
-  background: var(--color-surface-alt);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.chart-bar {
-  height: 100%;
-  background: var(--color-secondary);
-  border-radius: var(--radius-full);
-}
-
-@media (max-width: 900px) {
-  #section-dashboard {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  #stat-cards,
-  #chart-1,
-  #chart-2,
-  #feedback-panel {
-    grid-column: 1;
-  }
-
-  #feedback-panel {
-    grid-row: auto;
-  }
-}
-
-
-/* ==========================================================================
-   PRODUCT LISTING TABLE FIX
-   Paste this at the very END of system.css/wasteless.css (it overrides the
-   earlier rules, so order matters). No HTML changes needed.
-   ========================================================================== */
-
-/* Give the listing page more room than the dashboard */
-.container:has(#page-listing:not([hidden])) { max-width: 90rem; }
-
-/* ---- Table fits the card (fixed layout, % column widths) ---- */
-.product-section table {
-  min-width: 0;
-  table-layout: fixed;
-}
-.product-section th,
-.product-section td {
-  padding: var(--space-3) var(--space-2);
-}
-.product-section th {
-  white-space: normal;
-  line-height: var(--leading-tight);
-}
-.product-section td { white-space: normal; }
-.product-section td:nth-child(4) { min-width: 0; }
-
-/* ID | Image | Name | Description | Packaging | Price | Stock | Sold | Category | Action */
-.product-section th:nth-child(1)  { width: 5%; }
-.product-section th:nth-child(2)  { width: 7%; }
-.product-section th:nth-child(3)  { width: 12%; }
-.product-section th:nth-child(4)  { width: 16%; }
-.product-section th:nth-child(5)  { width: 12%; }
-.product-section th:nth-child(6)  { width: 8%; }
-.product-section th:nth-child(7)  { width: 11%; }
-.product-section th:nth-child(8)  { width: 11%; }
-.product-section th:nth-child(9)  { width: 9%; }
-.product-section th:nth-child(10) { width: 9%; }
-
-/* Stock + Sold are centred, like the wireframe */
-.product-section th:nth-child(7),
-.product-section th:nth-child(8),
-.product-section td:nth-child(7),
-.product-section td:nth-child(8) { text-align: center; }
-
-/* Small screens: fall back to sideways scroll instead of squashing */
-@media (max-width: 80em) {
-  .product-section table { min-width: 60rem; }
-}
-
-/* ---- Inline inputs ---- */
-.inline-input {
-  min-height: var(--control-height-sm);
-  padding: 0 var(--space-2);
-}
-textarea.inline-input {
-  min-height: 3.5rem;
-  padding: var(--space-2);
-  resize: vertical;
-}
-.product-section td select {            /* beats the global "td select" min-width */
-  width: 100%;
-  min-width: 0;
-  padding-right: 1.75rem;
-  background-position: right var(--space-2) center;
-  background-size: 1rem;
-}
-.inline-input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-.inline-input[type="number"]::-webkit-inner-spin-button,
-.inline-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.row-img {
-  width: 3rem;
-  height: 3rem;
-  object-fit: cover;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-alt);
-  font-size: 0;
-}
-
-/* ---- Stock / Sold:  [ - ] [ 00 ] [ + ]  (buttons left and right) ---- */
-.qty-control {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-}
-.qty-btn {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  font: var(--weight-bold) 1rem / 1 var(--font-sans);
-  cursor: pointer;
-  transition: background-color var(--motion-fast) var(--ease),
-              border-color var(--motion-fast) var(--ease),
-              color var(--motion-fast) var(--ease);
-}
-.qty-btn:hover {
-  background: var(--color-surface-alt);
-  border-color: var(--color-secondary);
-  color: var(--color-secondary);
-}
-.qty-btn:active { transform: translateY(1px); }
-.qty-input {
-  flex: 1 1 auto;
-  width: 100%;
-  min-width: 0;
-  max-width: 3.5rem;
-  padding: 0 var(--space-1);
-  text-align: center;
-}
-
-/* ---- Save / Delete stacked in the last column ---- */
-.product-section td.cell-actions { white-space: normal; }
-.product-section td.cell-actions .btn { width: 100%; }
-.product-section td.cell-actions button + button { margin: var(--space-1) 0 0; }
-.row-delete-btn {
-  --btn-fg: var(--color-danger);
-  --btn-fg-hover: var(--color-danger);
-  --btn-border-hover: var(--color-danger);
-}
-
-/* ---- Header + notification bell (these had no styles) ---- */
-.vendor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-.notif-wrapper { position: relative; }
-.notif-btn {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--control-height);
-  height: var(--control-height);
-  padding: 0;
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-.notif-btn:hover { border-color: var(--color-secondary); }
-.notif-badge {
-  position: absolute;
-  top: -0.4rem;
-  right: -0.4rem;
-  min-width: 1.1rem;
-  padding: 0 var(--space-1);
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: var(--color-text-on-dark);
-  font: var(--weight-bold) var(--text-caption) / 1.1rem var(--font-sans);
-  text-align: center;
-}
-.notif-panel {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  right: 0;
-  z-index: 20;
-  width: min(22rem, 90vw);
-  padding: var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-overlay);
-}
-.notif-title { margin-bottom: var(--space-2); }
-.notif-list { margin: 0; padding: 0; list-style: none; }
-.notif-item {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-}
-.notif-item + .notif-item { border-top: 1px solid var(--color-border); }
-.notif-message { color: var(--color-text-secondary); }
-
-/* ==========================================================================
-   HEADER SQUEEZE FIX: fixed column widths + horizontal scroll
-   (replaces the % widths above; keep this at the very END of the file)
-   ========================================================================== */
-.product-section .table-responsive { overflow-x: auto; }
-.product-section table { min-width: 87rem; }   /* scrolls left/right when the card is narrower */
-.product-section th { white-space: nowrap; padding: var(--space-3) var(--space-4); }
-.product-section td { padding: var(--space-3) var(--space-4); }
-
-.product-section th:nth-child(1)  { width: 6.5rem; }   /* Product ID */
-.product-section th:nth-child(2)  { width: 8rem; }     /* Product Image */
-.product-section th:nth-child(3)  { width: 9rem; }     /* Product Name */
-.product-section th:nth-child(4)  { width: 13rem; }    /* Product Description */
-.product-section th:nth-child(5)  { width: 11.5rem; }  /* Packaging Category */
-.product-section th:nth-child(6)  { width: 5.5rem; }   /* Price */
-.product-section th:nth-child(7)  { width: 9rem; }     /* Stock */
-.product-section th:nth-child(8)  { width: 9rem; }     /* Sold */
-.product-section th:nth-child(9)  { width: 8.5rem; }   /* Category */
-.product-section th:nth-child(10) { width: 7rem; }     /* Action */
-
-/* ==========================================================================
-   ADMIN LIST PAGES FIX  (keep at the very END of wasteless.css)
-   ========================================================================== */
-
-/* Wider content area so the tables can be larger */
-main > [id^="section-"] { max-width: 90rem; }
-
-/* ---- Toolbar: Search on its own row at the top, everything else below ---- */
-#section-accounts,
-#section-products,
-#section-categories,
-#stall-table-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3) var(--space-4);
-}
-#section-accounts > input[type="search"],
-#section-products > input[type="search"],
-#section-categories > input[type="search"],
-#stall-table-panel > input[type="search"] {
-  flex: 1 1 100%;
-  width: 100%;
-  max-width: none;
-}
-#section-accounts > select,
-#section-products > select,
-#section-categories > select,
-#stall-table-panel > select { flex: 0 1 15rem; }
-
-#section-accounts > span,
-#section-products > span,
-#section-categories > span,
-#stall-table-panel > span {
-  margin-left: auto;          /* count, sort and add button sit on the right */
-  font-size: 1rem;
-}
-
-/* Bigger controls */
-#section-accounts input, #section-accounts select,
-#section-products input, #section-products select,
-#section-categories input, #section-categories select,
-#stall-table-panel input, #stall-table-panel select {
-  min-height: 3rem;
-  font-size: 1rem;
-}
-#stall-add-button, #product-add-button, #category-add-button {
-  --btn-height: 3rem;
-  --btn-size: 1rem;
-  --btn-px: var(--space-5);
-}
-
-/* Notification bell goes to the far right of the toolbar row */
-[id^="section-"] > .notif-wrapper,
-[id^="section-"] > .notif-btn,
-#section-products .notif-wrapper { order: 10; }
-
-/* ---- Tables: fill their width, so no empty white panel ---- */
-[id^="section-"] > table,
-#stall-table-panel > table {
-  display: table;
-  flex: 1 1 100%;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  font-size: 1rem;
-}
-[id^="section-"] > table th,
-#stall-table-panel > table th {
-  padding: var(--space-4) var(--space-5);
-  font-size: 0.875rem;
-}
-[id^="section-"] > table td,
-#stall-table-panel > table td {
-  padding: var(--space-4) var(--space-5);
-  font-size: 1rem;
-}
-[id^="section-"] > table tbody tr:last-child td,
-#stall-table-panel > table tbody tr:last-child td { border-bottom: 0; }
-
-/* Bigger row buttons (Approve, Decline, Edit, Delete, Notify) */
-[id^="section-"] td button {
-  --btn-height: 2.5rem;
-  --btn-px: var(--space-4);
-  --btn-size: 0.9375rem;
-}
-td select { min-height: 2.5rem; font-size: 1rem; }
-
-/* ---- Stall Management: table left, notifications right ---- */
-#section-stalls { display: block; }
-#stall-management-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(18rem, 1fr);
-  gap: var(--space-5);
-  align-items: start;
-}
-#stall-table-panel { min-width: 0; }
-
-#my-notifications-panel {
-  position: sticky;
-  top: var(--space-5);
-  padding: var(--space-5);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-#my-notifications-panel > h2 { margin-bottom: var(--space-4); }
-#notification-list {
-  display: flex;
-  flex-direction: column;
-  max-height: 36rem;
-  overflow-y: auto;
-  color: var(--color-text-muted);       /* "No notifications sent yet." */
-}
-.notification-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4) 0;
-  color: var(--color-text-primary);
-}
-.notification-item + .notification-item { border-top: 1px solid var(--color-border); }
-.notification-item .notification-vendor { font-weight: var(--weight-semibold); }
-.notification-item .notification-message { color: var(--color-text-secondary); }
-.notification-item button[data-action="notify-vendor"] {
-  --btn-bg: var(--color-secondary);
-  --btn-fg: var(--color-text-on-dark);
-  --btn-border: var(--color-secondary);
-  --btn-bg-hover: var(--color-primary);
-  --btn-fg-hover: var(--color-text-on-dark);
-  --btn-border-hover: var(--color-primary);
-  align-self: flex-start;
-}
-
-@media (max-width: 56.25em) {
-  #stall-management-layout { grid-template-columns: minmax(0, 1fr); }
-  #my-notifications-panel { position: static; }
-}
-#stall-table-panel>table th,
-#stall-table-panel>table td { padding: var(--space-4) var(--space-3); }
-#stall-table-panel>table td:last-child { white-space: normal; }
-#stall-table-panel>table td:last-child button { margin: var(--space-1) var(--space-1) var(--space-1) 0; }
-#stall-table-panel>table { display: block; overflow-x: auto; }
-@media (max-width: 75em) {
-  #stall-management-layout { grid-template-columns: minmax(0, 1fr); }
-  #my-notifications-panel { position: static; }
-}
-
-/* ==========================================================================
-   NOTIFICATIONS + STALL LAYOUT FIX
-   Paste at the very END of system.css/wasteless.css (it overrides earlier rules).
-   ========================================================================== */
-
-/* ---- Stall Management: table on the left, My Notifications always on the RIGHT ---- */
-#stall-management-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 18rem;
-  gap: var(--space-5);
-  align-items: start;
-}
-#stall-table-panel { min-width: 0; }
-/* the table scrolls inside its own box instead of running under the notifications */
-#stall-table-panel > table { display: block; overflow-x: auto; }
-#stall-table-panel > table th,
-#stall-table-panel > table td { padding: var(--space-4) var(--space-3); }
-#stall-table-panel > table td:last-child { white-space: normal; }
-#stall-table-panel > table td:last-child button { margin: var(--space-1) var(--space-1) var(--space-1) 0; }
-#my-notifications-panel { position: sticky; top: var(--space-5); }
-
-/* ---- Product Management: bell beside "+ Add Product" ---- */
-.notif-wrap { position: relative; }
-
-#notif-btn {
-  --btn-height: 3rem;
-  position: relative;
-  width: 3rem;
-  height: 3rem;
-  min-height: 3rem;
-  padding: 0;
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-}
-#notif-btn:hover,
-#notif-btn[aria-expanded="true"] {
-  background: var(--color-surface-alt);
-  border-color: var(--color-secondary);
-  color: var(--color-secondary);
-}
-#notif-count {
-  position: absolute;
-  top: -0.45rem;
-  right: -0.45rem;
-  min-width: 1.25rem;
-  padding: 0 var(--space-1);
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: var(--color-text-on-dark);
-  font: var(--weight-bold) var(--text-caption) / 1.25rem var(--font-sans);
-  text-align: center;
-}
-
-/* notification list pop-up */
-#notif-panel {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  right: 0;
-  z-index: 30;
-  width: min(24rem, 90vw);
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-overlay);
-}
-#notif-title { margin-bottom: var(--space-2); }
-#notif-list { margin: 0; padding: 0; list-style: none; }
-.notif-item {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-}
-.notif-item + .notif-item { border-top: 1px solid var(--color-border); }
-.notif-text { min-width: 0; }
-.notif-message { margin-top: var(--space-1); color: var(--color-text-secondary); overflow-wrap: anywhere; }
-#notif-empty { padding: var(--space-3) 0; color: var(--color-text-muted); }
-
 /* ==========================================================================
    10. FIGMA DESIGN (accepted 2026-11-27): keep at the very END of the file.
    Overrides the older rules above for the sidebar, header, bell, product
@@ -2223,6 +1689,8 @@ body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
 .container { padding: var(--space-5) var(--space-6) var(--space-6); }
 
 /* Bell: icon button with a red count */
+.notif-wrapper { position: relative; }
+.notif-list { margin: 0; padding: 0; list-style: none; }
 .notif-btn,
 #notif-btn {
   --icon: var(--icon-bell);
@@ -2330,7 +1798,7 @@ body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
   border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
-.product-section table { min-width: 62rem; table-layout: fixed; width: 100%; border: 0; border-collapse: collapse; }
+.product-section table { min-width: 68rem; table-layout: fixed; width: 100%; border: 0; border-collapse: collapse; }
 .product-section th {
   padding: var(--space-3);
   background: var(--color-surface-alt);
@@ -2357,6 +1825,10 @@ body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
 .product-section th:nth-child(3),
 .product-section th:nth-child(4)  { width: auto; }   /* name + description share the rest */
 .product-section td:nth-child(1) { color: var(--color-text-muted); }
+.product-section th:nth-child(7),
+.product-section th:nth-child(8),
+.product-section td:nth-child(7),
+.product-section td:nth-child(8) { text-align: center; }
 
 .inline-input,
 .product-section td select,
@@ -2367,7 +1839,19 @@ body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
   background: var(--color-surface-alt);
   font-size: var(--text-body);
 }
-.product-section td select { border-color: var(--color-border); background-color: var(--color-surface); }
+.inline-input { padding: 0 var(--space-2); }
+.inline-input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.inline-input[type="number"]::-webkit-inner-spin-button,
+.inline-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.product-section td select {
+  width: 100%;
+  min-width: 0;
+  padding-right: 1.75rem;
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
+  background-position: right var(--space-2) center;
+  background-size: 1rem;
+}
 .inline-input:hover { border-color: var(--color-border); }
 .inline-input:focus { border-color: var(--color-focus); background: var(--color-surface); }
 textarea.inline-input { min-height: 2.5rem; resize: vertical; }
@@ -2394,6 +1878,7 @@ textarea.inline-input { min-height: 2.5rem; resize: vertical; }
 .qty-input {
   width: 2.5rem;
   min-height: 2.5rem;
+  padding: 0 var(--space-1);
   border: 0;
   background: transparent;
   text-align: center;
@@ -2649,6 +2134,39 @@ main > [id^="section-"] { max-width: none; padding: var(--space-5) var(--space-6
 #feedback-list .feedback-item + .feedback-item { border-top: 0; }
 
 /* List pages: search with an icon, count pill, table in a card */
+#section-accounts,
+#section-products,
+#section-categories,
+#stall-table-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+#section-stalls { display: block; }
+#stall-management-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: var(--space-5);
+  align-items: start;
+}
+#stall-table-panel { min-width: 0; }
+#my-notifications-panel {
+  position: sticky;
+  top: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+#my-notifications-panel > h2 { margin-bottom: var(--space-4); }
+#notification-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 36rem;
+  overflow-y: auto;
+  color: var(--color-text-muted);
+}
 .search-input {
   padding-left: 2.75rem !important;
   background: var(--color-surface) var(--icon-search-muted) no-repeat 1rem center / 1.25rem;
@@ -2658,7 +2176,7 @@ main > [id^="section-"] { max-width: none; padding: var(--space-5) var(--space-6
 #section-categories > input[type="search"],
 #stall-table-panel > input[type="search"] { flex: 1 1 16rem; width: auto; max-width: none; min-height: 3rem; }
 [id^="section-"] > select,
-#stall-table-panel > select { min-height: 3rem; }
+#stall-table-panel > select { flex: 0 1 14rem; width: auto; min-height: 3rem; }
 .count-pill {
   margin-left: 0 !important;
   padding: var(--space-1) var(--space-3);
@@ -2838,3 +2356,268 @@ textarea.inline-input { height: 2.5rem; min-height: 2.5rem; padding-block: 0.5re
 .policy-table th:first-child { width: 7rem; }
 .policy-table th,
 .policy-table td { white-space: normal; overflow-wrap: anywhere; }
+
+/* ---- QA fixes: selects, table overflow, stat alignment, feedback reply ---- */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  white-space: nowrap;
+}
+#chart-container select,
+.chart-card select,
+#feedback-panel select {
+  min-width: fit-content;
+}
+
+/* Admin dashboard stat cards: align big numbers even if a label wraps to 2 lines */
+#stat-cards > div {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  align-content: start;
+}
+
+/* Admin Stall Management: full-width table on desktop, stack My Notifications below 1200px */
+#stall-table-panel > table {
+  display: table;
+  width: 100%;
+}
+#notification-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 75em) {
+  #stall-management-layout { grid-template-columns: minmax(0, 1fr); }
+  #my-notifications-panel { position: static; }
+}
+
+/* Admin list tables: scroll inside the card on smaller viewports instead of clipping buttons */
+@media (max-width: 75em) {
+  [id^="section-"] > table,
+  #stall-table-panel > table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+[id^="section-"] td:last-child { white-space: nowrap; }
+[id^="section-"] td button:disabled { opacity: 0.45; cursor: default; }
+[id^="section-"] td button[data-action="delete"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: 2.5rem;
+  line-height: 0;
+}
+
+/* Vendor Product Listing: clean 1-line description without a tiny scrollbar until focused */
+textarea.inline-input { overflow-y: hidden; }
+textarea.inline-input:focus { overflow-y: auto; height: auto; min-height: 4rem; }
+.product-section th:nth-child(10) { width: 4.5rem; }
+.product-section td.cell-actions .row-delete-btn { margin-inline: auto; }
+.qty-input[readonly] { background: transparent; }
+
+/* Admin pop-ups: override old flex justify-content: flex-end so the grid column fills the dialog */
+dialog[id$="-dialog"] form {
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+}
+
+/* Admin & Vendor Feedback reply + view UI */
+#feedback-list {
+  padding-right: var(--space-2);
+  scrollbar-width: thin;
+}
+.feedback-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.feedback-item-footer .tags {
+  margin: 0;
+  align-items: center;
+}
+.feedback-item-footer .tag {
+  display: inline-flex;
+  align-items: center;
+  height: 1.875rem;
+  padding: 0 var(--space-3);
+  line-height: 1;
+}
+.feedback-reply-btn {
+  flex-shrink: 0;
+  min-height: 1.875rem;
+  height: 1.875rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-caption);
+  line-height: 1;
+}
+.feedback-reply-preview,
+.feedback-reply-box {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+}
+.submission-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.sub-dialog-body {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+}
+.sub-dialog-body p { white-space: pre-wrap; }
+.notif-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.notif-actions .btn-sm {
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-caption);
+}
+
+/* ---- Shared toast & confirmation dialog (WasteLessAPI.toast / .confirm) ---- */
+.wl-toast-stack {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: min(24rem, calc(100vw - 2rem));
+}
+.wl-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-overlay);
+  font-size: var(--text-body);
+}
+.wl-toast-error {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.wl-toast-ok {
+  border-color: var(--color-secondary);
+  background: var(--color-accent-soft);
+  color: var(--color-primary);
+}
+.wl-toast-close {
+  flex: none;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.wl-confirm-dialog {
+  width: min(26rem, calc(100% - var(--space-5)));
+  margin: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
+}
+.wl-confirm-dialog::backdrop { background: var(--color-scrim); }
+.wl-confirm-form { display: grid; gap: var(--space-4); }
+.wl-confirm-msg { margin: 0; font-size: var(--text-body); color: var(--color-text-primary); }
+.wl-confirm-ok.danger {
+  --btn-bg: var(--color-danger);
+  --btn-border: var(--color-danger);
+  --btn-bg-hover: #b91c1c;
+  --btn-border-hover: #b91c1c;
+}
+
+/* ---- UI/UX polish: inline save flash, feedback filter, empty states, mobile ---- */
+.cell-saved {
+  border-color: var(--color-success) !important;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.feedback-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.empty-cta {
+  text-align: center;
+}
+.empty-cta .btn {
+  margin-left: var(--space-3);
+}
+#feedback-reply-attachment {
+  max-width: 100%;
+  max-height: 16rem;
+  object-fit: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Mobile & tablet responsiveness */
+@media (max-width: 56.25em) {
+  .vendor-sidebar,
+  #sidebar {
+    padding: var(--space-3) var(--space-4);
+  }
+  .sidebar-nav ul,
+  #sidebar nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .product-section .table-responsive,
+  [id^="section-"] > table,
+  #stall-table-panel > table {
+    -webkit-overflow-scrolling: touch;
+  }
+  .feedback-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 37.5em) {
+  #stat-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .filter-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-toolbar label,
+  .filter-toolbar .search-field {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+  .feedback-controls {
+    width: 100%;
+  }
+  .feedback-controls label,
+  .feedback-controls select {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+  .feedback-item-footer {
+    flex-wrap: wrap;
+  }
+}

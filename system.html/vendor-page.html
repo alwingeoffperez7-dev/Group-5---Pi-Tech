@@ -447,6 +447,25 @@
                 <ul id="subs" class="submission-list"></ul>
               </div>
             </section>
+
+            <dialog id="submissionDialog" class="product-modal" aria-labelledby="subDialogTitle">
+              <div class="modal-header-row">
+                <h2 id="subDialogTitle">Submission</h2>
+                <button type="button" id="closeSubDialogBtn" class="close-btn" aria-label="Close">×</button>
+              </div>
+              <p id="subDialogMeta" class="modal-subtitle"></p>
+              <div class="sub-dialog-body">
+                <p id="subDialogMessage"></p>
+                <img id="subDialogAttachment" class="image-preview" alt="Attached screenshot" hidden />
+                <div id="subDialogReplyWrap" class="feedback-reply-box" hidden>
+                  <strong>Admin reply</strong>
+                  <p id="subDialogReply"></p>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="button" id="closeSubDialogFooterBtn" class="btn primary">Close</button>
+              </div>
+            </dialog>
           </div>
         </main>
       </div>

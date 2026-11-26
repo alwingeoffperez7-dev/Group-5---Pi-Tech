@@ -32,7 +32,7 @@ async function loadStall() {
 }
 
 // ---------- Sidebar pages (#dashboard, #listing, #feedback) ----------
-function showPage() {
+function showPage(initial = false) {
   const name = location.hash.slice(1) || "dashboard";
   const page = document.getElementById("page-" + name) ? name : "dashboard";
   document.querySelectorAll(".page").forEach((p) => {
@@ -51,10 +51,10 @@ function showPage() {
   window.scrollTo(0, 0);
   if (page === "dashboard") {
     loadEcoTips().catch(console.error); // pop-up on every dashboard visit
-    loadStall().then(renderDashboard).catch(console.error); // Running low after stock changes
+    if (!initial) loadStall().then(renderDashboard).catch(console.error); // Running low after stock changes
   }
 }
-window.addEventListener("hashchange", showPage);
+window.addEventListener("hashchange", () => showPage(false));
 
 async function loadCategories() {
   const list = await WasteLessAPI.getCategories();
@@ -99,7 +99,7 @@ async function loadSubmissions() {
 
 // DOMContentLoaded Initialization
 document.addEventListener("DOMContentLoaded", async () => {
-  showPage();
+  showPage(true);
   setupEventListeners();
   try {
     await Promise.all([
@@ -302,9 +302,10 @@ async function loadReportStatus() {
 async function downloadReport() {
   const btn = document.getElementById("downloadReportBtn");
   if (
-    !confirm(
+    !(await WasteLessAPI.confirm(
       "You can download the report only once every 7 days. Download it now?",
-    )
+      "Download",
+    ))
   )
     return;
   btn.disabled = true;
@@ -333,7 +334,7 @@ async function downloadReport() {
     URL.revokeObjectURL(link.href);
     showListingMsg("Report downloaded.");
   } catch (err) {
-    alert(err.message);
+    WasteLessAPI.toast(err.message, "error");
   } finally {
     loadReportStatus();
   }
@@ -425,7 +426,12 @@ function renderProducts(dataToRender) {
 
   tbody.innerHTML = "";
   if (dataToRender.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" class="empty-row">No products found.</td></tr>`;
+    tbody.innerHTML =
+      products.length === 0
+        ? `<tr><td colspan="10" class="empty-row empty-cta"><span>No products listed yet.</span> <button type="button" class="btn primary btn-sm" id="emptyAddBtn">Add your first product</button></td></tr>`
+        : `<tr><td colspan="10" class="empty-row">No products match your search or filter.</td></tr>`;
+    const emptyAdd = document.getElementById("emptyAddBtn");
+    if (emptyAdd) emptyAdd.addEventListener("click", () => openProductModal());
     return;
   }
   dataToRender.forEach((prod) => {
@@ -448,6 +454,15 @@ function rowProduct(tr) {
   return products.find((p) => String(p.product_id) === tr.dataset.productId);
 }
 
+// Briefly highlight an edited cell so the vendor sees it saved right where they edited.
+function flashSaved(el) {
+  if (!el) return;
+  el.classList.remove("cell-saved");
+  void el.offsetWidth;
+  el.classList.add("cell-saved");
+  setTimeout(() => el.classList.remove("cell-saved"), 1200);
+}
+
 // A cell was changed: save just that field.
 async function saveCell(input) {
   const tr = input.closest("tr");
@@ -456,10 +471,14 @@ async function saveCell(input) {
   fd.append(input.dataset.field, input.value);
   try {
     updateProduct(await WasteLessAPI.editProduct(prod.product_id, fd));
+    flashSaved(input.closest(".qty-control") || input);
     showListingMsg("Saved.");
   } catch (err) {
     fillRow(tr, prod); // put the old value back
-    alert(err.message + (Object.values(err.details || {}).length ? "\n" + Object.values(err.details).join("\n") : ""));
+    WasteLessAPI.toast(
+      err.message + (Object.values(err.details || {}).length ? " — " + Object.values(err.details).join(", ") : ""),
+      "error",
+    );
   }
 }
 
@@ -474,7 +493,7 @@ async function saveImage(input) {
     updateProduct(await WasteLessAPI.editProduct(rowProduct(tr).product_id, fd));
     showListingMsg("Image saved.");
   } catch (err) {
-    alert(err.message);
+    WasteLessAPI.toast(err.message, "error");
   } finally {
     input.value = ""; // so picking the same file again still counts as a change
   }
@@ -489,6 +508,7 @@ async function stepQuantity(btn) {
   try {
     if (btn.dataset.field === "sold") {
       updateProduct(plus ? await WasteLessAPI.recordSale(prod.product_id) : await WasteLessAPI.undoSale(prod.product_id));
+      flashSaved(btn.closest(".qty-control"));
       loadDashboard().catch(console.error); // graph + headline
       loadEcoTips().catch(console.error);
     } else {
@@ -497,7 +517,7 @@ async function stepQuantity(btn) {
       await saveCell(input);
     }
   } catch (err) {
-    alert(err.message);
+    WasteLessAPI.toast(err.message, "error");
   } finally {
     btn.disabled = false;
   }
@@ -519,8 +539,11 @@ async function loadNotifications() {
         <p class="notif-message">${escapeHtml(n.message)}</p>
         <small class="stat-note">${escapeHtml(formatWhen(n.created_at))}</small>
       </div>
-      ${n.is_read ? `<span class="notif-status">Read</span>`
-        : `<button type="button" class="btn outline btn-sm notif-read-btn">Read</button>`}
+      <div class="notif-actions">
+        ${n.is_read ? `<span class="notif-status">Read</span>`
+          : `<button type="button" class="btn outline btn-sm notif-read-btn">Read</button>`}
+        <button type="button" class="btn outline btn-sm notif-reply-btn" data-subject="${escapeHtml(n.product_name || "Admin notification")}">Reply</button>
+      </div>
     </li>`).join("");
 }
 
@@ -543,7 +566,10 @@ function renderSubmissions() {
         <strong>[${escapeHtml(sub.type)}] ${escapeHtml(sub.subject)}</strong>
         <div class="stat-note">Date: ${escapeHtml(sub.date)}</div>
       </div>
-      <span class="status-badge ${sub.status.toLowerCase()}">${sub.status}</span>
+      <div class="submission-actions">
+        <span class="status-badge ${escapeHtml(sub.status.toLowerCase())}">${escapeHtml(sub.status)}</span>
+        <button type="button" class="btn outline btn-sm sub-view-btn" data-sub-id="${escapeHtml(sub.id)}">View</button>
+      </div>
     `;
     subsList.appendChild(li);
   });
@@ -644,13 +670,28 @@ function setupEventListeners() {
       }
     });
     notifPanel.addEventListener("click", async (e) => {
+      const replyBtn = e.target.closest(".notif-reply-btn");
+      if (replyBtn) {
+        notifPanel.hidden = true;
+        notifBtn.setAttribute("aria-expanded", "false");
+        location.hash = "#feedback";
+        showPage(false);
+        const form = document.getElementById("feedbackForm");
+        if (form) {
+          if (form.elements.subject) {
+            form.elements.subject.value = ("Re: " + replyBtn.dataset.subject).slice(0, 150);
+          }
+          if (form.elements.message) form.elements.message.focus();
+        }
+        return;
+      }
       const btn = e.target.closest(".notif-read-btn");
       if (!btn) return;
       try {
         await WasteLessAPI.markNotificationRead(btn.closest(".notif-item").dataset.notifId);
         await loadNotifications();
       } catch (err) {
-        alert(err.message);
+        WasteLessAPI.toast(err.message, "error");
       }
     });
   }
@@ -724,6 +765,46 @@ function setupEventListeners() {
     });
   }
 
+  // View a past submission + any admin reply
+  const subsList = document.getElementById("subs");
+  const subDialog = document.getElementById("submissionDialog");
+  if (subsList && subDialog) {
+    subsList.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".sub-view-btn");
+      if (!btn) return;
+      try {
+        const sub = await WasteLessAPI.getSubmission(btn.dataset.subId);
+        document.getElementById("subDialogTitle").textContent = sub.subject;
+        document.getElementById("subDialogMeta").textContent =
+          `${sub.feedback_type} · ${sub.status} · ${String(sub.created_at).split("T")[0]}`;
+        document.getElementById("subDialogMessage").textContent = sub.message;
+        const att = document.getElementById("subDialogAttachment");
+        if (sub.attachment_url) {
+          att.src = sub.attachment_url;
+          att.hidden = false;
+        } else {
+          att.removeAttribute("src");
+          att.hidden = true;
+        }
+        const replyWrap = document.getElementById("subDialogReplyWrap");
+        if (sub.admin_reply) {
+          document.getElementById("subDialogReply").textContent = sub.admin_reply;
+          replyWrap.hidden = false;
+        } else {
+          replyWrap.hidden = true;
+        }
+        subDialog.showModal();
+      } catch (err) {
+        WasteLessAPI.toast(err.message, "error");
+      }
+    });
+    const closeSub = () => subDialog.close();
+    const closeSubX = document.getElementById("closeSubDialogBtn");
+    const closeSubFooter = document.getElementById("closeSubDialogFooterBtn");
+    if (closeSubX) closeSubX.addEventListener("click", closeSub);
+    if (closeSubFooter) closeSubFooter.addEventListener("click", closeSub);
+  }
+
   // Download Report Button Action
   const downloadReportBtn = document.getElementById("downloadReportBtn");
   if (downloadReportBtn) {
@@ -761,7 +842,7 @@ function openProductModal() {
   currentImageUrl = null;
   showImagePreview(null);
   document.getElementById("formTitle").textContent = "Add Product";
-  document.getElementById("saveBtn").textContent = "Save Product";
+  document.getElementById("saveBtn").textContent = "Add Product";
   modal.showModal();
 }
 
@@ -776,11 +857,11 @@ function showListingMsg(text) {
 }
 
 window.deleteProduct = async function (productId) {
-  if (!confirm("Are you sure you want to delete this product?")) return;
+  if (!(await WasteLessAPI.confirm("Are you sure you want to delete this product?", "Delete", true))) return;
   try {
     await WasteLessAPI.deleteProduct(productId);
     await loadProducts();
   } catch (err) {
-    alert(err.message);
+    WasteLessAPI.toast(err.message, "error");
   }
 };
