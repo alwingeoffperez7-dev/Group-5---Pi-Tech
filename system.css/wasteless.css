@@ -1554,3 +1554,454 @@ dialog[id$="-dialog"] form > button[type="submit"] { order: 2; }   /* Save */
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   PRODUCT LISTING TABLE FIX
+   Paste this at the very END of system.css/wasteless.css (it overrides the
+   earlier rules, so order matters). No HTML changes needed.
+   ========================================================================== */
+
+/* Give the listing page more room than the dashboard */
+.container:has(#page-listing:not([hidden])) { max-width: 90rem; }
+
+/* ---- Table fits the card (fixed layout, % column widths) ---- */
+.product-section table {
+  min-width: 0;
+  table-layout: fixed;
+}
+.product-section th,
+.product-section td {
+  padding: var(--space-3) var(--space-2);
+}
+.product-section th {
+  white-space: normal;
+  line-height: var(--leading-tight);
+}
+.product-section td { white-space: normal; }
+.product-section td:nth-child(4) { min-width: 0; }
+
+/* ID | Image | Name | Description | Packaging | Price | Stock | Sold | Category | Action */
+.product-section th:nth-child(1)  { width: 5%; }
+.product-section th:nth-child(2)  { width: 7%; }
+.product-section th:nth-child(3)  { width: 12%; }
+.product-section th:nth-child(4)  { width: 16%; }
+.product-section th:nth-child(5)  { width: 12%; }
+.product-section th:nth-child(6)  { width: 8%; }
+.product-section th:nth-child(7)  { width: 11%; }
+.product-section th:nth-child(8)  { width: 11%; }
+.product-section th:nth-child(9)  { width: 9%; }
+.product-section th:nth-child(10) { width: 9%; }
+
+/* Stock + Sold are centred, like the wireframe */
+.product-section th:nth-child(7),
+.product-section th:nth-child(8),
+.product-section td:nth-child(7),
+.product-section td:nth-child(8) { text-align: center; }
+
+/* Small screens: fall back to sideways scroll instead of squashing */
+@media (max-width: 80em) {
+  .product-section table { min-width: 60rem; }
+}
+
+/* ---- Inline inputs ---- */
+.inline-input {
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+}
+textarea.inline-input {
+  min-height: 3.5rem;
+  padding: var(--space-2);
+  resize: vertical;
+}
+.product-section td select {            /* beats the global "td select" min-width */
+  width: 100%;
+  min-width: 0;
+  padding-right: 1.75rem;
+  background-position: right var(--space-2) center;
+  background-size: 1rem;
+}
+.inline-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.inline-input[type="number"]::-webkit-inner-spin-button,
+.inline-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.row-img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  font-size: 0;
+}
+
+/* ---- Stock / Sold:  [ - ] [ 00 ] [ + ]  (buttons left and right) ---- */
+.qty-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+.qty-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: var(--weight-bold) 1rem / 1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease),
+              color var(--motion-fast) var(--ease);
+}
+.qty-btn:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+}
+.qty-btn:active { transform: translateY(1px); }
+.qty-input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 3.5rem;
+  padding: 0 var(--space-1);
+  text-align: center;
+}
+
+/* ---- Save / Delete stacked in the last column ---- */
+.product-section td.cell-actions { white-space: normal; }
+.product-section td.cell-actions .btn { width: 100%; }
+.product-section td.cell-actions button + button { margin: var(--space-1) 0 0; }
+.row-delete-btn {
+  --btn-fg: var(--color-danger);
+  --btn-fg-hover: var(--color-danger);
+  --btn-border-hover: var(--color-danger);
+}
+
+/* ---- Header + notification bell (these had no styles) ---- */
+.vendor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.notif-wrapper { position: relative; }
+.notif-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.notif-btn:hover { border-color: var(--color-secondary); }
+.notif-badge {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  min-width: 1.1rem;
+  padding: 0 var(--space-1);
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-text-on-dark);
+  font: var(--weight-bold) var(--text-caption) / 1.1rem var(--font-sans);
+  text-align: center;
+}
+.notif-panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 20;
+  width: min(22rem, 90vw);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+}
+.notif-title { margin-bottom: var(--space-2); }
+.notif-list { margin: 0; padding: 0; list-style: none; }
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+.notif-item + .notif-item { border-top: 1px solid var(--color-border); }
+.notif-message { color: var(--color-text-secondary); }
+
+/* ==========================================================================
+   HEADER SQUEEZE FIX: fixed column widths + horizontal scroll
+   (replaces the % widths above; keep this at the very END of the file)
+   ========================================================================== */
+.product-section .table-responsive { overflow-x: auto; }
+.product-section table { min-width: 87rem; }   /* scrolls left/right when the card is narrower */
+.product-section th { white-space: nowrap; padding: var(--space-3) var(--space-4); }
+.product-section td { padding: var(--space-3) var(--space-4); }
+
+.product-section th:nth-child(1)  { width: 6.5rem; }   /* Product ID */
+.product-section th:nth-child(2)  { width: 8rem; }     /* Product Image */
+.product-section th:nth-child(3)  { width: 9rem; }     /* Product Name */
+.product-section th:nth-child(4)  { width: 13rem; }    /* Product Description */
+.product-section th:nth-child(5)  { width: 11.5rem; }  /* Packaging Category */
+.product-section th:nth-child(6)  { width: 5.5rem; }   /* Price */
+.product-section th:nth-child(7)  { width: 9rem; }     /* Stock */
+.product-section th:nth-child(8)  { width: 9rem; }     /* Sold */
+.product-section th:nth-child(9)  { width: 8.5rem; }   /* Category */
+.product-section th:nth-child(10) { width: 7rem; }     /* Action */
+
+/* ==========================================================================
+   ADMIN LIST PAGES FIX  (keep at the very END of wasteless.css)
+   ========================================================================== */
+
+/* Wider content area so the tables can be larger */
+main > [id^="section-"] { max-width: 90rem; }
+
+/* ---- Toolbar: Search on its own row at the top, everything else below ---- */
+#section-accounts,
+#section-products,
+#section-categories,
+#stall-table-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+#section-accounts > input[type="search"],
+#section-products > input[type="search"],
+#section-categories > input[type="search"],
+#stall-table-panel > input[type="search"] {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: none;
+}
+#section-accounts > select,
+#section-products > select,
+#section-categories > select,
+#stall-table-panel > select { flex: 0 1 15rem; }
+
+#section-accounts > span,
+#section-products > span,
+#section-categories > span,
+#stall-table-panel > span {
+  margin-left: auto;          /* count, sort and add button sit on the right */
+  font-size: 1rem;
+}
+
+/* Bigger controls */
+#section-accounts input, #section-accounts select,
+#section-products input, #section-products select,
+#section-categories input, #section-categories select,
+#stall-table-panel input, #stall-table-panel select {
+  min-height: 3rem;
+  font-size: 1rem;
+}
+#stall-add-button, #product-add-button, #category-add-button {
+  --btn-height: 3rem;
+  --btn-size: 1rem;
+  --btn-px: var(--space-5);
+}
+
+/* Notification bell goes to the far right of the toolbar row */
+[id^="section-"] > .notif-wrapper,
+[id^="section-"] > .notif-btn,
+#section-products .notif-wrapper { order: 10; }
+
+/* ---- Tables: fill their width, so no empty white panel ---- */
+[id^="section-"] > table,
+#stall-table-panel > table {
+  display: table;
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: 1rem;
+}
+[id^="section-"] > table th,
+#stall-table-panel > table th {
+  padding: var(--space-4) var(--space-5);
+  font-size: 0.875rem;
+}
+[id^="section-"] > table td,
+#stall-table-panel > table td {
+  padding: var(--space-4) var(--space-5);
+  font-size: 1rem;
+}
+[id^="section-"] > table tbody tr:last-child td,
+#stall-table-panel > table tbody tr:last-child td { border-bottom: 0; }
+
+/* Bigger row buttons (Approve, Decline, Edit, Delete, Notify) */
+[id^="section-"] td button {
+  --btn-height: 2.5rem;
+  --btn-px: var(--space-4);
+  --btn-size: 0.9375rem;
+}
+td select { min-height: 2.5rem; font-size: 1rem; }
+
+/* ---- Stall Management: table left, notifications right ---- */
+#section-stalls { display: block; }
+#stall-management-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(18rem, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+#stall-table-panel { min-width: 0; }
+
+#my-notifications-panel {
+  position: sticky;
+  top: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+#my-notifications-panel > h2 { margin-bottom: var(--space-4); }
+#notification-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 36rem;
+  overflow-y: auto;
+  color: var(--color-text-muted);       /* "No notifications sent yet." */
+}
+.notification-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  color: var(--color-text-primary);
+}
+.notification-item + .notification-item { border-top: 1px solid var(--color-border); }
+.notification-item .notification-vendor { font-weight: var(--weight-semibold); }
+.notification-item .notification-message { color: var(--color-text-secondary); }
+.notification-item button[data-action="notify-vendor"] {
+  --btn-bg: var(--color-secondary);
+  --btn-fg: var(--color-text-on-dark);
+  --btn-border: var(--color-secondary);
+  --btn-bg-hover: var(--color-primary);
+  --btn-fg-hover: var(--color-text-on-dark);
+  --btn-border-hover: var(--color-primary);
+  align-self: flex-start;
+}
+
+@media (max-width: 56.25em) {
+  #stall-management-layout { grid-template-columns: minmax(0, 1fr); }
+  #my-notifications-panel { position: static; }
+}
+#stall-table-panel>table th,
+#stall-table-panel>table td { padding: var(--space-4) var(--space-3); }
+#stall-table-panel>table td:last-child { white-space: normal; }
+#stall-table-panel>table td:last-child button { margin: var(--space-1) var(--space-1) var(--space-1) 0; }
+#stall-table-panel>table { display: block; overflow-x: auto; }
+@media (max-width: 75em) {
+  #stall-management-layout { grid-template-columns: minmax(0, 1fr); }
+  #my-notifications-panel { position: static; }
+}
+
+/* ==========================================================================
+   NOTIFICATIONS + STALL LAYOUT FIX
+   Paste at the very END of system.css/wasteless.css (it overrides earlier rules).
+   ========================================================================== */
+
+/* ---- Stall Management: table on the left, My Notifications always on the RIGHT ---- */
+#stall-management-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: var(--space-5);
+  align-items: start;
+}
+#stall-table-panel { min-width: 0; }
+/* the table scrolls inside its own box instead of running under the notifications */
+#stall-table-panel > table { display: block; overflow-x: auto; }
+#stall-table-panel > table th,
+#stall-table-panel > table td { padding: var(--space-4) var(--space-3); }
+#stall-table-panel > table td:last-child { white-space: normal; }
+#stall-table-panel > table td:last-child button { margin: var(--space-1) var(--space-1) var(--space-1) 0; }
+#my-notifications-panel { position: sticky; top: var(--space-5); }
+
+/* ---- Product Management: bell beside "+ Add Product" ---- */
+.notif-wrap { position: relative; }
+
+#notif-btn {
+  --btn-height: 3rem;
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  min-height: 3rem;
+  padding: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+#notif-btn:hover,
+#notif-btn[aria-expanded="true"] {
+  background: var(--color-surface-alt);
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+}
+#notif-count {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.45rem;
+  min-width: 1.25rem;
+  padding: 0 var(--space-1);
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-text-on-dark);
+  font: var(--weight-bold) var(--text-caption) / 1.25rem var(--font-sans);
+  text-align: center;
+}
+
+/* notification list pop-up */
+#notif-panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 30;
+  width: min(24rem, 90vw);
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+}
+#notif-title { margin-bottom: var(--space-2); }
+#notif-list { margin: 0; padding: 0; list-style: none; }
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+.notif-item + .notif-item { border-top: 1px solid var(--color-border); }
+.notif-text { min-width: 0; }
+.notif-message { margin-top: var(--space-1); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+#notif-empty { padding: var(--space-3) 0; color: var(--color-text-muted); }
+
