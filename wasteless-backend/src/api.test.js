@@ -79,6 +79,12 @@ test('API: sales, notifications, bottled water', async (t) => {
     assert.strictEqual(r.body.sold, 2);
     const stall = await call(vendor, 'GET', '/api/stall');
     assert.strictEqual(stall.body.summary.plastic_items_sold_this_week, 2);
+    // 3 left with the default reorder threshold of 5 -> on the Running low card
+    assert.ok(stall.body.running_low.some((p) => p.product_id === id && p.stock === 3));
+    const dash = await call(vendor, 'GET', '/api/stall/dashboard');
+    assert.strictEqual(dash.body.summary.total, 2);
+    assert.strictEqual(dash.body.summary.most_used.items, 2);
+    assert.strictEqual(dash.body.summary.busiest_day.items, 2);
   });
 
   await t.test('cannot sell more than is in stock, or a bad quantity', async () => {

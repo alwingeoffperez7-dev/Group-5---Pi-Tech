@@ -65,7 +65,7 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Register | `POST /api/auth/register` (business_name, email, user_pass, contact_number) | anyone |
 | Log In as Vendor / Admin | `POST /api/auth/login` (email, password, role) | anyone |
 | Log Out | `POST /api/auth/logout` | anyone |
-| Landing chart / summary | `GET /api/landing/chart?days=7|14|30` (items sold per packaging category, all stalls), `GET /api/landing/summary` | anyone |
+| Landing chart / summary | `GET /api/landing/chart?days=7|14|30` (items sold per packaging category, all stalls, plus `summary` = graph headline, see below), `GET /api/landing/summary` (also `week: { this_week, last_week, change_pct }` for the hero card; `change_pct` is null when last week had no sales) | anyone |
 | Admin dashboard totals | `GET /api/admin/stats` | admin |
 | Admin feedback list | `GET /api/admin/feedback?sort=newest|oldest` | admin |
 | Notify vendors (Product Management > Notify) | `POST /api/admin/notifications` (product_id, comments), `GET /api/admin/notifications` (sent list: Pending = not read yet, Completed = read by the vendor) | admin |
@@ -75,7 +75,7 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Product Management | `GET/POST /api/admin/products`, `PUT/DELETE /api/admin/products/:id` | admin |
 | Packaging Category (plastic: Tetra Pak, Polystyrene, ...) | `GET/POST /api/admin/packaging`, `PUT/DELETE /api/admin/packaging/:id` | admin |
 | Packaging dropdown | `GET /api/packaging` | anyone |
-| Vendor dashboard packaging graph | `GET /api/stall/dashboard?days=7|14|30` | vendor |
+| Vendor dashboard packaging graph | `GET /api/stall/dashboard?days=7|14|30` → `{ days, labels, lines, summary }`; `summary` = `{ total, most_used: {label, items}, least_used, busiest_day: {day, items} }` (null when there is nothing to show) | vendor |
 | Eco-Tip Management (weekly limit, share %, texts, tip per packaging category) | `GET /api/admin/eco/conditions`, `PUT /api/admin/eco/conditions/:id` (threshold, tip_text), `GET /api/admin/eco/tips`, `PUT /api/admin/eco/tips/:packaging_id` (effects, tip_text) | admin |
 | Eco-Tip pop-up / banner for this week | `GET /api/stall/eco-tips` → `{ week_total, limit, level: 'warning'|'positive', title, tip, categories }` | vendor |
 | Download Report (PDF of the last 7 days; **once every 7 days** per stall) | `POST /api/stall/report` (PDF, or 429 with the next date), `GET /api/stall/report/status` | vendor |
@@ -84,7 +84,7 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 
 | Wireframe action | Method & URL | Send | Get back |
 |---|---|---|---|
-| Header (Stall ID / Name), My Stall info + 3 cards | `GET /api/stall` | — | stall info + `summary.products_listed`, `low_stock_items`, `plastic_items_sold_this_week` |
+| Header (Stall ID / Name), My Stall info + 3 cards | `GET /api/stall` | — | stall info + `summary.products_listed`, `low_stock_items`, `plastic_items_sold_this_week`, and `running_low` (up to 5 products with stock ≤ their reorder threshold, lowest first: `product_id, product_name, packaging_name, stock, reorder_threshold`) |
 | Category chips | `GET /api/categories` | — | list of categories |
 | Product table, search box, category filter | `GET /api/products?q=&category=` | — | `count` (Product Count) + `products` |
 | Open Edit pop-up | `GET /api/products/:id` | — | one product |

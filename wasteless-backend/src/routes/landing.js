@@ -2,7 +2,7 @@
 const express = require('express');
 const pool = require('../db');
 const { wrap } = require('../middleware');
-const { rangeDays, lastDays, packagingLines } = require('../packaging-graph');
+const { rangeDays, lastDays, packagingLines, graphSummary, changePct } = require('../packaging-graph');
 
 const router = express.Router();
 
@@ -20,10 +20,12 @@ router.get('/chart', wrap(async (req, res) => {
     [n - 1]
   );
   const days = lastDays(n);
+  const datasets = await packagingLines(rows, days);
   res.json({
     yLabel: 'Items sold',
     labels: days.map((d) => new Date(d + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-    datasets: await packagingLines(rows, days)
+    datasets,
+    summary: graphSummary(datasets, days)
   });
 }));
 
@@ -37,7 +39,18 @@ router.get('/summary', wrap(async (req, res) => {
   );
   const [[inv]] = await pool.query('SELECT COALESCE(SUM(stock), 0) AS items FROM product WHERE is_active = 1');
   const change = Number(w.this_year) - Number(w.last_year);
+  // Hero card: plastic items sold in the last 7 days vs the 7 days before, all stalls
+  const [[wk]] = await pool.query(
+    `SELECT COALESCE(SUM(CASE WHEN s.sold_at >= CURDATE() - INTERVAL 6 DAY THEN s.quantity_sold END), 0) AS this_week,
+            COALESCE(SUM(CASE WHEN s.sold_at < CURDATE() - INTERVAL 6 DAY THEN s.quantity_sold END), 0) AS last_week
+     FROM sales_record s
+     JOIN product p ON p.product_id = s.product_id
+     JOIN canteen c ON c.canteen_id = p.canteen_id
+     WHERE c.status <> 'Removed' AND s.sold_at >= CURDATE() - INTERVAL 13 DAY`
+  );
+  const thisWeek = Number(wk.this_week), lastWeek = Number(wk.last_week);
   res.json({
+    week: { this_week: thisWeek, last_week: lastWeek, change_pct: changePct(thisWeek, lastWeek) },
     title: 'Summary',
     items: [
       { label: 'Total plastic waste', value: `${Number(w.total)} kg` },
