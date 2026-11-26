@@ -566,8 +566,8 @@ listenToTableClicks("product-table-body", {
     form.reset();
     form.elements.product_id.value = p.product_id;
     form.elements.stall_id.value = p.stall_id;
-    byId("notify-stall").value = "Stall " + p.stall_id + " " + p.stall_name;
-    byId("notify-product").value = p.product_name;
+    byId("notify-vendor-name").value = "Stall " + p.stall_id + " " + p.stall_name;
+    byId("notify-product-name").value = p.product_name;
     byId("notify-dialog").showModal();
   },
   delete: function (id) {
