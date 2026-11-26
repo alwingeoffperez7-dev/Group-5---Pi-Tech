@@ -2,7 +2,7 @@
 const express = require("express");
 const pool = require("../db");
 const { HttpError, wrap } = require("../middleware");
-const { rangeDays, lastDays, packagingLines } = require("../packaging-graph");
+const { rangeDays, lastDays, packagingLines, graphSummary } = require("../packaging-graph");
 const { ecoTips } = require("../eco-tip");
 
 const router = express.Router();
@@ -26,6 +26,15 @@ router.get(
      FROM product WHERE canteen_id = ? AND is_active = 1`,
       [req.canteenId],
     );
+    // "Running low" card: stock at or under the product's reorder threshold, lowest first
+    const [runningLow] = await pool.query(
+      `SELECT p.product_id, p.product_name, pk.packaging_name, p.stock, p.reorder_threshold
+     FROM product p JOIN packaging_category pk ON pk.packaging_id = p.packaging_id
+     WHERE p.canteen_id = ? AND p.is_active = 1 AND p.stock <= p.reorder_threshold
+     ORDER BY p.stock, p.product_name
+     LIMIT 5`,
+      [req.canteenId],
+    );
     const [[plastic]] = await pool.query(
       `SELECT COALESCE(SUM(s.quantity_sold), 0) AS plastic_items_sold_this_week
      FROM sales_record s
@@ -44,6 +53,7 @@ router.get(
           plastic.plastic_items_sold_this_week,
         ),
       },
+      running_low: runningLow,
     });
   }),
 );
@@ -64,10 +74,12 @@ router.get(
       [req.canteenId, n - 1],
     );
     const days = lastDays(n);
+    const lines = await packagingLines(rows, days);
     res.json({
       days: n,
       labels: days,
-      lines: await packagingLines(rows, days),
+      lines,
+      summary: graphSummary(lines, days),
     });
   }),
 );

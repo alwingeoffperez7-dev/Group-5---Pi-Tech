@@ -34,4 +34,24 @@ async function packagingLines(rows, days) {
   }));
 }
 
-module.exports = { RANGES, rangeDays, lastDays, packagingLines };
+// The graph's headline + busiest-day marker, from the lines above.
+// Categories with 0 items are skipped for most/least used; null when nothing was sold.
+function graphSummary(lines, days) {
+  const totals = lines.map((l) => ({ label: l.label, items: l.values.reduce((a, b) => a + b, 0) }));
+  const used = totals.filter((t) => t.items > 0).sort((a, b) => b.items - a.items);
+  const perDay = days.map((day, i) => ({ day, items: lines.reduce((a, l) => a + l.values[i], 0) }));
+  const busiest = perDay.reduce((best, d) => (d.items > best.items ? d : best), { day: null, items: 0 });
+  return {
+    total: totals.reduce((a, t) => a + t.items, 0),
+    most_used: used[0] || null,
+    least_used: used.length > 1 ? used[used.length - 1] : null,
+    busiest_day: busiest.day ? busiest : null
+  };
+}
+
+// Week-over-week change in %, rounded; null when last week had nothing to compare with.
+function changePct(thisWeek, lastWeek) {
+  return lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100) : null;
+}
+
+module.exports = { RANGES, rangeDays, lastDays, packagingLines, graphSummary, changePct };
