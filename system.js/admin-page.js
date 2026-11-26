@@ -5,6 +5,8 @@ let currentCategories = [];
 let allCategories = []; // ALL categories (used by the dropdowns)
 let currentConditions = [];
 let currentEcoTips = [];
+let currentFeedback = [];
+const loadSeq = {};
 
 function byId(id) {
   return document.getElementById(id);
@@ -95,7 +97,7 @@ const api = WasteLessAPI.request; // from /js/api.js
 // Shows backend errors (e.g. "That name is already used") instead of failing silently
 function showApiError(err) {
   console.error(err);
-  alert(err.message);
+  WasteLessAPI.toast(err.message, "error");
 }
 
 function listUrl(path, options) {
@@ -105,6 +107,14 @@ function listUrl(path, options) {
 const ACCOUNT_STATUSES = ["Pending", "Approved", "Declined"].map(function (s) {
   return { value: s, label: s };
 });
+const STALL_FILTERS = [
+  { value: "over", label: "Over weekly limit" },
+  { value: "under", label: "Under weekly limit" },
+];
+const CATEGORY_FILTERS = [
+  { value: "used", label: "In use (with products)" },
+  { value: "unused", label: "Unused (0 products)" },
+];
 
 
 function loadDashboard() {
@@ -137,43 +147,50 @@ function renderPlasticByStall(stalls, limit) {
 
 function loadFeedback() {
   const sort = byId("feedback-sort").value; // "", "newest", "oldest"
-  api("GET", listUrl("/api/admin/feedback", { sort: sort }))
+  const filterEl = byId("feedback-filter");
+  const status = filterEl ? filterEl.value : "";
+  api("GET", listUrl("/api/admin/feedback", { sort: sort, status: status }))
     .then(renderFeedback)
     .catch(showApiError);
 }
 
 function loadAccounts() {
   const options = getListOptions("account"); // { search, filter, sort }
-  fillSelect(
-    "account-filter",
-    ACCOUNT_STATUSES,
-    "value",
-    "label",
-    "Filter/Category",
-  );
+  const seq = (loadSeq.accounts = (loadSeq.accounts || 0) + 1);
   api("GET", listUrl("/api/admin/accounts", options))
-    .then(renderAccounts)
+    .then(function (rows) {
+      if (seq === loadSeq.accounts) renderAccounts(rows);
+    })
     .catch(showApiError);
 }
 
 function loadStalls() {
   const options = getListOptions("stall");
+  const seq = (loadSeq.stalls = (loadSeq.stalls || 0) + 1);
   api("GET", listUrl("/api/admin/stalls", options))
-    .then(renderStalls)
+    .then(function (rows) {
+      if (seq === loadSeq.stalls) renderStalls(rows);
+    })
     .catch(showApiError);
 }
 
 function loadProducts() {
   const options = getListOptions("product"); // options.filter = a category_id
+  const seq = (loadSeq.products = (loadSeq.products || 0) + 1);
   api("GET", listUrl("/api/admin/products", options))
-    .then(renderProducts)
+    .then(function (rows) {
+      if (seq === loadSeq.products) renderProducts(rows);
+    })
     .catch(showApiError);
 }
 
 function loadCategories() {
   const options = getListOptions("category");
+  const seq = (loadSeq.categories = (loadSeq.categories || 0) + 1);
   api("GET", listUrl("/api/admin/packaging", options))
-    .then(renderCategories)
+    .then(function (rows) {
+      if (seq === loadSeq.categories) renderCategories(rows);
+    })
     .catch(showApiError);
 }
 
@@ -204,6 +221,7 @@ function renderDashboardStats(stats) {
 }
 
 function renderFeedback(messages) {
+  currentFeedback = messages;
   byId("feedback-count").textContent = messages.length;
   let html = "";
   messages.forEach(function (m) {
@@ -215,28 +233,52 @@ function renderFeedback(messages) {
       if (tag.trim() !== "")
         tagHtml += `<span class="tag tag-${escapeHtml(tag.trim().toLowerCase().replace(/\W+/g, "-"))}">${escapeHtml(tag.trim())}</span>`;
     });
+    const replyHtml = m.admin_reply
+      ? `<p class="feedback-reply-preview"><strong>Reply:</strong> ${escapeHtml(m.admin_reply)}</p>`
+      : "";
     html += `<article class="feedback-item">
       <h3>${escapeHtml(m.subject)}</h3>
       <p>${escapeHtml(m.message)}</p>
-      <p class="tags">${tagHtml}</p>
+      ${replyHtml}
+      <div class="feedback-item-footer">
+        <p class="tags">${tagHtml}</p>
+        <button type="button" class="btn outline btn-sm feedback-reply-btn" data-action="reply-feedback" data-id="${escapeHtml(m.feedback_id)}">${m.admin_reply ? "Edit reply" : "Reply"}</button>
+      </div>
     </article>`;
   });
+  if (!messages.length) {
+    byId("feedback-list").innerHTML = '<p class="empty-row">No feedback messages match this filter.</p>';
+    return;
+  }
   byId("feedback-list").innerHTML = html;
 }
 
 function renderAccounts(accounts) {
   currentAccounts = accounts;
   byId("account-count").textContent = accounts.length;
+  if (!accounts.length) {
+    byId("account-table-body").innerHTML =
+      '<tr><td colspan="6" class="empty-row">No accounts found.</td></tr>';
+    return;
+  }
   let rows = "";
   accounts.forEach(function (a) {
+    const status = a.status || "Pending";
+    const tagClass =
+      status === "Approved"
+        ? "tag-good"
+        : status === "Declined"
+          ? "tag-warning"
+          : "tag-pending";
     rows += `<tr>
       <td>${escapeHtml(a.business_name)}</td>
       <td>${escapeHtml(a.email)}</td>
       <td>${escapeHtml(a.contact_person)}</td>
       <td>${escapeHtml(a.contact_number)}</td>
+      <td><span class="tag ${tagClass}">${escapeHtml(status)}</span></td>
       <td>
-        <button type="button" data-action="approve" data-id="${escapeHtml(a.account_id)}">Approve</button>
-        <button type="button" data-action="decline" data-id="${escapeHtml(a.account_id)}">Decline</button>
+        <button type="button" data-action="approve" data-id="${escapeHtml(a.account_id)}"${status === "Approved" ? " disabled" : ""}>Approve</button>
+        <button type="button" data-action="decline" data-id="${escapeHtml(a.account_id)}"${status === "Declined" ? " disabled" : ""}>Decline</button>
       </td>
     </tr>`;
   });
@@ -246,6 +288,11 @@ function renderAccounts(accounts) {
 function renderStalls(stalls) {
   currentStalls = stalls;
   byId("stall-count").textContent = stalls.length;
+  if (!stalls.length) {
+    byId("stall-table-body").innerHTML =
+      '<tr><td colspan="5" class="empty-row">No stalls found.</td></tr>';
+    return;
+  }
   let rows = "";
   stalls.forEach(function (s) {
     rows += `<tr>
@@ -265,6 +312,11 @@ function renderStalls(stalls) {
 function renderProducts(products) {
   currentProducts = products;
   byId("product-count").textContent = products.length;
+  if (!products.length) {
+    byId("product-table-body").innerHTML =
+      '<tr><td colspan="5" class="empty-row">No products found.</td></tr>';
+    return;
+  }
   let rows = "";
   products.forEach(function (p) {
     rows += `<tr>
@@ -288,6 +340,11 @@ function renderProducts(products) {
 function renderCategories(categories) {
   currentCategories = categories;
   byId("category-count").textContent = categories.length;
+  if (!categories.length) {
+    byId("category-table-body").innerHTML =
+      '<tr><td colspan="6" class="empty-row">No packaging categories found.</td></tr>';
+    return;
+  }
   let rows = "";
   categories.forEach(function (c) {
     let arrow = "";
@@ -401,6 +458,9 @@ Object.keys(sectionLoaders).forEach(function (name) {
 });
 
 byId("feedback-sort").addEventListener("change", loadFeedback);
+if (byId("feedback-filter")) {
+  byId("feedback-filter").addEventListener("change", loadFeedback);
+}
 
 /* ====================================================================================== */
 
@@ -503,8 +563,8 @@ listenToTableClicks("stall-table-body", {
   edit: function (id) {
     openForm("stall-form", findById(currentStalls, "stall_id", id));
   },
-  delete: function (id) {
-    if (!confirm("Delete this stall?")) return;
+  delete: async function (id) {
+    if (!(await WasteLessAPI.confirm("Delete this stall?", "Delete", true))) return;
     deleteRecord("/api/admin/stalls/" + id, function () {
       loadStalls();
       loadProducts();
@@ -524,8 +584,8 @@ listenToTableClicks("product-table-body", {
     byId("notify-product-name").value = p.product_name;
     byId("notify-dialog").showModal();
   },
-  delete: function (id) {
-    if (!confirm("Delete this product?")) return;
+  delete: async function (id) {
+    if (!(await WasteLessAPI.confirm("Delete this product?", "Delete", true))) return;
     deleteRecord("/api/admin/products/" + id, function () {
       loadProducts();
       loadCategories();
@@ -537,8 +597,8 @@ listenToTableClicks("category-table-body", {
   edit: function (id) {
     openForm("category-form", findById(currentCategories, "packaging_id", id));
   },
-  delete: function (id) {
-    if (!confirm("Delete this packaging category?")) return;
+  delete: async function (id) {
+    if (!(await WasteLessAPI.confirm("Delete this packaging category?", "Delete", true))) return;
     deleteRecord("/api/admin/packaging/" + id, function () {
       loadCategories();
       loadEcoTips();
@@ -663,6 +723,52 @@ byId("notify-form").addEventListener("submit", async function (event) {
   byId("notify-dialog").close();
   loadNotifications();
 });
+
+// Feedback reply button -> open #feedback-reply-dialog
+byId("feedback-list").addEventListener("click", function (event) {
+  const btn = event.target.closest('button[data-action="reply-feedback"]');
+  if (!btn) return;
+  const item = findById(currentFeedback, "feedback_id", btn.dataset.id);
+  if (!item) return;
+  const form = byId("feedback-reply-form");
+  form.reset();
+  form.elements.feedback_id.value = item.feedback_id;
+  byId("feedback-reply-subject").textContent = `[${item.feedback_type}] ${item.subject} — ${item.business_name}`;
+  byId("feedback-reply-message").textContent = item.message;
+  const att = byId("feedback-reply-attachment");
+  if (att) {
+    if (item.attachment_url) {
+      att.src = item.attachment_url;
+      att.hidden = false;
+    } else {
+      att.removeAttribute("src");
+      att.hidden = true;
+    }
+  }
+  form.elements.status.value = item.status === "Pending" ? "Replied" : item.status;
+  form.elements.admin_reply.value = item.admin_reply || "";
+  byId("feedback-reply-dialog").showModal();
+});
+
+byId("feedback-reply-form").addEventListener("submit", async function (event) {
+  event.preventDefault();
+  const form = event.target;
+  try {
+    await api("PUT", "/api/admin/feedback/" + form.elements.feedback_id.value, {
+      status: form.elements.status.value,
+      admin_reply: form.elements.admin_reply.value,
+    });
+  } catch (err) {
+    return showApiError(err);
+  }
+  byId("feedback-reply-dialog").close();
+  loadFeedback();
+});
+
+// Static filter dropdowns (populated once on load)
+fillSelect("account-filter", ACCOUNT_STATUSES, "value", "label", "All statuses");
+fillSelect("stall-filter", STALL_FILTERS, "value", "label", "All stalls");
+fillSelect("category-filter", CATEGORY_FILTERS, "value", "label", "All categories");
 
 showSection("dashboard");
 loadDashboard();

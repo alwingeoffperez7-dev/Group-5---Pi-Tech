@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
 
             const submitterButton = event.submitter;
-            const userRole = submitterButton.value;
+            const userRole = submitterButton ? submitterButton.value : 'vendor';
 
             const formData = new FormData(loginForm);
             formData.append('role', userRole);

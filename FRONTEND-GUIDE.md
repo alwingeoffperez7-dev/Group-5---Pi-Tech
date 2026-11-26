@@ -127,7 +127,7 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | Keep this | What it is |
 |---|---|
 | `id="notifBtn"`, `id="notifBadge"` | the bell and its unread count (hidden when 0) |
-| `id="notifPanel"`, `id="notifList"`, `id="notifEmpty"` | the pop-up list. The script adds one `<li class="notif-item">` per message (`.notif-subject`, `.notif-message`, and a `.notif-read-btn` button or a `.notif-status` "Read"); read ones also get `class="read"` |
+| `id="notifPanel"`, `id="notifList"`, `id="notifEmpty"` | the pop-up list. The script adds one `<li class="notif-item">` per message (`.notif-subject`, `.notif-message`, and `.notif-actions` with `.notif-read-btn` / `.notif-status` "Read" + `.notif-reply-btn` "Reply" which jumps to `#feedback`); read ones also get `class="read"` |
 
 **Add Product pop-up** (editing happens in the table)
 
@@ -147,7 +147,8 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 |---|---|
 | `id="feedbackForm"` with `name="feedback_type"`, `name="subject"`, `name="message"`, `name="attachment"` | New Message to Admin (keep the 4 `<option>` texts: Inquiry, Report a Problem, Suggestion, Stall Info Change) |
 | `id="feedbackMsg"` | sent / error message |
-| `id="subs"` | My Submissions list (filled by the script) |
+| `id="subs"` | My Submissions list (filled by the script, with `.sub-view-btn` "View" buttons) |
+| `<dialog id="submissionDialog">` | pop-up showing full submission (`id="subDialogTitle"`, `id="subDialogMeta"`, `id="subDialogMessage"`, `id="subDialogAttachment"`, `id="subDialogReplyWrap"`, `id="subDialogReply"`, `id="closeSubDialogBtn"`, `id="closeSubDialogFooterBtn"`) |
 
 **Classes the script puts on generated content (style these freely):**
 `product-thumb` (table image), `empty-row` ("No products found." / "No submissions yet."), `btn outline btn-sm` and `text-danger` (Edit / Delete buttons in rows), `submission-item` (each submission), `status-badge` plus `pending` / `replied` / `resolved` (status pill), `stat-note` (small grey text), `form-msg ok` (green success message), `active` (current sidebar link), `eco-category` and `eco-tip-text` (Eco-Tip pop-up), `positive` (on the banner when congratulating).
@@ -164,7 +165,7 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | `id="admin-logout"` | Log Out button at the bottom of the sidebar |
 | `data-only="stalls"` / `"products"` / `"categories"` | header buttons shown only on that section (Add Stall, Add Product + bell, Add Category) |
 
-**Dashboard:** `id="total-stalls"`, `id="total-categories"`, `id="total-products"`, `id="pending-accounts"` (the 4 stat cards), `id="plastic-by-stall"` + `id="plastic-by-stall-note"` (Plastic by stall bars inside `id="chart-1"`; data from `GET /api/admin/stats`), `id="feedback-count"`, `id="feedback-sort"`, `id="feedback-list"` (Vendor feedback cards).
+**Dashboard:** `id="total-stalls"`, `id="total-categories"`, `id="total-products"`, `id="pending-accounts"` (the 4 stat cards), `id="plastic-by-stall"` + `id="plastic-by-stall-note"` (Plastic by stall bars inside `id="chart-1"`; data from `GET /api/admin/stats`), `id="feedback-count"`, `id="feedback-filter"`, `id="feedback-sort"`, `id="feedback-list"` (Vendor feedback cards).
 
 **Each list page** uses the same pattern, where `X` is `account`, `stall`, `product` or `category`:
 
@@ -185,6 +186,7 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 
 | `id="condition-dialog"` / `id="condition-form"` (Eco-Tip rules, edit only) | `condition_id` (hidden), `condition_name` (read-only), `threshold`, `tip_text`; keep `id="condition-form-threshold-row"` (hidden for "Good Work") and `id="condition-form-unit"` |
 | `id="ecotip-dialog"` / `id="ecotip-form"` (tip per packaging category, edit only) | `packaging_id` (hidden), `packaging_name` (read-only), `effects` (one per line), `tip_text` |
+| `id="feedback-reply-dialog"` / `id="feedback-reply-form"` (reply to vendor feedback) | `feedback_id` (hidden), `id="feedback-reply-subject"`, `id="feedback-reply-message"`, `status` (`id="feedback-reply-status"`), `admin_reply` (`id="feedback-reply-text"`) |
 
 **Eco-Tips page:** tables `id="condition-table-body"` (4 columns: Condition, Threshold, Eco-Tip, Action/Edit) and `id="ecotip-table-body"` (4 columns), filled by the script.
 

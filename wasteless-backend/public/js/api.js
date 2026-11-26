@@ -17,7 +17,11 @@ const WasteLessAPI = (() => {
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) location.href = "/system.html/log-in.html"; // not logged in
     if (!res.ok) {
-      const err = new Error(data.error || `Request failed (${res.status})`);
+      let msg = data.error || `Request failed (${res.status})`;
+      if (res.status === 403 && /Only (admin|vendor) accounts/i.test(msg)) {
+        msg = "Your session switched to another role in another tab. Please log in again.";
+      }
+      const err = new Error(msg);
       err.status = res.status;
       err.details = data.details || {};
       throw err;
@@ -25,9 +29,79 @@ const WasteLessAPI = (() => {
     return data;
   }
 
+  // Styled toast notification (replaces browser alert())
+  function toast(message, type = "info") {
+    let stack = document.querySelector(".wl-toast-stack");
+    if (!stack) {
+      stack = document.createElement("div");
+      stack.className = "wl-toast-stack";
+      stack.setAttribute("aria-live", "polite");
+      document.body.appendChild(stack);
+    }
+    const el = document.createElement("div");
+    el.className = `wl-toast wl-toast-${type}`;
+    el.setAttribute("role", type === "error" ? "alert" : "status");
+    const text = document.createElement("span");
+    text.textContent = String(message || "");
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "wl-toast-close";
+    close.setAttribute("aria-label", "Dismiss");
+    close.textContent = "×";
+    close.addEventListener("click", () => el.remove());
+    el.append(text, close);
+    stack.appendChild(el);
+    setTimeout(() => el.remove(), type === "error" ? 5500 : 3500);
+  }
+
+  // Styled confirmation dialog (replaces browser confirm())
+  function confirmDialog(message, okText = "Confirm", danger = false) {
+    let dlg = document.getElementById("wlConfirmDialog");
+    if (!dlg) {
+      dlg = document.createElement("dialog");
+      dlg.id = "wlConfirmDialog";
+      dlg.className = "wl-confirm-dialog";
+      dlg.innerHTML = `<form method="dialog" class="wl-confirm-form">
+        <p class="wl-confirm-msg"></p>
+        <div class="dialog-actions">
+          <button type="button" class="btn outline wl-confirm-cancel">Cancel</button>
+          <button type="submit" class="btn primary wl-confirm-ok">Confirm</button>
+        </div>
+      </form>`;
+      document.body.appendChild(dlg);
+    }
+    dlg.querySelector(".wl-confirm-msg").textContent = message;
+    const okBtn = dlg.querySelector(".wl-confirm-ok");
+    const cancelBtn = dlg.querySelector(".wl-confirm-cancel");
+    okBtn.textContent = okText;
+    okBtn.classList.toggle("danger", Boolean(danger));
+
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = (val) => {
+        if (done) return;
+        done = true;
+        dlg.removeEventListener("close", onClose);
+        cancelBtn.removeEventListener("click", onCancel);
+        okBtn.removeEventListener("click", onOk);
+        if (dlg.open) dlg.close();
+        resolve(val);
+      };
+      const onOk = (e) => { e.preventDefault(); finish(true); };
+      const onCancel = () => finish(false);
+      const onClose = () => finish(false);
+      okBtn.addEventListener("click", onOk);
+      cancelBtn.addEventListener("click", onCancel);
+      dlg.addEventListener("close", onClose);
+      dlg.showModal();
+    });
+  }
+
   return {
     // Any route, e.g. request('GET', '/api/admin/stalls?search=x'). Used by the admin page.
     request,
+    toast,
+    confirm: confirmDialog,
     logout: () => request("POST", "/api/auth/logout"),
 
     // Header + My Stall page

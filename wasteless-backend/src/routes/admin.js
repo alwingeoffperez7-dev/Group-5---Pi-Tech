@@ -54,22 +54,46 @@ router.get(
   }),
 );
 
-// ?sort=newest|oldest
+// ?sort=newest|oldest&status=Pending|Replied|Resolved
 router.get(
   "/feedback",
   wrap(async (req, res) => {
+    const allowed = ["Pending", "Replied", "Resolved"];
+    const status = allowed.includes(req.query.status) ? req.query.status : "";
     const [rows] = await pool.query(
-      `SELECT f.feedback_id, f.subject, f.message, f.feedback_type, f.status, f.created_at,
-            c.business_name
+      `SELECT f.feedback_id, f.subject, f.message, f.feedback_type, f.status, f.admin_reply,
+            f.attachment_path, f.created_at, c.business_name
      FROM feedback f JOIN canteen c ON c.canteen_id = f.canteen_id
+     ${status ? "WHERE f.status = ?" : ""}
      ORDER BY f.created_at ${req.query.sort === "oldest" ? "ASC" : "DESC"}, f.feedback_id`,
+      status ? [status] : [],
     );
     res.json(
       rows.map((r) => ({
         ...r,
+        attachment_url: r.attachment_path ? `/uploads/${r.attachment_path}` : null,
         tags: [r.feedback_type, r.status, r.business_name],
       })),
     );
+  }),
+);
+
+router.put(
+  "/feedback/:id",
+  wrap(async (req, res) => {
+    const reply = String(req.body.admin_reply ?? "").trim();
+    const allowed = ["Pending", "Replied", "Resolved"];
+    let status = req.body.status;
+    if (!status) status = reply ? "Replied" : "Pending";
+    if (!allowed.includes(status)) {
+      throw new HttpError(400, "Invalid feedback status");
+    }
+    const [r] = await pool.query(
+      "UPDATE feedback SET admin_reply = ?, status = ? WHERE feedback_id = ?",
+      [reply || null, status, req.params.id],
+    );
+    if (!r.affectedRows) throw new HttpError(404, "Feedback not found");
+    res.json({ feedback_id: Number(req.params.id), status, admin_reply: reply || null });
   }),
 );
 
@@ -121,23 +145,41 @@ for (const [action, status] of [
 }
 
 // ---------- Stall Management ----------
+// filter = over | under (compared to the weekly plastic limit)
 router.get(
   "/stalls",
   wrap(async (req, res) => {
-    const { search, sort } = req.query;
-    const where = [`status = 'Approved'`];
+    const { search, filter, sort } = req.query;
+    const where = [`c.status = 'Approved'`];
     const params = [];
     if (search) {
       where.push(
-        "(business_name LIKE ? OR contact_person LIKE ? OR business_email LIKE ?)",
+        "(c.business_name LIKE ? OR c.contact_person LIKE ? OR c.business_email LIKE ?)",
       );
       params.push(like(search), like(search), like(search));
     }
+    let having = "";
+    if (filter === "over" || filter === "under") {
+      const [[cond]] = await pool.query(
+        "SELECT threshold FROM conditions WHERE condition_code = 'high_overall'",
+      );
+      const limit = Number(cond?.threshold ?? 90);
+      having =
+        filter === "over"
+          ? "HAVING COALESCE(SUM(s.quantity_sold), 0) >= ?"
+          : "HAVING COALESCE(SUM(s.quantity_sold), 0) < ?";
+      params.push(limit);
+    }
     const [rows] = await pool.query(
-      `SELECT canteen_id AS stall_id, business_name, contact_person, contact_number,
-            business_email AS email, location, joined_date
-     FROM canteen WHERE ${where.join(" AND ")}
-     ORDER BY ${pickSort(sort, NAME_SORT("business_name", "canteen_id"), "name_asc")}`,
+      `SELECT c.canteen_id AS stall_id, c.business_name, c.contact_person, c.contact_number,
+            c.business_email AS email, c.location, c.joined_date
+     FROM canteen c
+     LEFT JOIN product p ON p.canteen_id = c.canteen_id
+     LEFT JOIN sales_record s ON s.product_id = p.product_id AND s.sold_at >= CURDATE() - INTERVAL 6 DAY
+     WHERE ${where.join(" AND ")}
+     GROUP BY c.canteen_id, c.business_name, c.contact_person, c.contact_number, c.business_email, c.location, c.joined_date
+     ${having}
+     ORDER BY ${pickSort(sort, NAME_SORT("c.business_name", "c.canteen_id"), "name_asc")}`,
       params,
     );
     res.json(rows);
@@ -319,22 +361,30 @@ router.delete(
 );
 
 // ---------- Packaging Category Management (plastic packaging) ----------
+// filter = used | unused
 router.get(
   "/packaging",
   wrap(async (req, res) => {
-    const { search, sort } = req.query;
+    const { search, filter, sort } = req.query;
     const sorts = {
       name_asc: "pk.packaging_name ASC",
       name_desc: "pk.packaging_name DESC",
       items_desc: "item_count DESC",
       items_asc: "item_count ASC",
     };
+    const having =
+      filter === "used"
+        ? "HAVING COUNT(p.product_id) > 0"
+        : filter === "unused"
+          ? "HAVING COUNT(p.product_id) = 0"
+          : "";
     const [rows] = await pool.query(
       `SELECT pk.packaging_id, pk.packaging_name, pk.description, pk.example, COUNT(p.product_id) AS item_count
      FROM packaging_category pk
      LEFT JOIN product p ON p.packaging_id = pk.packaging_id AND p.is_active = 1
      ${search ? "WHERE pk.packaging_name LIKE ?" : ""}
      GROUP BY pk.packaging_id
+     ${having}
      ORDER BY ${sorts[sort] || "pk.packaging_id ASC"}`,
       search ? [like(search)] : [],
     );

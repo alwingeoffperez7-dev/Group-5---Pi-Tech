@@ -31,7 +31,13 @@ router.get('/chart', wrap(async (req, res) => {
 
 // GET /api/landing/summary
 router.get('/summary', wrap(async (req, res) => {
-  const [[w]] = await pool.query('SELECT COALESCE(SUM(weight_kg), 0) AS total FROM wastelog');
+  const [[w]] = await pool.query(
+    `SELECT COALESCE(SUM(s.quantity_sold), 0) AS total
+     FROM sales_record s
+     JOIN product p ON p.product_id = s.product_id
+     JOIN canteen c ON c.canteen_id = p.canteen_id
+     WHERE c.status <> 'Removed'`
+  );
   const [[inv]] = await pool.query('SELECT COALESCE(SUM(stock), 0) AS items FROM product WHERE is_active = 1');
   // Approved stalls under the weekly plastic limit (same limit + 7 days as the Eco-Tip)
   const [[st]] = await pool.query(
@@ -61,7 +67,7 @@ router.get('/summary', wrap(async (req, res) => {
     items: [
       { label: 'Stalls under the limit', value: `${Number(st.under_limit)} of ${Number(st.stalls)}`, note: 'Under the weekly plastic limit' },
       { label: 'Items in inventory', value: String(inv.items), note: `Across ${Number(st.stalls)} active stalls` },
-      { label: 'Total plastic waste', value: `${Number(w.total)} kg`, note: 'All time, from the waste logs' }
+      { label: 'Total plastic waste', value: `${Number(w.total).toLocaleString()} pcs`, note: 'All time, across all stalls' }
     ]
   });
 }));
