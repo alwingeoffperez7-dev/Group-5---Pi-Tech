@@ -68,6 +68,8 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Landing chart / summary | `GET /api/landing/chart?days=7|14|30` (items sold per packaging category, all stalls), `GET /api/landing/summary` | anyone |
 | Admin dashboard totals | `GET /api/admin/stats` | admin |
 | Admin feedback list | `GET /api/admin/feedback?sort=newest|oldest` | admin |
+| Notify vendors (Product Management > Notify) | `POST /api/admin/notifications` (product_id, comments), `GET /api/admin/notifications` (sent list: Pending = not read yet, Completed = read by the vendor) | admin |
+| Vendor notification bell | `GET /api/notifications` → `{ unread, notifications }`, `POST /api/notifications/:id/read` | vendor |
 | Account Management | `GET /api/admin/accounts?search=&filter=Pending|Approved|Declined&sort=`, `POST /api/admin/accounts/:id/approve|decline` | admin |
 | Stall Management | `GET/POST /api/admin/stalls`, `PUT/DELETE /api/admin/stalls/:id` | admin |
 | Product Management | `GET/POST /api/admin/products`, `PUT/DELETE /api/admin/products/:id` | admin |
@@ -87,7 +89,9 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 | Product table, search box, category filter | `GET /api/products?q=&category=` | — | `count` (Product Count) + `products` |
 | Open Edit pop-up | `GET /api/products/:id` | — | one product |
 | Add Product → Save Product | `POST /api/products` | FormData | the new product |
-| Edit Product → Save Changes | `PUT /api/products/:id` | FormData (only changed fields needed) | the updated product |
+| Table cell changed (inline editing) / Stock +/- | `PUT /api/products/:id` | FormData with just that field, e.g. `stock` | the updated product |
+| Sold + (record a sale, stock −1) | `POST /api/products/:id/sales` | `{ quantity }` (default 1) | the updated product (`sold` = last 7 days) |
+| Sold − (undo the last sale of the past 7 days, stock back) | `DELETE /api/products/:id/sales/last` | — | the updated product |
 | Delete pop-up → Delete | `DELETE /api/products/:id` | — | `{ deleted: true }` |
 | Send to Admin | `POST /api/feedback` | FormData | the new submission |
 | My Submissions list | `GET /api/feedback` | — | `submissions` (newest first) |
@@ -105,6 +109,9 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 - Adding a product writes a `stocklog` row (`initial`). Changing stock in Edit writes another (`restock` or `adjustment`), so stock history is kept.
 - Delete is a **soft delete** (`is_active = 0`). Old sales and waste records still point to it, so analytics don't break.
 - Uploaded images go to `/uploads` and are served at `image_url`.
+- **Sales:** the Sold "+" button writes a `sales_record` row (price at that moment) and takes it out of stock (`stocklog` type `sale`); you can't sell more than is in stock. "−" deletes the most recent sale from the **last 7 days** only (older weeks stay as they are). `sold` and the dashboard's "Items Sold This Week" both count the last 7 days.
+- **Bottled water is not allowed** (team rule): adding or renaming a product to a name with "bottled / mineral / purified / distilled / spring water" is refused (`src/rules.js`). Caps and lids are fine.
+- **Notifications** from the admin are saved in the `notification` table (`notif_type = 'admin'`) for the product's stall; a vendor only ever sees their own.
 - **Eco-Tip** (`src/eco-tip.js`, version 2 = team decision 2026-10-22, from Condition_Tip.pdf). Plastic waste = pieces sold in the last 7 days (1 item = 1 piece). Defaults (the admin can change them in the Eco-Tips tab):
 
   | Condition | Rule | Shows |
@@ -118,7 +125,7 @@ Vendor routes (below) act on the **logged-in vendor's own stall**.
 ## Not done yet
 
 - **Sessions** are kept in memory, so everyone is logged out when the server restarts.
-- **Notification** table exists (from the ERD) but isn't used: Eco-Tips are checked live on each visit.
+- **Notification** table holds the admin's messages to vendors (Notify). Eco-Tips don't use it: they're checked live on each visit.
 - **Eco-Tip summary chart** in the pop-up is tentative (not built yet).
 - **Business Analytics:** `sales_record` table and a `business_analytics` view exist for the other members.
 - **Spreadsheet version** of Product Listing (2-ALT) isn't wired; the same endpoints can back it if the team picks it.

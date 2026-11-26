@@ -9,9 +9,7 @@
     <link rel="icon" type="image/png" href="logo.png">
   </head>
   <body>
-    <!-- App Layout Wrapper for Sidebar & Main Content -->
     <div class="app-layout">
-      <!-- Sidebar Navigation -->
       <aside class="vendor-sidebar">
         <div class="sidebar-logo">
           <span class="logo-icon" aria-hidden="true"><img src="logo.png" alt="Wasteless logo" style="width: 35px; height: 35px;"></span>
@@ -21,7 +19,7 @@
           <ul>
             <li><a href="#dashboard" class="active">Dashboard</a></li>
             <li><a href="#listing">Product Listing</a></li>
-            <li><a href="#feedback">Feedback &amp; Reports</a></li>
+            <li><a href="#feedback">Feedback</a></li>
           </ul>
         </nav>
         <div class="sidebar-footer">
@@ -29,7 +27,6 @@
         </div>
       </aside>
 
-      <!-- Main Content Wrapper -->
       <div class="main-wrapper">
         <!-- Header: which stall is logged in -->
         <header class="vendor-header">
@@ -37,14 +34,29 @@
             <span id="stallIdLabel" class="stall-id">Stall ID #0000</span>
             <h2 id="stall">STALL NAME</h2>
           </div>
+
+          <!-- NEW: Notification bell (top-right in wireframe) -->
+          <div class="notif-wrapper">
+            <button type="button" id="notifBtn" class="notif-btn" aria-label="Notifications" aria-expanded="false">
+              🔔 <span id="notifBadge" class="notif-badge" hidden>0</span>
+            </button>
+
+            <!-- NEW: Notifications panel (Page 5 of the wireframe) -->
+            <div id="notifPanel" class="notif-panel" hidden>
+              <h3 class="notif-title">Notifications</h3>
+              <ul id="notifList" class="notif-list">
+                <!-- Filled by vendor-page.js: one .notif-item per notification from the admin -->
+              </ul>
+              <p id="notifEmpty" class="notif-empty" hidden>No notifications yet.</p>
+            </div>
+          </div>
         </header>
 
         <main class="container">
-          <!-- ===== PAGE: Dashboard ===== -->
+          <!-- ===== PAGE: Dashboard (unchanged) ===== -->
           <div class="page" id="page-dashboard">
             <h1 class="page-title">Dashboard</h1>
 
-            <!-- Dashboard Summary Cards -->
             <section class="dashboard-stats">
   <div class="stat-card">
     <h3>Products</h3>
@@ -53,9 +65,9 @@
   </div>
 
   <div class="stat-card">
-    <h3>Plastic Items Sold This Week</h3>
+    <h3>Items Sold This Week</h3>
     <p class="stat-value" id="vendor-sold-items">0</p>
-    <p class="stat-note">Plastic-packaged items sold</p>
+    <p class="stat-note">Last 7 days, from Product Listing</p>
   </div>
 
   <div class="stat-card">
@@ -65,35 +77,26 @@
 </section>
 
             <!-- Dashboard graph: items sold per packaging category -->
-            <section class="dashboard-stats">
-  <div class="stat-card">
-    <h3>Stall ID</h3>
-    <p class="stat-value" id="vendor-stall-id">Loading...</p>
-  </div>
+            <section class="card chart-card">
+              <h2>Packaging Used (items sold)</h2>
+              <label
+                >Show
+                <select id="packagingRange">
+                  <option value="7">Last 7 days</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+              </label>
+              <canvas
+                id="packagingChart"
+                width="720"
+                height="320"
+                role="img"
+                aria-label="Line graph of items sold per day for each packaging category"
+              ></canvas>
+              <p class="chart-status" id="packagingChartStatus"></p>
+            </section>
 
-  <div class="stat-card">
-    <h3>Stall Name</h3>
-    <p class="stat-value" id="vendor-stall-name">Loading...</p>
-  </div>
-
-  <div class="stat-card">
-    <h3>Total Products</h3>
-    <p class="stat-value" id="count">00</p>
-    <p class="stat-note">Listed in your stall</p>
-  </div>
-
-  <div class="stat-card">
-    <h3>Sold Items</h3>
-    <p class="stat-value" id="vendor-sold-items">0</p>
-  </div>
-
-  <div class="stat-card">
-    <h3>Package Category</h3>
-    <ul class="package-breakdown" id="packageBreakdown"></ul>
-  </div>
-</section>
-
-            <!-- Eco Tip Banner: congratulates when under the weekly limit ("positive" class) -->
             <aside class="eco-tip-banner" id="ecoTipBanner">
               <strong>EcoTip 101</strong>
               <span id="ecoTipBannerText"
@@ -111,8 +114,6 @@
               </button>
             </aside>
 
-            <!-- Eco-Tip pop-up (a div; style it as an overlay). Opens on every dashboard visit
-                 while the stall is over the weekly limit. -->
             <div
               class="eco-tip-popup"
               id="ecoTipPopup"
@@ -169,26 +170,80 @@
                       <th>Product Description</th>
                       <th>Packaging Category</th>
                       <th>Price</th>
-                      <th>Stock</th>
+                      <th>Stock</th>   <!-- NEW -->
+                      <th>Sold</th>
                       <th>Category</th>
-                      <th>Action/Edit</th>
+                      <th>Action</th>  <!-- Edit removed: rows are edited inline -->
                     </tr>
                   </thead>
                   <tbody id="rows">
-                    <!-- Dynamic rows injected via vendor-page.js -->
+                    <!-- Dynamic rows injected via vendor-page.js.
+                         Each row must follow the structure in #rowTemplate below. -->
                   </tbody>
                 </table>
               </div>
+
+              <!-- NEW: row structure for inline editing (no Edit button / no pop-up).
+                   Every cell is a live input; +/- buttons change Stock and Sold. -->
+              <template id="rowTemplate">
+                <tr data-product-id="">
+                  <td class="cell-id"></td>
+                  <!-- Image: click it to pick a new one (saved right away; JPG/PNG/WEBP/GIF, max 2 MB) -->
+                  <td class="cell-image">
+                    <button type="button" class="row-img-btn" title="Change image">
+                      <img class="row-img" width="60" alt="Product image" />
+                      <span class="row-img-none">Add image</span>
+                    </button>
+                    <input type="file" class="row-image-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
+                  </td>
+                  <td><input class="inline-input" data-field="product_name" /></td>
+                  <td><textarea class="inline-input" data-field="description" rows="2"></textarea></td>
+                  <td><select class="inline-input" data-field="packaging_id"></select></td>
+                  <td><input class="inline-input" data-field="unit_price" type="number" min="0" step="0.01" /></td>
+
+                  <!-- NEW: Stock with − / + -->
+                  <td>
+                    <div class="qty-control">
+                      <button type="button" class="qty-btn" data-qty="minus" data-field="stock" aria-label="Decrease stock">−</button>
+                      <input class="inline-input qty-input" data-field="stock" type="number" min="0" step="1" aria-label="Stock" />
+                      <button type="button" class="qty-btn" data-qty="plus" data-field="stock" aria-label="Increase stock">+</button>
+                    </div>
+                  </td>
+
+                  <!-- Sold this week with − / + ("+" records a sale and takes 1 from stock, "−" undoes the last sale of the past 7 days) -->
+                  <td>
+                    <div class="qty-control">
+                      <button type="button" class="qty-btn" data-qty="minus" data-field="sold" aria-label="Undo a sale">−</button>
+                      <input class="qty-input" data-field="sold" type="number" readonly aria-label="Sold this week" />
+                      <button type="button" class="qty-btn" data-qty="plus" data-field="sold" aria-label="Record a sale">+</button>
+                    </div>
+                  </td>
+
+                  <td>
+                    <select class="inline-input" data-field="category">
+                      <option>Meals</option>
+                      <option>Snacks</option>
+                      <option>Drinks</option>
+                      <option>Desserts</option>
+                    </select>
+                  </td>
+
+                  <!-- Changes save as soon as a cell is changed (like a spreadsheet); only Delete here -->
+                  <td class="cell-actions">
+                    <button type="button" class="btn btn-sm row-delete-btn">Delete</button>
+                  </td>
+                </tr>
+              </template>
             </section>
 
-            <!-- Add / Edit Product pop-up -->
+            <!-- Add Product pop-up (now ADD only; editing happens in the table) -->
             <dialog
               class="product-modal"
               id="productFormContainer"
               aria-labelledby="formTitle"
             >
               <div class="modal-header-row">
-                <h2 id="formTitle">Edit Product</h2>
+                <h2 id="formTitle">Add Product</h2>
                 <button
                   type="button"
                   id="closeModalBtn"
@@ -235,7 +290,6 @@
                   <div class="form-group">
                     <label
                       >Packaging Category
-                      <!-- options filled from the database by vendor-page.js -->
                       <select
                         name="packaging_id"
                         id="formPackaging"
@@ -255,6 +309,7 @@
                         required
                     /></label>
                   </div>
+                  <!-- NEW: Stock -->
                   <div class="form-group">
                     <label
                       >Stock
@@ -296,16 +351,16 @@
                     Cancel
                   </button>
                   <button type="submit" id="saveBtn" class="btn primary">
-                    Save Changes
+                    Add Product
                   </button>
                 </div>
               </form>
             </dialog>
           </div>
 
-          <!-- ===== PAGE: Feedback & Reports ===== -->
+          <!-- ===== PAGE: Feedback ===== -->
           <div class="page" id="page-feedback" hidden>
-            <h1 class="page-title">Feedback &amp; Reports</h1>
+            <h1 class="page-title">Feedback</h1>
 
             <section class="feedback-grid">
               <div class="card">
@@ -357,9 +412,7 @@
 
               <div class="card">
                 <h2>My Submissions</h2>
-                <ul id="subs" class="submission-list">
-                  <!-- Dynamic submissions list -->
-                </ul>
+                <ul id="subs" class="submission-list"></ul>
               </div>
             </section>
           </div>
@@ -367,10 +420,10 @@
       </div>
     </div>
 
-    <!-- Script Import -->
-    <!-- Chart.js (dashboard graphs), same version as the landing page -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="/js/api.js"></script>
     <script src="../system.js/vendor-page.js"></script>
+
   </body>
 </html>
+

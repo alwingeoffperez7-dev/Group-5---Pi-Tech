@@ -65,6 +65,7 @@ app.use('/api/stall/report', requireRole('vendor'), require('./routes/report'));
 app.use('/api/stall', requireRole('vendor'), require('./routes/stall'));
 app.use('/api/products', requireRole('vendor'), require('./routes/products'));
 app.use('/api/feedback', requireRole('vendor'), require('./routes/feedback'));
+app.use('/api/notifications', requireRole('vendor'), require('./routes/notifications'));
 
 // Admin API
 app.use('/api/admin', requireRole('admin'), require('./routes/admin'));
@@ -73,4 +74,5 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'No such API route' 
 app.use(errorHandler);
 
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => console.log(`WasteLess running at http://localhost:${port}`));
+// Exported so the API tests (src/api.test.js) can close the server when they finish.
+module.exports = app.listen(port, () => console.log(`WasteLess running at http://localhost:${port}`));

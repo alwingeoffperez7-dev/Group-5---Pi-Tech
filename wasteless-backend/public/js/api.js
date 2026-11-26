@@ -56,11 +56,18 @@ const WasteLessAPI = (() => {
 
     // Pass the <form> element or a FormData with fields:
     // product_name, description, category (name) or category_id,
-    // packaging_type (Plastic|Paper|Reusable), unit_price, stock, image (file)
+    // packaging_id (from getPackaging), unit_price, stock, image (file)
     addProduct: (form) => request("POST", "/api/products", toFormData(form)),
     editProduct: (id, form) =>
       request("PUT", `/api/products/${id}`, toFormData(form)),
     deleteProduct: (id) => request("DELETE", `/api/products/${id}`),
+    // Sold +/- buttons: record a sale (stock goes down) / undo the last sale of the past 7 days. Both return the updated product.
+    recordSale: (id, quantity = 1) => request("POST", `/api/products/${id}/sales`, { quantity }),
+    undoSale: (id) => request("DELETE", `/api/products/${id}/sales/last`),
+
+    // Notification bell: { unread, notifications: [...] } sent by the admin
+    getNotifications: () => request("GET", "/api/notifications"),
+    markNotificationRead: (id) => request("POST", `/api/notifications/${id}/read`),
 
     // Feedback / Report: feedback_type, subject, message, attachment (file)
     getSubmissions: () => request("GET", "/api/feedback"),
