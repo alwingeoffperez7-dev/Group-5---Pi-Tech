@@ -31,14 +31,19 @@ router.get('/chart', wrap(async (req, res) => {
 
 // GET /api/landing/summary
 router.get('/summary', wrap(async (req, res) => {
-  const [[w]] = await pool.query(
-    `SELECT COALESCE(SUM(weight_kg), 0) AS total,
-            COALESCE(SUM(CASE WHEN YEAR(wastelog_date) = YEAR(CURDATE()) THEN weight_kg END), 0) AS this_year,
-            COALESCE(SUM(CASE WHEN YEAR(wastelog_date) = YEAR(CURDATE()) - 1 THEN weight_kg END), 0) AS last_year
-     FROM wastelog`
-  );
+  const [[w]] = await pool.query('SELECT COALESCE(SUM(weight_kg), 0) AS total FROM wastelog');
   const [[inv]] = await pool.query('SELECT COALESCE(SUM(stock), 0) AS items FROM product WHERE is_active = 1');
-  const change = Number(w.this_year) - Number(w.last_year);
+  // Approved stalls under the weekly plastic limit (same limit + 7 days as the Eco-Tip)
+  const [[st]] = await pool.query(
+    `SELECT COUNT(*) AS stalls,
+            COALESCE(SUM(t.pieces < (SELECT threshold FROM conditions WHERE condition_code = 'high_overall')), 0) AS under_limit
+     FROM (SELECT c.canteen_id, COALESCE(SUM(s.quantity_sold), 0) AS pieces
+           FROM canteen c
+           LEFT JOIN product p ON p.canteen_id = c.canteen_id
+           LEFT JOIN sales_record s ON s.product_id = p.product_id AND s.sold_at >= CURDATE() - INTERVAL 6 DAY
+           WHERE c.status = 'Approved'
+           GROUP BY c.canteen_id) t`
+  );
   // Hero card: plastic items sold in the last 7 days vs the 7 days before, all stalls
   const [[wk]] = await pool.query(
     `SELECT COALESCE(SUM(CASE WHEN s.sold_at >= CURDATE() - INTERVAL 6 DAY THEN s.quantity_sold END), 0) AS this_week,
@@ -52,10 +57,11 @@ router.get('/summary', wrap(async (req, res) => {
   res.json({
     week: { this_week: thisWeek, last_week: lastWeek, change_pct: changePct(thisWeek, lastWeek) },
     title: 'Summary',
+    // The small cards beside the hero card, in this order
     items: [
-      { label: 'Total plastic waste', value: `${Number(w.total)} kg` },
-      { label: 'Items in inventory', value: String(inv.items) },
-      { label: 'Change since last year', value: `${change >= 0 ? '+' : ''}${change} kg` }
+      { label: 'Stalls under the limit', value: `${Number(st.under_limit)} of ${Number(st.stalls)}`, note: 'Under the weekly plastic limit' },
+      { label: 'Items in inventory', value: String(inv.items), note: `Across ${Number(st.stalls)} active stalls` },
+      { label: 'Total plastic waste', value: `${Number(w.total)} kg`, note: 'All time, from the waste logs' }
     ]
   });
 }));

@@ -8,131 +8,103 @@
     <link rel="stylesheet" href="../system.css/wasteless.css">
     <link rel="icon" type="image/png" href="logo.png">
   </head>
-  <body>
+  <body class="landing">
     <!-- ===== HEADER / NAVBAR ===== -->
     <header id="site-header">
-      <div id="header-logo"><img src="logo.png" alt="Wasteless logo" style="width: 40px; height: 40px;"></div>
-      <p id="header-title">
-        WasteLess: Canteen Inventory and Plastic Waste Monitoring System
-      </p>
+      <a id="header-logo" href="landing.html"><img src="logo.png" alt="" width="40" height="40"><span>WasteLess</span></a>
 
-      <nav id="header-nav">
-        <a id="login-link" href="log-in.html">Log In</a>
-        <a id="register-link" href="register.html">Sign Up</a>
+      <nav id="header-nav" aria-label="Main">
+        <a href="#this-week">This week</a>
+        <a href="#packaging">Packaging</a>
+        <a id="login-link" class="btn outline" href="log-in.html">Log in</a>
+        <a id="register-link" class="btn primary" href="register.html">Register your stall</a>
       </nav>
     </header>
 
     <main>
-      <!-- ===== HERO ===== -->
+      <!-- ===== HERO: welcome + the canteen's packaging graph ===== -->
       <section id="hero">
         <div id="hero-text">
+          <p class="eyebrow">QCU Cooperative · Canteen</p>
           <h1>
-            <span id="hero-welcome">Welcome to</span><br />
+            <span id="hero-welcome">Welcome to</span>
             <span id="hero-brand">WasteLess</span>
           </h1>
+          <p id="hero-tagline">Less plastic, one stall at a time.</p>
           <p id="hero-subtitle">
-            Canteen Inventory and Plastic Waste Monitoring System
+            WasteLess helps canteen vendors keep their product list, record sales,
+            and see how much plastic packaging leaves their stall each week, with
+            friendly Eco-Tips to cut it down.
           </p>
-        </div>
-
-        <div id="hero-logo"><img src="logo.png" alt="Wasteless logo" style="width: 245px; height: 245px;"></div>
-      </section>
-
-      <!-- ===== HOW THE SYSTEM WORKS ===== -->
-      <section id="how-it-works">
-        <h2>How our System Works</h2>
-
-        <div id="how-it-works-steps">
-          <div class="step" id="step-1">
-            <span class="step-icon" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyMjA0NjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS11c2VyIHByZXZpZXctaWNvbiI+PHBhdGggZD0iTTE5IDIxdi0yYTQgNCAwIDAgMC00LTRIOWE0IDQgMCAwIDAtNCA0djIiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjciIHI9IjQiLz48L3N2Zz4=" alt="Step-1 icon"></span>
-            <h3>Register</h3>
-            <p>Stall owners register their business and wait for an admin to approve the account.</p>
-          </div>
-
-          <span class="step-arrow" aria-hidden="true">→</span>
-
-          <div class="step" id="step-2">
-            <span class="step-icon" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyMjA0NjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1zZWFyY2ggcHJldmlldy1pY29uIj48cGF0aCBkPSJtMjEgMjEtNC4zNC00LjM0Ii8+PGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iOCIvPjwvc3ZnPg==" alt="Step-2 icon"></span>
-            <h3>List your Products</h3>
-            <p>Add each product to your stall and pick the packaging it comes in.</p>
-          </div>
-
-          <span class="step-arrow" aria-hidden="true">→</span>
-
-          <div class="step" id="step-3">
-            <span class="step-icon" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyMjA0NjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1oYW5kc2hha2UgcHJldmlldy1pY29uIj48cGF0aCBkPSJtMTEgMTcgMiAyYTEgMSAwIDEgMCAzLTMiLz48cGF0aCBkPSJtMTQgMTQgMi41IDIuNWExIDEgMCAxIDAgMy0zbC0zLjg4LTMuODhhMyAzIDAgMCAwLTQuMjQgMGwtLjg4Ljg4YTEgMSAwIDEgMS0zLTNsMi44MS0yLjgxYTUuNzkgNS43OSAwIDAgMSA3LjA2LS44N2wuNDcuMjhhMiAyIDAgMCAwIDEuNDIuMjVMMjEgNCIvPjxwYXRoIGQ9Im0yMSAzIDEgMTFoLTIiLz48cGF0aCBkPSJNMyAzIDIgMTRsNi41IDYuNWExIDEgMCAxIDAgMy0zIi8+PHBhdGggZD0iTTMgNGg4Ii8+PC9zdmc+" alt="Step-3 icon"></span>
-            <h3>Cut Down on Waste</h3>
-            <p>Check your plastic use on the dashboard, read the eco-tips and send feedback.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="register.html">Register your stall</a>
+            <a class="btn outline" href="log-in.html">Log in</a>
           </div>
         </div>
-      </section>
 
-      <!-- ===== DATA SUMMARY ===== -->
-      <section id="data-summary">
-        <h2>Data Summary</h2>
-
-        <div id="data-summary-content">
-          <div id="chart-container">
-            <label
-              >Show
+        <div id="chart-container" class="card">
+          <div class="card-head">
+            <div>
+              <h2>Plastic packaging sold</h2>
+              <p class="card-sub">All stalls · items sold per day</p>
+            </div>
+            <label>
+              <span class="sr-only">Show</span>
               <select id="chart-range">
                 <option value="7">Last 7 days</option>
                 <option value="14">Last 14 days</option>
                 <option value="30">Last 30 days</option>
               </select>
             </label>
+          </div>
+          <div class="chart-box">
             <canvas
               id="waste-chart"
-              aria-label="Line graph of items sold per month for each packaging category, across all stalls"
+              aria-label="Line graph of items sold per day for each packaging category, across all stalls"
               role="img"
             ></canvas>
-            <p id="chart-status">Loading chart...</p>
           </div>
-
-          <div id="summary-card">
-            <h3 id="summary-title">Summary</h3>
-            <hr />
-            <dl id="summary-list"></dl>
-            <p id="summary-status">Loading summary...</p>
-          </div>
+          <p id="chart-status" class="card-sub">Loading chart...</p>
         </div>
       </section>
 
-      <!-- ===== PURPOSE OF WASTELESS ===== -->
-      <section id="purpose">
-        <h2>Purpose of WasteLess</h2>
-
-        <div id="purpose-cards">
-          <div class="purpose-card" id="purpose-1">
-            <span class="purpose-icon" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyMjA0NjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jb2lucyBwcmV2aWV3LWljb24iPjxwYXRoIGQ9Ik0xMy43NDQgMTcuNzM2YTYgNiAwIDEgMS03LjQ4LTcuNDgiLz48cGF0aCBkPSJNMTUgNmgxdjQiLz48cGF0aCBkPSJtNi4xMzQgMTQuNzY4Ljg2Ni0uNSAyIDMuNDY0Ii8+PGNpcmNsZSBjeD0iMTYiIGN5PSI4IiByPSI2Ii8+PC9zdmc+" alt="Purpose-1 icon"></span>
-            <p>Show vendors how much packaging their stall really goes through.</p>
+      <!-- ===== THIS WEEK: big card + small cards from GET /api/landing/summary ===== -->
+      <section id="this-week">
+        <h2>This week across the canteen</h2>
+        <div class="week-grid">
+          <div class="card week-hero">
+            <div>
+              <p class="eyebrow">Plastic items sold this week</p>
+              <p id="week-total" class="week-number">0</p>
+              <p class="card-sub">Last 7 days, all stalls</p>
+            </div>
+            <div class="week-trend">
+              <svg id="week-sparkline" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+              <p><strong id="week-change"></strong> <span class="card-sub">Plastic items per day, last 7 days</span></p>
+            </div>
           </div>
-
-          <div class="purpose-card" id="purpose-2">
-            <span class="purpose-icon" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyMjA0NjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1oYW5kLWNvaW5zIHByZXZpZXctaWNvbiI+PHBhdGggZD0iTTExIDE1aDJhMiAyIDAgMSAwIDAtNGgtM2MtLjYgMC0xLjEuMi0xLjQuNkwzIDE3Ii8+PHBhdGggZD0ibTcgMjEgMS42LTEuNGMuMy0uNC44LS42IDEuNC0uNmg0YzEuMSAwIDIuMS0uNCAyLjgtMS4ybDQuNi00LjRhMiAyIDAgMCAwLTIuNzUtMi45MWwtNC4yIDMuOSIvPjxwYXRoIGQ9Im0yIDE2IDYgNiIvPjxjaXJjbGUgY3g9IjE2IiBjeT0iOSIgcj0iMi45Ii8+PGNpcmNsZSBjeD0iNiIgY3k9IjUiIHI9IjMiLz48L3N2Zz4=" alt="Purpose-2 icon"></span>
-            <p>Help stalls spend less on packaging.</p>
-          </div>
-
-          <div class="purpose-card" id="purpose-3">
-            <span class="purpose-icon" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyMjA0NjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS10cmVlLWRlY2lkdW91cyBwcmV2aWV3LWljb24iPjxwYXRoIGQ9Ik04IDE5YTQgNCAwIDAgMS0yLjI0LTcuMzJBMy41IDMuNSAwIDAgMSA5IDYuMDNWNmEzIDMgMCAxIDEgNiAwdi4wNGEzLjUgMy41IDAgMCAxIDMuMjQgNS42NUE0IDQgMCAwIDEgMTYgMTlaIi8+PHBhdGggZD0iTTEyIDE5djMiLz48L3N2Zz4=" alt="Purpose-3 icon"></span>
-            <p>Cut down on single-use plastic in the canteen.</p>
-          </div>
-
-          <div class="purpose-card" id="purpose-4">
-            <span class="purpose-icon" aria-hidden="true"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyMjA0NjciIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaXJjbGUtY2hlY2stYmlnIHByZXZpZXctaWNvbiI+PHBhdGggZD0iTTIxLjgwMSAxMEExMCAxMCAwIDEgMSAxNyAzLjMzNSIvPjxwYXRoIGQ9Im05IDExIDMgM0wyMiA0Ii8+PC9zdmc+" alt="Purpose-4 icon"></span>
-            <p>Give admins one place to approve stalls and track the numbers.</p>
-          </div>
+          <dl id="summary-list" class="week-small"></dl>
         </div>
+        <p id="summary-status" class="card-sub">Loading summary...</p>
+      </section>
+
+      <!-- ===== WHAT WE TRACK: packaging categories from GET /api/packaging ===== -->
+      <section id="packaging">
+        <h2>What we track</h2>
+        <p class="section-sub">Every product is listed under one of these plastic packaging categories, so each sale counts toward the right kind of waste.</p>
+        <ul id="packaging-list" class="packaging-cards"></ul>
       </section>
     </main>
 
     <!-- ===== FOOTER ===== -->
     <footer id="site-footer">
-      <p>&copy; 2026 WasteLess. All rights reserved.</p>
+      <p>&copy; 2026 WasteLess · QCU Cooperative.</p>
+      <p>This site uses one cookie, only to keep you logged in. <a href="cookie-policy.html">Cookie &amp; Privacy Policy</a></p>
     </footer>
 
-    <!-- Chart.js (draws the line graph) -->
+    <!-- Chart.js (draws the line graph), then the shared graph style -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="../system.js/charts.js"></script>
     <script src="../system.js/landing.js"></script>
   </body>
 </html>

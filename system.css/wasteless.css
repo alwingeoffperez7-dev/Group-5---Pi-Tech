@@ -10,7 +10,7 @@
    5. Layout helpers         9. Responsive, reduced motion
    ========================================================================== */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap");
 
 /* ==========================================================================
    1. DESIGN TOKENS
@@ -41,6 +41,9 @@
   --color-focus: #2563EB;
   --color-danger: #B42318;
   --color-success: #1D7A4F;
+  --color-success-line: #16A34A;   /* graph and trend lines only, not text */
+  --color-warning: #8A5A0F;
+  --color-warning-soft: #FBF0DC;
 
   /* Derived (no new hues) */
   --color-focus-ring: color-mix(in srgb, var(--color-focus) 25%, transparent);
@@ -63,7 +66,7 @@
   --radius-lg: 1rem;       /* cards, dialogs, banners */
 
   /* Typography */
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Fira Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --text-display: 2rem;        /* page title */
   --text-hero: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);  /* landing hero only */
   --text-heading: 1.375rem;    /* section heading */
@@ -115,6 +118,7 @@
   --icon-arrow-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 19-7-7 7-7'/%3E%3Cpath d='M19 12H5'/%3E%3C/svg%3E");
   /* --icon-store is a background image on the register title: stroke baked to --color-secondary. */
   --icon-store: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563EB' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7'/%3E%3Cpath d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/%3E%3Cpath d='M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4'/%3E%3Cpath d='M2 7h20'/%3E%3Cpath d='M22 7v3a2 2 0 0 1-2 2a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7'/%3E%3C/svg%3E");
+  --icon-alert: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
   /* Select chevron is a background image, so its stroke is baked in: keep it equal to --color-text-muted. */
   --icon-chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B85' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
@@ -838,68 +842,215 @@ body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
 .page-title { margin-bottom: var(--space-1); }
 .section-header .page-title { margin-bottom: 0; }
 
-/* ---- Dashboard ---- */
-.dashboard-stats {
+/* ---- Dashboard ----
+   Two columns: the packaging graph (main card) + Running low on the left,
+   Eco-Tips + Package Category on the right. */
+.dash-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: var(--space-5);
+  align-items: stretch;
+}
+.dash-main,
+.dash-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+.dash-side .package-card { flex: 1; }
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: var(--space-4);
 }
-.stat-card h3 { margin-bottom: var(--space-3); }
-.stat-value {
-  font-size: var(--text-display);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-  letter-spacing: -0.01em;
+.card .card-head h2 { margin-bottom: 0; }
+.card-sub {
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
 }
-.package-breakdown {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.text-link {
+  font-weight: var(--weight-semibold);
+  color: var(--color-secondary);
+  text-decoration: none;
+  white-space: nowrap;
 }
-.package-breakdown li {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-2) 0;
-}
-.package-breakdown li + li { border-top: 1px solid var(--color-border); }
+.text-link:hover { text-decoration: underline; }
 
 .chart-card {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  overflow-x: auto;
 }
-.chart-card > h2 { margin-bottom: 0; }
+.chart-card .card-head h2 { font-size: var(--text-heading); }
 #chart-container label,
 .chart-card label { flex-direction: row; align-items: center; width: fit-content; }
 #chart-container select,
 .chart-card select { width: auto; }
-.chart-card canvas { max-width: none; }
-
-/* Eco-tip banner: neutral by default; success when .positive; danger while
-   the "View Eco-Tip" button is visible (over the weekly limit). */
-.eco-tip-banner {
+.chart-headline {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  border: 1.5px solid transparent;
-  border-radius: var(--radius-lg);
+  gap: var(--space-4);
+}
+.stat-value {
+  font-size: 3.25rem;
+  font-weight: var(--weight-semibold);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.headline-label { font-weight: var(--weight-semibold); }
+/* Chart.js fills this box (responsive), so size the box, not the canvas */
+.chart-box { position: relative; height: 22rem; }
+.chart-status:empty,
+#chart-status:empty,
+#summary-status:empty { display: none; }
+
+.running-low-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.running-low-list li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-4);
+}
+.running-low-list li:first-child { padding-left: 0; }
+.running-low-list li + li { border-left: 1px solid var(--color-border); }
+.running-low-list span { font-size: var(--text-caption); color: var(--color-text-muted); }
+.running-low-list .danger { color: var(--color-danger); }
+.running-low-list .warning { color: var(--color-warning); }
+
+/* Eco-Tips card: blue when under the weekly limit, amber (.warning) when over */
+.eco-card { display: flex; flex-direction: column; gap: var(--space-4); }
+.eco-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+.eco-status-row { display: flex; justify-content: space-between; gap: var(--space-3); }
+.eco-status-row strong { font-size: var(--text-body); color: var(--color-text-primary); }
+.eco-bar {
+  height: 0.5rem;
+  border-radius: 999px;
   background: var(--color-accent-light);
+  overflow: hidden;
 }
-.eco-tip-banner > span { flex: 1 1 20rem; }
-.eco-tip-banner.positive {
-  background: var(--color-surface);
-  border-color: var(--color-success);
+.eco-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--color-secondary);
 }
-.eco-tip-banner.positive strong { color: var(--color-success); }
-.eco-tip-banner:has(#ecoTipOpenBtn:not([hidden])) {
-  background: var(--color-surface);
-  border-color: var(--color-danger);
+.eco-card.warning .eco-status { background: var(--color-warning-soft); color: var(--color-warning); }
+.eco-card.warning .eco-status-row strong { color: var(--color-warning); }
+.eco-card.warning .eco-bar { background: var(--color-surface); }
+.eco-card.warning .eco-bar span { background: var(--color-warning); }
+.eco-tip-list { margin: 0; padding: 0; list-style: none; }
+.eco-tip-list:empty { display: none; }
+.eco-tip-list li { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) 0; }
+.eco-tip-list li + li { border-top: 1px solid var(--color-border); }
+.eco-tip-list span { font-size: var(--text-caption); color: var(--color-text-muted); }
+
+/* Package Category: donut with the product count in the middle, list underneath */
+.package-card { display: flex; flex-direction: column; gap: var(--space-4); }
+.package-card > h2 { margin-bottom: 0; }
+.donut { position: relative; width: 180px; height: 180px; margin: auto; }
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-caption);
+  color: var(--color-text-muted);
 }
-.eco-tip-banner:has(#ecoTipOpenBtn:not([hidden])) strong { color: var(--color-danger); }
+.donut-center strong { font-size: var(--text-display); line-height: 1.1; color: var(--color-text-primary); }
+.package-breakdown { margin: 0; padding: 0; list-style: none; }
+.package-breakdown li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+.package-breakdown strong { margin-left: auto; }
+.swatch {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+  background: var(--swatch);
+}
+
+/* Eco-Tip pop-up header: warning sign + eyebrow */
+.popup-head { display: flex; align-items: center; gap: var(--space-3); }
+.alert-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+.alert-icon::before {
+  content: "";
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: currentColor;
+  -webkit-mask: var(--icon-alert) center / contain no-repeat;
+  mask: var(--icon-alert) center / contain no-repeat;
+}
+.popup-eyebrow {
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-warning);
+}
+.eco-tip-popup .eco-category {
+  padding: var(--space-4);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+}
+.eco-tip-popup .eco-tip-text {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-light);
+  color: var(--color-primary);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 68.75em) {              /* 1100px: right column goes under */
+  .dash-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 37.5em) {
+  .running-low-list { grid-template-columns: minmax(0, 1fr); }
+  .running-low-list li { padding: var(--space-2) 0; }
+  .running-low-list li + li { border-left: 0; border-top: 1px solid var(--color-border); }
+  .chart-box { height: 16rem; }
+}
 
 /* ---- Product listing ---- */
 .filter-toolbar {
@@ -943,11 +1094,7 @@ body:has(#section-eco:not([hidden])) #sidebar [data-section="eco"] {
    ========================================================================== */
 body > main { flex: 1; }
 
-/* ---- Header and navigation ----
-   PLACE SYSTEM LOGO HERE (#header-logo and #hero-logo)
-   Replace the "LOGO" text with the real logo, e.g. <img src="..." alt="WasteLess">.
-   The dashed outline only marks the empty slot and disappears once an <img>
-   is inside. Do not substitute a logo. */
+/* ---- Header and navigation ---- */
 #site-header {
   position: sticky;
   top: 0;
@@ -959,215 +1106,162 @@ body > main { flex: 1; }
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
-#header-logo,
-#hero-logo {
-  display: grid;
-  place-items: center;
-  flex: none;
-  border: 1.5px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
+#header-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-right: auto;
+  font-size: var(--text-subheading);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+#header-nav { display: flex; align-items: center; gap: var(--space-2) var(--space-4); }
+#header-nav > a:not(.btn) {
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+#header-nav > a:not(.btn):hover { color: var(--color-secondary); }
+
+/* ---- Sections share one centred column ---- */
+.landing main > section {
+  width: min(100% - 2 * var(--space-4), var(--content-max));
+  margin-inline: auto;
+  padding-block: var(--space-7) 0;
+}
+.landing main > section > h2 { margin-bottom: var(--space-2); }
+.eyebrow {
   font-size: var(--text-caption);
   font-weight: var(--weight-semibold);
   letter-spacing: var(--tracking-label);
-}
-#header-logo {
-  height: var(--control-height);
-  min-width: var(--control-height);
-  padding: 0 var(--space-3);
-}
-#header-logo:has(> img),
-#hero-logo:has(> img) { padding: 0; border: 0; }
-#header-logo img { height: 100%; width: auto; }
-#hero-logo img { width: 100%; height: auto; }
-#header-title {
-  flex: 1;
-  min-width: 0;
-  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
   color: var(--color-text-secondary);
 }
-#header-nav { display: flex; gap: var(--space-2); }
+.section-sub { max-width: 40rem; margin-bottom: var(--space-5); color: var(--color-text-secondary); }
 
-/* ---- Full-width bands ----
-   Hero, how it works and purpose have a background that runs edge to edge, so
-   the side padding does the centring (same trick as #site-header). */
-#hero,
-#how-it-works,
-#purpose {
-  padding-inline: max(var(--space-4), calc((100% - var(--content-max)) / 2));
-}
-#data-summary {
-  width: min(100% - 2 * var(--space-4), var(--content-max));
-  margin-inline: auto;
-}
-
-/* ---- Hero ---- */
+/* ---- Hero: text left, the graph card right ---- */
 #hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
   align-items: center;
-  gap: var(--space-6);
-  padding-block: var(--space-7);
-  background: var(--color-accent-light);
+  gap: var(--space-7);
 }
 #hero h1 {
-  font-size: var(--text-heading);
-  font-weight: var(--weight-semibold);
-  letter-spacing: normal;
-  color: var(--color-text-secondary);
-}
-#hero-brand {
+  margin: var(--space-3) 0;
   font-size: var(--text-hero);
   font-weight: var(--weight-bold);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--color-text-primary);
 }
-#hero-subtitle {
-  max-width: 32rem;
-  margin-top: var(--space-3);
-  font-size: var(--text-subheading);
-  color: var(--color-text-secondary);
+#hero-brand { color: var(--color-secondary); }
+#hero-tagline {
+  font-size: var(--text-heading);
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary);
 }
-#hero-logo {
-  width: 14rem;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  color: var(--color-text-secondary);   /* the muted grey is too faint on the light blue band */
-}
+#hero-subtitle { max-width: 32rem; margin-top: var(--space-3); color: var(--color-text-secondary); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
 
-/* ---- Data summary ---- */
-#data-summary { padding-block: var(--space-7); }
-#data-summary > h2 { margin-bottom: var(--space-4); }
-#data-summary-content {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: var(--space-4);
-  align-items: start;
-}
-/* Chart.js is responsive here: it sizes itself to this positioned container. */
+/* Chart.js is responsive here: it sizes itself to .chart-box */
 #chart-container {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   min-width: 0;
 }
-#chart-status:empty,
-#summary-status:empty { display: none; }
-#summary-card hr { margin: var(--space-3) 0 var(--space-4); }
-#summary-list { margin: 0; }
-#summary-list dd {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-heading);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-}
-#summary-list dd + dt { margin-top: var(--space-4); }
+#chart-container .chart-box { height: 18rem; }
 
-/* ---- How it works ---- */
-#how-it-works {
-  padding-block: var(--space-7);
-  background: var(--color-surface);
+/* ---- This week: one big card + small cards ---- */
+#this-week > h2 { margin-bottom: var(--space-5); }
+.week-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-5);
 }
-#how-it-works > h2 {
-  margin-bottom: var(--space-7);   /* leaves room for the icon badges sticking out of the cards */
-  text-align: center;
-}
-#how-it-works-steps {
+.week-hero {
   display: flex;
-  align-items: stretch;
-  gap: var(--space-4);
-}
-.step {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  padding: var(--space-7) var(--space-5) var(--space-5);
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  text-align: center;
-}
-.step h3 { margin-bottom: var(--space-2); }
-.step p { color: var(--color-text-secondary); }
-.step-arrow {
-  flex: none;
-  align-self: center;
-  font-size: var(--text-display);
-  font-weight: var(--weight-bold);
-  color: var(--color-primary);
-}
-
-/* Round icon badge on the top edge of each step card */
-.step-icon {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: var(--color-accent);
-  color: var(--color-text-on-dark);
-}
-.step-icon::before { width: 1.75rem; height: 1.75rem; }
-
-/* ---- Purpose ---- */
-#purpose {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   align-items: center;
   gap: var(--space-6);
-  padding-block: var(--space-7);
-  background: var(--color-primary);
-  color: var(--color-text-on-dark);
+  padding: var(--space-6);
 }
-#purpose > h2 {
-  font-size: var(--text-hero);
+.week-number {
+  font-size: 7.5rem;
   font-weight: var(--weight-bold);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
-#purpose-cards {
+.week-trend { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.week-trend svg { width: 100%; height: 7rem; overflow: visible; }
+.spark-base { stroke: var(--color-border); stroke-width: 1; }
+.spark-line {
+  fill: none;
+  stroke: var(--color-success-line);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.spark-dot { fill: var(--color-success-line); stroke: var(--color-surface); stroke-width: 3; }
+.week-small { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; }
+.week-small .card {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-.purpose-card {
-  display: flex;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  border-radius: var(--radius-lg);
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-4) var(--space-5);
 }
-.purpose-icon {
+.week-small dt { grid-column: 1; }
+.week-small dd { margin: 0; }
+.week-small dd:not(.card-sub) {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-size: var(--text-display);
+  font-weight: var(--weight-semibold);
+}
+.week-small .card-sub { grid-column: 1; }
+
+/* ---- What we track ---- */
+.packaging-cards {
   display: grid;
-  place-items: center;
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  color: var(--color-primary);
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.purpose-icon::before { width: 2rem; height: 2rem; }
+.packaging-cards li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  background: var(--color-surface-alt);
+}
+.packaging-cards strong { font-size: var(--text-subheading); }
 
-/* If a real <img> icon goes in, it replaces the drawn one */
-.step-icon img { width: 1.75rem; height: auto; }
-.purpose-icon img { width: 2rem; height: auto; }
-.step-icon:has(> img)::before,
-.purpose-icon:has(> img)::before { display: none; }
-
-/* ---- Footer (landing page only: auth pages keep the plain footer) ---- */
+/* ---- Footer ---- */
 #site-footer {
-  background: var(--color-text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-7);
+  padding: var(--space-5) max(var(--space-4), calc((100% - var(--content-max)) / 2));
+  background: var(--color-primary);
   color: var(--color-accent-light);
 }
 #site-footer a { color: var(--color-text-on-dark); }
 #site-footer a:hover { color: var(--color-accent-light); }
+
+@media (max-width: 56.25em) {
+  #hero,
+  .week-grid { grid-template-columns: minmax(0, 1fr); }
+  .week-hero { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 37.5em) {
+  #site-header { flex-wrap: wrap; }
+  #header-nav > a:not(.btn) { display: none; }
+  .week-number { font-size: 5rem; }
+}
 
 /* ==========================================================================
    8c. ADMIN PAGE (admin-page.html)
@@ -1513,47 +1607,6 @@ dialog[id$="-dialog"] form > button[type="submit"] { order: 2; }   /* Save */
   }
 }
 
-
-.dashboard-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.dashboard-stats .stat-card {
-  padding: 24px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.dashboard-stats .stat-card h3 {
-  margin-bottom: 12px;
-  font-size: 16px;
-}
-
-.dashboard-stats .stat-value {
-  font-size: 32px;
-  font-weight: 700;
-}
-
-.dashboard-stats .stat-note {
-  margin-top: 8px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-}
-
-.dashboard-stats .package-breakdown {
-  padding-left: 20px;
-  line-height: 1.8;
-}
-
-@media (max-width: 768px) {
-  .dashboard-stats {
-    grid-template-columns: 1fr;
-  }
-}
 
 /* ==========================================================================
    PRODUCT LISTING TABLE FIX

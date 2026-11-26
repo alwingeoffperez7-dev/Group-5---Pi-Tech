@@ -42,7 +42,10 @@ function showPage() {
     a.classList.toggle("active", a.getAttribute("href") === "#" + page);
   });
   window.scrollTo(0, 0);
-  if (page === "dashboard") loadEcoTips().catch(console.error); // pop-up on every dashboard visit
+  if (page === "dashboard") {
+    loadEcoTips().catch(console.error); // pop-up on every dashboard visit
+    loadStall().then(renderDashboard).catch(console.error); // Running low after stock changes
+  }
 }
 window.addEventListener("hashchange", showPage);
 
@@ -107,43 +110,60 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Dashboard cards: Products, Package Category
+// Dashboard: Package Category donut + list, Running low card
 function renderDashboard() {
-  const pad = (n) => (n < 10 ? `0${n}` : String(n));
   const countBadge = document.getElementById("count");
+  if (countBadge) countBadge.textContent = products.length;
+
+  const counts = packagingList.map(
+    (pk) => products.filter((p) => p.packaging_id === pk.packaging_id).length,
+  );
   const breakdown = document.getElementById("packageBreakdown");
-  const soldItems = document.getElementById("vendor-sold-items");
-
-  if (countBadge) countBadge.textContent = pad(products.length);
-
   if (breakdown) {
     breakdown.innerHTML = packagingList
-      .map((pk) => {
-        const n = products.filter(
-          (p) => p.packaging_id === pk.packaging_id,
-        ).length;
-        return `<li>${escapeHtml(pk.packaging_name)}: <strong>${n}</strong></li>`;
+      .map((pk, i) => {
+        const pct = products.length ? Math.round((counts[i] / products.length) * 100) : 0;
+        return `<li><span class="swatch" style="--swatch:${LINE_COLORS[i % LINE_COLORS.length]}"></span>${escapeHtml(pk.packaging_name)}<strong>${counts[i]} · ${pct}%</strong></li>`;
       })
       .join("");
   }
+  drawChart("packageDonut", {
+    type: "doughnut",
+    data: {
+      labels: packagingList.map((pk) => pk.packaging_name),
+      datasets: [
+        {
+          data: counts,
+          backgroundColor: packagingList.map((_, i) => LINE_COLORS[i % LINE_COLORS.length]),
+          borderColor: "#ffffff", // white gaps between the slices
+          borderWidth: 3,
+        },
+      ],
+    },
+    options: {
+      cutout: "66%",
+      plugins: { legend: { display: false }, tooltip: { enabled: products.length > 0 } },
+    },
+  });
 
-  if (soldItems) {
-    soldItems.textContent =
-      stallData.summary?.plastic_items_sold_this_week ?? 0;
+  const lowList = document.getElementById("runningLowList");
+  const low = stallData.running_low || [];
+  if (lowList) {
+    lowList.innerHTML = low
+      .slice(0, 3)
+      .map(
+        (p) => `<li><strong>${escapeHtml(p.product_name)}</strong>
+          <span><b class="${p.stock <= 2 ? "danger" : "warning"}">${p.stock} left</b> · ${escapeHtml(p.packaging_name)}</span></li>`,
+      )
+      .join("");
   }
+  const lowEmpty = document.getElementById("runningLowEmpty");
+  if (lowEmpty) lowEmpty.hidden = low.length > 0;
 }
 
 // ---------- Dashboard graphs (Chart.js) ----------
+// LINE_COLORS, packagingDatasets, busiestDayPlugin... come from system.js/charts.js
 const charts = {};
-// One colour per packaging category line (in order); repeats if the admin adds more than 6
-const LINE_COLORS = [
-  "#2563eb",
-  "#dc2626",
-  "#d97706",
-  "#16a34a",
-  "#7c3aed",
-  "#0891b2",
-];
 
 // Draws (or redraws) one chart; shows a message instead when there's nothing to draw.
 function drawChart(id, config, emptyMessage) {
@@ -161,13 +181,18 @@ function drawChart(id, config, emptyMessage) {
   charts[id] = new Chart(document.getElementById(id), config);
 }
 
-// Packaging line graph (one line per packaging category)
-// Range comes from the "Show" dropdown above the graph (7 / 14 / 30 days)
+// Packaging line graph + its headline. Range comes from the dropdown (7 / 14 / 30 days)
 async function loadDashboard() {
   const range = document.getElementById("packagingRange");
   const data = await WasteLessAPI.getDashboard(range ? range.value : 7);
 
-  const anySold = data.lines.some((line) => line.values.some((n) => n > 0));
+  document.getElementById("vendor-sold-items").textContent = data.summary.total;
+  document.getElementById("chartHeadlineLabel").textContent =
+    data.days === 7 ? "items sold this week" : `items sold in the last ${data.days} days`;
+  document.getElementById("chartHeadlineNote").textContent = data.summary.most_used
+    ? graphSummaryText(data.summary)
+    : "";
+
   drawChart(
     "packagingChart",
     {
@@ -179,49 +204,37 @@ async function loadDashboard() {
             day: "numeric",
           }),
         ),
-        datasets: data.lines.map((line, i) => ({
-          label: line.label,
-          data: line.values,
-          borderColor: LINE_COLORS[i % LINE_COLORS.length],
-          backgroundColor: LINE_COLORS[i % LINE_COLORS.length],
-          cubicInterpolationMode: "monotone", // smooth, but never dips below 0 between points
-        })),
+        datasets: packagingDatasets(data.lines),
       },
-      options: {
-        plugins: { legend: { position: "bottom" } },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { precision: 0 },
-            title: { display: true, text: "Items sold" },
-          },
-        },
-      },
+      options: packagingChartOptions(),
+      plugins: [busiestDayPlugin],
     },
-    anySold ? "" : `No sales recorded in the last ${data.days} days yet.`,
+    data.summary.total ? "" : `No sales recorded in the last ${data.days} days yet.`,
   );
 }
 
-// ---------- Eco-Tip pop-up ----------
+// ---------- Eco-Tips card + pop-up ----------
 // The backend checks this week's plastic waste against the rules (admin page > Eco-Tips).
-// Over the weekly limit -> the pop-up opens (on every dashboard visit) with the effects and
-// tips of the top plastic categories. Under the limit -> the banner congratulates instead.
+// Over the weekly limit -> the card turns amber and the pop-up opens (on every dashboard
+// visit) with the effects and tips of the top plastic categories. Under it -> Good Work.
 async function loadEcoTips() {
   const data = await WasteLessAPI.getEcoTips();
   const warning = data.level === "warning";
 
-  const banner = document.getElementById("ecoTipBanner");
-  const bannerText = document.getElementById("ecoTipBannerText");
-  const openBtn = document.getElementById("ecoTipOpenBtn");
-  if (bannerText) {
-    bannerText.textContent = warning
-      ? `Your stall is over the weekly plastic limit (${data.week_total} of ${data.limit} pieces).`
-      : data.title + ". " + data.tip;
-  }
-  if (banner) banner.classList.toggle("positive", !warning);
-  if (openBtn) openBtn.hidden = !warning;
+  document.getElementById("ecoTipBanner").classList.toggle("warning", warning);
+  document.getElementById("ecoStatusTitle").textContent = warning ? "Over the limit" : "Good Work!";
+  document.getElementById("ecoStatusCount").textContent = `${data.week_total} of ${data.limit} pieces`;
+  document.getElementById("ecoBarFill").style.width =
+    Math.min(100, Math.round((data.week_total / data.limit) * 100)) + "%";
+  document.getElementById("ecoTipBannerText").textContent = warning
+    ? "Your stall went over the weekly plastic limit. See the tips below."
+    : data.tip;
+  document.getElementById("ecoTipList").innerHTML = data.categories
+    .map((c) => `<li><strong>${escapeHtml(c.packaging_name)}</strong><span>${escapeHtml(c.tip)}</span></li>`)
+    .join("");
+  document.getElementById("ecoTipOpenBtn").hidden = !warning;
 
-  document.getElementById("ecoTipTitle").textContent = "WARNING: " + data.title;
+  document.getElementById("ecoTipTitle").textContent = data.title;
   document.getElementById("ecoTipMessage").textContent = data.tip;
   document.getElementById("ecoTipCategories").innerHTML = data.categories
     .map(
@@ -464,7 +477,7 @@ async function stepQuantity(btn) {
   try {
     if (btn.dataset.field === "sold") {
       updateProduct(plus ? await WasteLessAPI.recordSale(prod.product_id) : await WasteLessAPI.undoSale(prod.product_id));
-      loadStall().then(renderDashboard).catch(console.error); // "Items Sold This Week" card
+      loadDashboard().catch(console.error); // graph + headline
       loadEcoTips().catch(console.error);
     } else {
       const input = tr.querySelector('input[data-field="stock"]');

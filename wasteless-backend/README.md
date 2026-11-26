@@ -65,7 +65,7 @@ Log-in uses a cookie, so open the pages through this server (http://localhost:30
 | Register | `POST /api/auth/register` (business_name, email, user_pass, contact_number) | anyone |
 | Log In as Vendor / Admin | `POST /api/auth/login` (email, password, role) | anyone |
 | Log Out | `POST /api/auth/logout` | anyone |
-| Landing chart / summary | `GET /api/landing/chart?days=7|14|30` (items sold per packaging category, all stalls, plus `summary` = graph headline, see below), `GET /api/landing/summary` (also `week: { this_week, last_week, change_pct }` for the hero card; `change_pct` is null when last week had no sales) | anyone |
+| Landing chart / summary | `GET /api/landing/chart?days=7|14|30` (items sold per packaging category, all stalls, plus `summary` = graph headline, see below), `GET /api/landing/summary` (small cards: Stalls under the limit, Items in inventory, Total plastic waste, each `{ label, value, note }`; also `week: { this_week, last_week, change_pct }` for the hero card; `change_pct` is null when last week had no sales) | anyone |
 | Admin dashboard totals | `GET /api/admin/stats` | admin |
 | Admin feedback list | `GET /api/admin/feedback?sort=newest|oldest` | admin |
 | Notify vendors (Product Management > Notify) | `POST /api/admin/notifications` (product_id, comments), `GET /api/admin/notifications` (sent list: Pending = not read yet, Completed = read by the vendor) | admin |

@@ -22,7 +22,7 @@ Those scripts find elements by their **`id`**, **`class`**, **`name`** and **`da
   [hidden] { display: none !important; }
   ```
 - **Pop-ups are native `<dialog>` elements.** Style them with `dialog { … }` and the dim background with `dialog::backdrop { … }`. Don't replace them with `<div>`s.
-- **Graphs:** the vendor graph's size comes from the `width`/`height` attributes on `<canvas id="packagingChart">`. Change those numbers instead of resizing the canvas with CSS, or it gets blurry. The landing graph (`#waste-chart`) fills `#chart-container`, so size the container.
+- **Graphs:** both line graphs fill their `.chart-box` (`height` in `wasteless.css`), so to make a graph bigger or smaller change the `.chart-box` height, not the `<canvas>`. Their look (colours, dash patterns, busiest-day dot and tag, scale on the right) is in `system.js/charts.js`, shared by both pages. The Package Category donut (`#packageDonut`) is sized by its `width`/`height` attributes and `.donut`.
 - **Adding a stylesheet to a page:** put the file in `system.css/` and link it in the page's `<head>`:
   `<link rel="stylesheet" href="../system.css/landing.css" />`
 - **Google Fonts are allowed** (the `@import` in `wasteless.css` works). **Other external fonts / CDNs are blocked** by the site's security policy. To allow one, ask the backend person to add the address to the `Content-Security-Policy` in `wasteless-backend/src/server.js`. Fonts saved inside `system.css/` work without any change.
@@ -40,17 +40,18 @@ Those scripts find elements by their **`id`**, **`class`**, **`name`** and **`da
 
 The tables list what the scripts need. Anything **not** listed is safe to change.
 
-### `landing.html` (script: `system.js/landing.js`)
+### `landing.html` (scripts: Chart.js, `system.js/charts.js`, then `system.js/landing.js`)
 
 | Keep this | What it is |
 |---|---|
-| `id="chart-range"` | "Show" dropdown (keep the `<option value="7">`, `value="14"` and `value="30"`) |
-| `id="chart-container"` | box around the graph (the graph fills it) |
-| `id="waste-chart"` | the graph `<canvas>` |
-| `id="chart-status"` | message under the graph ("No sales recorded yet.") |
-| `id="summary-title"`, `id="summary-list"`, `id="summary-status"` | Summary card (title, the `<dl>` that gets filled, status message) |
+| `id="chart-range"` | graph dropdown (keep the `<option value="7">`, `value="14"` and `value="30"`) |
+| `id="waste-chart"` inside a `.chart-box` | the graph `<canvas>` (fills the box) |
+| `id="chart-status"` | text under the graph ("Plastic Wrapper was used most…" or "No sales recorded yet.") |
+| `id="week-total"`, `id="week-change"`, `id="week-sparkline"` (an `<svg>`) | big "Plastic items sold this week" card: the number, "↓ 12% from last week", the green trend line |
+| `id="summary-list"` (a `<dl>`), `id="summary-status"` | the small cards beside it; the script fills one `<div class="card">` per item |
+| `id="packaging-list"` | "What we track" cards (filled from the packaging categories) |
 | `href="log-in.html"`, `href="register.html"`, `href="cookie-policy.html"` | links to the other pages |
-| `<script src="…chart.umd.min.js">` before `<script src="../system.js/landing.js">` | Chart.js must load first |
+| Chart.js, then `charts.js`, then `landing.js` | load order |
 
 ### `log-in.html` (script: `system.js/login.js`)
 
@@ -84,13 +85,18 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 
 | Keep this | What it is |
 |---|---|
-| `id="count"` | Products card number |
-| `id="packageBreakdown"` | Package Category card list (filled with one `<li>` per packaging category) |
-| `id="packagingRange"` | "Show" dropdown (keep the `value="7"`, `value="14"` and `value="30"` options) |
-| `id="packagingChart"` | graph `<canvas>` (size = its `width`/`height` attributes) |
-| `id="packagingChartStatus"` | message under the graph |
-| `id="ecoTipBanner"`, `id="ecoTipBannerText"` | EcoTip banner; the script changes the text and adds `class="positive"` when it congratulates |
-| `id="ecoTipOpenBtn"` | "View Eco-Tip" button in the banner (hidden unless there's a warning) |
+| `id="packagingRange"` | graph dropdown (keep the `value="7"`, `value="14"` and `value="30"` options) |
+| `id="vendor-sold-items"`, `id="chartHeadlineLabel"`, `id="chartHeadlineNote"` | graph headline: "57", "items sold this week", "Polystyrene (PS) was used most…" |
+| `id="packagingChart"` inside a `.chart-box` | graph `<canvas>` (fills the box) |
+| `id="packagingChartStatus"` | message under the graph when nothing was sold |
+| `id="runningLowList"`, `id="runningLowEmpty"` | Running low card (up to 3 products) and its "Everything is well stocked." text |
+| `id="ecoTipBanner"` | Eco-Tips card; the script adds `class="warning"` when the stall is over the weekly limit |
+| `id="ecoStatusTitle"`, `id="ecoStatusCount"`, `id="ecoBarFill"`, `id="ecoTipBannerText"` | "Good Work!" / "Over the limit", "57 of 90 pieces", the bar (its width is set), the note |
+| `id="ecoTipList"` | tips per packaging category (only when over the limit) |
+| `id="ecoTipOpenBtn"` | "View Eco-Tip" button (hidden unless there's a warning) |
+| `id="packageDonut"`, `id="count"` | Package Category donut and the product count in its middle |
+| `id="packageBreakdown"` | list under the donut (one `<li>` per packaging category, with a colour `.swatch`) |
+| `system.js/charts.js` before `/js/api.js` | shared graph style; must load after Chart.js |
 
 **Eco-Tip pop-up** (a `<div>`, shown on the dashboard while the stall is over the weekly limit)
 
