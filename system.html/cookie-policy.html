@@ -3,63 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasteLess - Cookie &amp; Privacy Policy</title>
+    <title>Cookie &amp; Privacy Policy · WasteLess</title>
+    <link rel="stylesheet" href="../system.css/wasteless.css">
     <link rel="icon" type="image/png" href="logo.png">
 </head>
-<body>
-    <!-- ===== COOKIE & PRIVACY POLICY (plain page; style it like the other pages) ===== -->
-    <header id="policy-header">
-        <a id="policy-home-link" href="landing.html">&larr; Back to WasteLess</a>
-        <h1>Cookie &amp; Privacy Policy</h1>
-        <p id="policy-updated">Last updated: October 15, 2026</p>
+<body class="landing policy">
+    <!-- Same header and footer as the landing page -->
+    <header id="site-header">
+        <a id="header-logo" href="landing.html"><img src="logo.png" alt="" width="40" height="40"><span>WasteLess</span></a>
+        <nav id="header-nav" aria-label="Main">
+            <a href="landing.html#this-week">This week</a>
+            <a href="landing.html#packaging">Packaging</a>
+            <a class="btn outline" href="log-in.html">Log in</a>
+            <a class="btn primary" href="register.html">Register your stall</a>
+        </nav>
     </header>
 
     <main id="policy-content">
-        <section id="policy-cookies">
+        <header id="policy-header">
+            <a id="policy-home-link" href="landing.html">&larr; Back to WasteLess</a>
+            <h1>Cookie &amp; Privacy Policy</h1>
+            <p id="policy-updated">Last updated: October 15, 2026</p>
+        </header>
+
+        <section class="policy-short">
+            <p class="eyebrow">In short</p>
+            <p>WasteLess uses one cookie, only to keep you logged in. No ads, no tracking, and nothing is shared with anyone.</p>
+        </section>
+
+        <section id="policy-cookies" class="card">
             <h2>Cookies we use</h2>
             <p>WasteLess uses <strong>one cookie</strong>, and only to keep you logged in:</p>
-            <table border="1">
-                <thead>
-                    <tr><th>Name</th><th>Purpose</th><th>How long it lasts</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><code>sid</code></td>
-                        <td>Remembers that you are logged in (vendor or admin), so you don't have to log in on every page.</td>
-                        <td>Until you log out, or 8 hours after logging in, whichever comes first.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="policy-table">
+                <table>
+                    <thead>
+                        <tr><th>Name</th><th>Purpose</th><th>How long it lasts</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>sid</code></td>
+                            <td>Remembers that you are logged in (vendor or admin), so you don't have to log in on every page.</td>
+                            <td>Until you log out, or 8 hours after logging in, whichever comes first.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             <ul>
-                <li>It is a <strong>strictly necessary</strong> cookie: the vendor and admin pages cannot work without it, so it is not optional.</li>
+                <li>It is a strictly necessary cookie: the vendor and admin pages can't work without it, so it isn't optional.</li>
                 <li>It holds only a random code, not your name, email or password.</li>
-                <li>Page scripts cannot read it, and it is never sent along when another website links to us.</li>
-                <li>We do <strong>not</strong> use advertising, tracking or analytics cookies, and we do not share cookies with anyone.</li>
+                <li>Page scripts can't read it, and it's never sent along when another website links to us.</li>
+                <li>We don't use advertising, tracking or analytics cookies, and we don't share cookies with anyone.</li>
             </ul>
         </section>
 
-        <section id="policy-data">
+        <section id="policy-data" class="card">
             <h2>What information we keep</h2>
             <ul>
-                <li><strong>Stall accounts:</strong> business name, email, contact person and contact number, so the QCU Cooperative admin can manage stalls.</li>
-                <li><strong>Passwords</strong> are stored scrambled (hashed). Nobody, including the admin, can see your actual password.</li>
-                <li><strong>Products, stock, sales and feedback</strong> you enter, used for your stall's dashboard, reports and the plastic packaging summary.</li>
+                <li>Stall accounts: business name, email, contact person and contact number, so the QCU Cooperative admin can manage stalls.</li>
+                <li>Passwords are stored scrambled (hashed). Nobody, including the admin, can see your actual password.</li>
+                <li>Products, stock, sales and feedback you enter, used for your stall's dashboard, reports and the plastic packaging summary.</li>
                 <li>The public landing page only shows totals for all stalls combined, never a single stall's data.</li>
             </ul>
         </section>
 
-        <section id="policy-control">
+        <section id="policy-choices" class="card">
             <h2>Your choices</h2>
             <ul>
-                <li><strong>Log out</strong> to remove the cookie right away.</li>
-                <li>You can also delete cookies in your browser settings. You will just need to log in again.</li>
-                <li>To change or remove your stall's information, send a "Stall Info Change" message from the vendor page's Feedback &amp; Reports, or contact the QCU Cooperative admin.</li>
+                <li>Log out to remove the cookie right away.</li>
+                <li>You can also delete cookies in your browser settings. You'll just need to log in again.</li>
+                <li>To change or remove your stall's information, send a "Stall Info Change" message from the vendor page's Feedback, or contact the QCU Cooperative admin.</li>
             </ul>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2026 WasteLess. All rights reserved.</p>
+    <footer id="site-footer">
+        <p>&copy; 2026 WasteLess · QCU Cooperative.</p>
+        <p>This site uses one cookie, only to keep you logged in. <a href="cookie-policy.html">Cookie &amp; Privacy Policy</a></p>
     </footer>
 </body>
 </html>
