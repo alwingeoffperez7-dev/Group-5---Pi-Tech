@@ -1,149 +1,133 @@
-const USE_MOCK_DATA = false;
-
+// Landing page: data from the backend (public, no log-in needed).
+// Graph style (colours, dashes, busiest-day marker) comes from system.js/charts.js.
 const API_ENDPOINTS = {
   chart: "/api/landing/chart",
   summary: "/api/landing/summary",
+  packaging: "/api/packaging",
 };
 
-/* ---------- Mock data (matches the design; remove once backend is live) ---------- */
-const MOCK_CHART_DATA = {
-  yLabel: "Plastic waste",
-  labels: [
-    "Jan 2021", "Jul 2021", "Jan 2022", "Jul 2022", "Jan 2023",
-    "Jul 2023", "Jan 2024", "Jul 2024", "Jan 2025",
-  ],
-  values: [8, null, 18, null, 20, null, 33, null, 36],
-};
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-const MOCK_SUMMARY_DATA = {
-  title: "Summary",
-  items: [
-    { label: "Total plastic waste", value: "36 kg" },
-    { label: "Items in inventory", value: "412" },
-    { label: "Change since last year", value: "+3 kg" },
-  ],
-};
-
-/* ---------- Data fetching ---------- */
 async function fetchJSON(url) {
   const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Request to ${url} failed (${response.status})`);
-  }
+  if (!response.ok) throw new Error(`Request to ${url} failed (${response.status})`);
   return response.json();
 }
 
-// Range comes from the "Show" dropdown above the graph (7 / 14 / 30 days)
-function getChartData() {
+// Range comes from the dropdown above the graph (7 / 14 / 30 days)
+function getChartData(days) {
   const range = document.getElementById("chart-range");
-  const days = range ? range.value : 7;
-  return USE_MOCK_DATA ? Promise.resolve(MOCK_CHART_DATA) : fetchJSON(`${API_ENDPOINTS.chart}?days=${days}`);
-}
-
-function getSummaryData() {
-  return USE_MOCK_DATA ? Promise.resolve(MOCK_SUMMARY_DATA) : fetchJSON(API_ENDPOINTS.summary);
+  return fetchJSON(`${API_ENDPOINTS.chart}?days=${days || (range ? range.value : 7)}`);
 }
 
 /* ---------- Line graph ---------- */
 let wasteChart = null;
-// One colour per packaging category line (same order as the vendor dashboard graph)
-const LINE_COLORS = ["#2563eb", "#dc2626", "#d97706", "#16a34a", "#7c3aed", "#0891b2"];
 
 function renderChart(data) {
   const statusEl = document.getElementById("chart-status");
-  const canvas = document.getElementById("waste-chart");
-
   if (typeof Chart === "undefined") {
     statusEl.textContent = "Chart library failed to load.";
     return;
   }
-  if (!data || !Array.isArray(data.labels) || data.labels.length === 0) {
+  if (!data || !Array.isArray(data.datasets) || data.labels.length === 0) {
     statusEl.textContent = "No chart data available yet.";
     return;
   }
-
-  // Backend sends one line per packaging category: datasets = [{ label: "Tetra Pak", values: [...] }, ...]
-  // (the mock data still uses a single `values` line)
-  const lines = Array.isArray(data.datasets) ? data.datasets : [{ label: data.yLabel || "Plastic waste", values: data.values }];
-  const anyData = lines.some((line) => line.values.some((v) => v));
-  statusEl.textContent = anyData ? "" : "No sales recorded yet.";
+  // Text version of the graph (also for screen readers)
+  statusEl.textContent = graphSummaryText(data.summary);
   if (wasteChart) wasteChart.destroy(); // avoid duplicate charts on re-render
-
-  wasteChart = new Chart(canvas, {
+  wasteChart = new Chart(document.getElementById("waste-chart"), {
     type: "line",
-    data: {
-      labels: data.labels,
-      datasets: lines.map((line, i) => ({
-        label: line.label,
-        data: line.values,
-        tension: 0.4,      // smooth curve, like the design
-        cubicInterpolationMode: "monotone", // smooth, but never dips below 0 between points
-        spanGaps: true,    // connect points across null values
-        pointRadius: 4,
-        borderColor: lines.length > 1 ? LINE_COLORS[i % LINE_COLORS.length] : "#000000",
-        backgroundColor: lines.length > 1 ? LINE_COLORS[i % LINE_COLORS.length] : "#000000",
-      })),
-    },
-    options: {
-      plugins: { legend: { display: lines.length > 1, position: "bottom" } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { precision: 0 },
-          title: { display: true, text: data.yLabel || "" },
-        },
-      },
-    },
+    data: { labels: data.labels, datasets: packagingDatasets(data.datasets) },
+    options: packagingChartOptions(),
+    plugins: [busiestDayPlugin],
   });
 }
 
-/* ---------- Information summary card ---------- */
+/* ---------- This week: big card ---------- */
+// perDay: plastic items per day for the last 7 days (sum of the graph's lines)
+function renderWeek(week, perDay) {
+  document.getElementById("week-total").textContent = week.this_week;
+  const change = document.getElementById("week-change");
+  if (week.change_pct === null) change.textContent = "No sales last week to compare";
+  else if (week.change_pct === 0) change.textContent = "Same as last week";
+  else change.textContent = `${week.change_pct < 0 ? "↓" : "↑"} ${Math.abs(week.change_pct)}% from last week`;
+
+  // Small green trend line
+  const svg = document.getElementById("week-sparkline");
+  const max = Math.max(...perDay, 1);
+  const pts = perDay.map((v, i) => `${(i * 300) / (perDay.length - 1 || 1)},${96 - (v / max) * 88}`);
+  const last = pts[pts.length - 1].split(",");
+  svg.innerHTML = `<line x1="0" y1="99" x2="300" y2="99" class="spark-base"/>
+    <polyline points="${pts.join(" ")}" class="spark-line"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="5" class="spark-dot"/>`;
+}
+
+/* ---------- This week: small cards ---------- */
 function renderSummary(data) {
-  const titleEl = document.getElementById("summary-title");
   const listEl = document.getElementById("summary-list");
   const statusEl = document.getElementById("summary-status");
-
-  listEl.innerHTML = "";
-
   if (!data || !Array.isArray(data.items) || data.items.length === 0) {
     statusEl.textContent = "No summary available yet.";
     return;
   }
-
   statusEl.textContent = "";
-  if (data.title) titleEl.textContent = data.title;
+  listEl.innerHTML = data.items
+    .map(
+      (item) => `<div class="card">
+        <dt>${escapeHtml(item.label)}</dt>
+        <dd>${escapeHtml(item.value)}</dd>
+        ${item.note ? `<dd class="card-sub">${escapeHtml(item.note)}</dd>` : ""}
+      </div>`,
+    )
+    .join("");
+}
 
-  data.items.forEach((item) => {
-    const term = document.createElement("dt");
-    term.textContent = item.label;
-
-    const detail = document.createElement("dd");
-    detail.textContent = item.value;
-
-    listEl.append(term, detail);
-  });
+/* ---------- What we track ---------- */
+function renderPackaging(list) {
+  document.getElementById("packaging-list").innerHTML = list
+    .map(
+      (pk) => `<li class="card"><strong>${escapeHtml(pk.packaging_name)}</strong>
+        ${pk.example ? `<span class="card-sub">e.g. ${escapeHtml(pk.example)}</span>` : ""}</li>`,
+    )
+    .join("");
 }
 
 /* ---------- Init ---------- */
 async function initLanding() {
-  const [chartResult, summaryResult] = await Promise.allSettled([
-    getChartData(),
-    getSummaryData(),
+  const [chartResult, summaryResult, packagingResult] = await Promise.allSettled([
+    getChartData(7),
+    fetchJSON(API_ENDPOINTS.summary),
+    fetchJSON(API_ENDPOINTS.packaging),
   ]);
 
-  if (chartResult.status === "fulfilled") {
-    renderChart(chartResult.value);
-  } else {
+  if (chartResult.status === "fulfilled") renderChart(chartResult.value);
+  else {
     console.error(chartResult.reason);
     document.getElementById("chart-status").textContent = "Could not load chart data.";
   }
 
   if (summaryResult.status === "fulfilled") {
     renderSummary(summaryResult.value);
+    if (chartResult.status === "fulfilled") {
+      const lines = chartResult.value.datasets;
+      const perDay = chartResult.value.labels.map((_, i) => lines.reduce((a, l) => a + l.values[i], 0));
+      renderWeek(summaryResult.value.week, perDay);
+    }
   } else {
     console.error(summaryResult.reason);
     document.getElementById("summary-status").textContent = "Could not load summary.";
   }
+
+  if (packagingResult.status === "fulfilled") renderPackaging(packagingResult.value);
+  else console.error(packagingResult.reason);
 }
 
 document.addEventListener("DOMContentLoaded", () => {

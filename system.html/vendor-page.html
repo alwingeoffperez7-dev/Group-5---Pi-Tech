@@ -53,66 +53,88 @@
         </header>
 
         <main class="container">
-          <!-- ===== PAGE: Dashboard (unchanged) ===== -->
+          <!-- ===== PAGE: Dashboard ===== -->
           <div class="page" id="page-dashboard">
             <h1 class="page-title">Dashboard</h1>
 
-            <section class="dashboard-stats">
-  <div class="stat-card">
-    <h3>Products</h3>
-    <p class="stat-value" id="count">00</p>
-    <p class="stat-note">Listed in your stall</p>
-  </div>
+            <div class="dash-grid">
+              <div class="dash-main">
+                <!-- Packaging graph: the main card. Headline = items sold in the chosen range -->
+                <section class="card chart-card">
+                  <div class="card-head">
+                    <div>
+                      <h2>Packaging used</h2>
+                      <p class="card-sub">Items sold per day, by packaging category</p>
+                    </div>
+                    <label>
+                      <span class="sr-only">Show</span>
+                      <select id="packagingRange">
+                        <option value="7">Last 7 days</option>
+                        <option value="14">Last 14 days</option>
+                        <option value="30">Last 30 days</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="chart-headline">
+                    <p class="stat-value" id="vendor-sold-items">0</p>
+                    <div>
+                      <p class="headline-label" id="chartHeadlineLabel">items sold this week</p>
+                      <p class="card-sub" id="chartHeadlineNote"></p>
+                    </div>
+                  </div>
+                  <div class="chart-box">
+                    <canvas
+                      id="packagingChart"
+                      role="img"
+                      aria-label="Line graph of items sold per day for each packaging category"
+                    ></canvas>
+                  </div>
+                  <p class="chart-status" id="packagingChartStatus"></p>
+                </section>
 
-  <div class="stat-card">
-    <h3>Items Sold This Week</h3>
-    <p class="stat-value" id="vendor-sold-items">0</p>
-    <p class="stat-note">Last 7 days, from Product Listing</p>
-  </div>
+                <!-- Products at or under their reorder threshold (from GET /api/stall running_low) -->
+                <section class="card running-low">
+                  <div class="card-head">
+                    <h2>Running low</h2>
+                    <a href="#listing" class="text-link">View all →</a>
+                  </div>
+                  <ul class="running-low-list" id="runningLowList"></ul>
+                  <p class="card-sub" id="runningLowEmpty" hidden>Everything is well stocked.</p>
+                </section>
+              </div>
 
-  <div class="stat-card">
-    <h3>Package Category</h3>
-    <ul class="package-breakdown" id="packageBreakdown"></ul>
-  </div>
-</section>
+              <aside class="dash-side">
+                <!-- Eco-Tips: this week's status (Good Work / Over the limit) -->
+                <section class="card eco-card" id="ecoTipBanner">
+                  <div class="card-head">
+                    <h2>Eco-Tips</h2>
+                    <span class="card-sub">This week</span>
+                  </div>
+                  <div class="eco-status">
+                    <div class="eco-status-row">
+                      <strong id="ecoStatusTitle">Good Work!</strong>
+                      <span id="ecoStatusCount"></span>
+                    </div>
+                    <div class="eco-bar"><span id="ecoBarFill"></span></div>
+                    <p id="ecoTipBannerText"></p>
+                  </div>
+                  <ul class="eco-tip-list" id="ecoTipList"></ul>
+                  <button type="button" id="ecoTipOpenBtn" class="btn outline" hidden>
+                    View Eco-Tip
+                  </button>
+                </section>
 
-            <!-- Dashboard graph: items sold per packaging category -->
-            <section class="card chart-card">
-              <h2>Packaging Used (items sold)</h2>
-              <label
-                >Show
-                <select id="packagingRange">
-                  <option value="7">Last 7 days</option>
-                  <option value="14">Last 14 days</option>
-                  <option value="30">Last 30 days</option>
-                </select>
-              </label>
-              <canvas
-                id="packagingChart"
-                width="720"
-                height="320"
-                role="img"
-                aria-label="Line graph of items sold per day for each packaging category"
-              ></canvas>
-              <p class="chart-status" id="packagingChartStatus"></p>
-            </section>
-
-            <aside class="eco-tip-banner" id="ecoTipBanner">
-              <strong>EcoTip 101</strong>
-              <span id="ecoTipBannerText"
-                >Every item sold leaves plastic behind. Check which packaging
-                category your stall uses most, and look for products with less
-                of it.</span
-              >
-              <button
-                type="button"
-                id="ecoTipOpenBtn"
-                class="btn outline btn-sm"
-                hidden
-              >
-                View Eco-Tip
-              </button>
-            </aside>
+                <!-- Products per packaging category: donut + list (the list is the text version) -->
+                <section class="card package-card">
+                  <h2>Package Category</h2>
+                  <div class="donut">
+                    <canvas id="packageDonut" width="180" height="180" aria-hidden="true"></canvas>
+                    <p class="donut-center"><strong id="count">0</strong><span>products</span></p>
+                  </div>
+                  <ul class="package-breakdown" id="packageBreakdown"></ul>
+                </section>
+              </aside>
+            </div>
 
             <div
               class="eco-tip-popup"
@@ -121,7 +143,13 @@
               aria-labelledby="ecoTipTitle"
               hidden
             >
-              <h2 id="ecoTipTitle">Eco-Tip</h2>
+              <div class="popup-head">
+                <span class="alert-icon" aria-hidden="true"></span>
+                <div>
+                  <p class="popup-eyebrow">Warning</p>
+                  <h2 id="ecoTipTitle">Eco-Tip</h2>
+                </div>
+              </div>
               <p id="ecoTipMessage"></p>
               <div id="ecoTipCategories"></div>
               <button type="button" id="ecoTipCloseBtn" class="btn primary">
@@ -421,6 +449,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="../system.js/charts.js"></script>
     <script src="/js/api.js"></script>
     <script src="../system.js/vendor-page.js"></script>
 
