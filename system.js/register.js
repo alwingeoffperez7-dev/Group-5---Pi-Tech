@@ -17,13 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
            const result = await response.json();
 
            if (result.success) {
-            registerFeedback.textContent = 'Registration successful! Redirecting to login page...';
+            registerFeedback.className = 'ok';
+            registerFeedback.textContent = 'Registered. An admin must approve your account before you can log in.';
             registerForm.reset();
 
             setTimeout(() => {
                 window.location.href = 'log-in.html';
-            }, 2000);
+            }, 3000);
            } else {
+            registerFeedback.className = '';
             registerFeedback.textContent = result.message || "Registration failed. Email may already be in use.";
            }
         } catch (error) {

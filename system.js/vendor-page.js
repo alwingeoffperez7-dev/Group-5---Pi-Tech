@@ -41,6 +41,13 @@ function showPage() {
   document.querySelectorAll(".sidebar-nav a").forEach((a) => {
     a.classList.toggle("active", a.getAttribute("href") === "#" + page);
   });
+  // Header: page title + the buttons that belong to this page (data-page)
+  const titles = { dashboard: "Dashboard", listing: "Product Listing", feedback: "Feedback" };
+  const pageTitle = document.getElementById("pageTitle");
+  if (pageTitle) pageTitle.textContent = titles[page];
+  document.querySelectorAll("[data-page]").forEach((el) => {
+    el.hidden = el.dataset.page !== page;
+  });
   window.scrollTo(0, 0);
   if (page === "dashboard") {
     loadEcoTips().catch(console.error); // pop-up on every dashboard visit
@@ -342,7 +349,12 @@ function initStallInfo() {
     stallIdLabel.textContent = `Stall ID #${stallData.stall_id}`;
   if (stallNameHeader) stallNameHeader.textContent = stallData.stall_name;
   if (subtitle)
-    subtitle.textContent = `Stall ${stallData.stall_id} ${stallData.stall_name}`;
+    subtitle.textContent = `Stall ${stallData.stall_id} · ${stallData.stall_name}`;
+  // Stall card at the bottom of the sidebar
+  const sideName = document.getElementById("sidebarStallName");
+  const sideId = document.getElementById("sidebarStallId");
+  if (sideName) sideName.textContent = stallData.stall_name;
+  if (sideId) sideId.textContent = `Stall ID #${stallData.stall_id}`;
 }
 
 // Populate Category Dropdowns
@@ -557,6 +569,16 @@ function applyFilters() {
 
 // Event Listeners Setup
 function setupEventListeners() {
+  // File drop zones: show the picked file name (back to the default text on form reset)
+  document.querySelectorAll(".dropzone input[type=file]").forEach((input) => {
+    const title = input.parentElement.querySelector(".dropzone-title");
+    const text = title.textContent;
+    input.addEventListener("change", () => {
+      title.textContent = input.files[0] ? input.files[0].name : text;
+    });
+    if (input.form) input.form.addEventListener("reset", () => (title.textContent = text));
+  });
+
   // Search & Filter
   const searchInput = document.getElementById("q");
   const filterCat = document.getElementById("filterCat");

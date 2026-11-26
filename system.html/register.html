@@ -4,66 +4,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasteLess</title>
+    <title>Register · WasteLess</title>
     <link rel="stylesheet" href="../system.css/wasteless.css">
     <link rel="icon" type="image/png" href="logo.png">
 </head>
-<body>
-    <section>
+<body class="auth">
+    <!-- Left: brand panel -->
+    <aside class="auth-brand">
+        <a class="auth-logo" href="landing.html"><img src="logo.png" alt="" width="44" height="44"><span>WasteLess</span></a>
         <div>
+            <h1>Register your stall and start tracking your plastic.</h1>
+            <p>One account per stall. Add your products once, record sales with a tap.</p>
+            <p>The Coop admin approves new stalls before the first log-in.</p>
+            <p>Bottled water isn't allowed in the canteen, so it can't be listed.</p>
+        </div>
+        <p class="auth-credit">QCU Cooperative · Group 5 Pi-Tech</p>
+    </aside>
 
-            <div>
-                <h2>REGISTER</h2>
-                <hr>
-            </div>
+    <!-- Right: the form -->
+    <main class="auth-main">
+        <section class="card auth-card">
+            <h2>Register</h2>
+            <p class="auth-sub">Tell us about your stall. You can log in once the admin approves it.</p>
 
             <form id="registerForm" method="POST" action="/api/auth/register">
-                <div>
-                    
+                <div class="auth-grid">
                     <div>
-                        <div>
-                            <span>[Store Icon]</span>
-                        </div>
-
-                        <div>
-                            <label for="regBusinessName">Business Name:</label>
-                            <input type="text" id="regBusinessName" name="business_name" required>
-                        </div>
-
-                        <div>
-                            <label for="regEmail">Email Address:</label>
-                            <input type="email" id="regEmail" name="email" required>
-                        </div>
-
-                        <div>
-                            <label for="regPassword">Password:</label>
-                            <input type="password" id="regPassword" name="user_pass" required>
-                        </div>
-
-                        <div></div>
-
-                        <div>
-                            <label for="regContactNumber">Contact Number:</label>
-                            <input type="tel" id="regContactNumber" name="contact_number" required>
-                        </div>
+                        <label for="regBusinessName">Business name</label>
+                        <input type="text" id="regBusinessName" name="business_name" placeholder="e.g. Kape't Tinapay" required>
                     </div>
-
+                    <div>
+                        <label for="regEmail">Email address</label>
+                        <input type="email" id="regEmail" name="email" placeholder="you@example.com" autocomplete="email" required>
+                    </div>
+                    <div>
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" name="user_pass" placeholder="At least 6 characters" autocomplete="new-password" required>
+                    </div>
+                    <div>
+                        <label for="regContactNumber">Contact number</label>
+                        <input type="tel" id="regContactNumber" name="contact_number" placeholder="09XX XXX XXXX" required>
+                    </div>
                 </div>
-
-                <div>
+                <div class="auth-actions">
                     <button type="submit">Register</button>
                 </div>
-
-                <div id="registerFeedback"></div>
+                <div id="registerFeedback" role="status"></div>
             </form>
 
-        </div>
-    </section>
+            <p class="auth-switch">Already registered? <a href="log-in.html">Log in</a></p>
+        </section>
 
-    <footer>
-        <p>&copy; 2026 WasteLess. All rights reserved.</p>
-        <p>This site uses one cookie, only to keep you logged in. <a class="cookie-policy-link" href="cookie-policy.html">Cookie &amp; Privacy Policy</a></p>
-    </footer>
+        <footer>
+            <p>This site uses one cookie, only to keep you logged in. <a class="cookie-policy-link" href="cookie-policy.html">Cookie &amp; Privacy Policy</a></p>
+        </footer>
+    </main>
 
     <script src="../system.js/register.js"></script>
 </body>

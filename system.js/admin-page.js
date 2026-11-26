@@ -67,6 +67,10 @@ function showSection(name) {
   });
   const button = document.querySelector('[data-section="' + name + '"]');
   byId("page-title").textContent = button.dataset.title;
+  // Header buttons that belong to one section (Add Stall, Add Product + bell, Add Category)
+  document.querySelectorAll("[data-only]").forEach(function (el) {
+    el.hidden = el.dataset.only !== name;
+  });
 }
 
 document.querySelectorAll("[data-section]").forEach(function (button) {
@@ -77,6 +81,11 @@ document.querySelectorAll("[data-section]").forEach(function (button) {
 
 byId("back-btn").addEventListener("click", function () {
   window.history.back();
+});
+
+byId("admin-logout").addEventListener("click", async function () {
+  await WasteLessAPI.logout();
+  window.location.href = "landing.html";
 });
 
 /* ========== backend here =========== */
@@ -100,86 +109,29 @@ const ACCOUNT_STATUSES = ["Pending", "Approved", "Declined"].map(function (s) {
 
 function loadDashboard() {
   api("GET", "/api/admin/stats").then(renderDashboardStats).catch(showApiError);
-
-  api("GET", "/api/admin/packaging").then(renderPackagingChart).catch(function () {
-    renderDashboardChart("chart-1", "Products by Packaging Category", [
-      { name: "Plastic", count: 12 },
-      { name: "Paper", count: 8 },
-      { name: "Biodegradable", count: 15 },
-      { name: "Glass", count: 5 }
-    ]);
-  });
-
-  api("GET", "/api/admin/products").then(renderProductCategoryChart).catch(function () {
-    renderDashboardChart("chart-2", "Products by Food Category", [
-      { name: "Snacks", count: 10 },
-      { name: "Drinks", count: 14 },
-      { name: "Meals", count: 7 },
-      { name: "Desserts", count: 9 }
-    ]);
-  });
 }
 
-function renderPackagingChart(categories) {
-  const items = categories
-    .map(function (category) {
-      return {
-        name: category.packaging_name,
-        count: Number(category.item_count)
-      };
-    })
-    .filter(function (item) {
-      return item.count > 0;
-    });
-
-  renderDashboardChart("chart-1", "Products by Packaging Category", items);
-}
-
-function renderProductCategoryChart(products) {
-  const counts = {};
-
-  products.forEach(function (product) {
-    const name = product.category_name || "Uncategorized";
-    counts[name] = (counts[name] || 0) + 1;
-  });
-
-  const items = Object.entries(counts).map(function (entry) {
-    return {
-      name: entry[0],
-      count: entry[1]
-    };
-  });
-
-  renderDashboardChart("chart-2", "Products by Food Category", items);
-}
-
-function renderDashboardChart(elementId, title, items) {
-  const container = byId(elementId);
-
-  if (items.length === 0) {
-    container.innerHTML = `<h2>${title}</h2><p class="chart-empty">No data available yet.</p>`;
+// "Plastic by stall": one bar per stall, the line marks the weekly limit
+function renderPlasticByStall(stalls, limit) {
+  byId("plastic-by-stall-note").textContent =
+    "Pieces sold in the last 7 days · weekly limit " + limit;
+  if (!stalls.length) {
+    byId("plastic-by-stall").innerHTML = '<li class="card-sub">No approved stalls yet.</li>';
     return;
   }
-
-  const maxCount = Math.max(...items.map(function (item) {
-    return item.count;
-  }));
-
-  let rows = "";
-
-  items.forEach(function (item) {
-    const width = Math.round((item.count / maxCount) * 100);
-
-    rows += `<div class="chart-row">
-      <div class="chart-label">${escapeHtml(item.name)}</div>
-      <div class="chart-track">
-        <div class="chart-bar" style="width: ${width}%"></div>
-      </div>
-      <div class="chart-value">${item.count}</div>
-    </div>`;
-  });
-
-  container.innerHTML = `<h2>${title}</h2><div class="chart-bars">${rows}</div>`;
+  const max = Math.max(limit * 1.2, ...stalls.map(function (s) { return s.pieces; }));
+  byId("plastic-by-stall").innerHTML = stalls
+    .map(function (s) {
+      const over = s.pieces >= limit;
+      return `<li class="${over ? "over" : ""}">
+        <div class="stall-bar-head">
+          <strong>${escapeHtml(s.business_name)}</strong>
+          <span>${s.pieces} pcs <span class="tag ${over ? "tag-warning" : "tag-good"}">${over ? "Over limit" : "Good Work"}</span></span>
+        </div>
+        <div class="stall-bar" style="--fill:${Math.round((s.pieces / max) * 100)}%; --limit:${Math.round((limit / max) * 100)}%"></div>
+      </li>`;
+    })
+    .join("");
 }
 // to do
 
@@ -247,6 +199,8 @@ function renderDashboardStats(stats) {
   byId("total-stalls").textContent = stats.total_stalls;
   byId("total-categories").textContent = stats.total_categories;
   byId("total-products").textContent = stats.total_products;
+  byId("pending-accounts").textContent = stats.pending_accounts;
+  renderPlasticByStall(stats.plastic_by_stall || [], stats.weekly_limit);
 }
 
 function renderFeedback(messages) {
@@ -259,12 +213,12 @@ function renderFeedback(messages) {
     let tagHtml = "";
     tags.forEach(function (tag) {
       if (tag.trim() !== "")
-        tagHtml += `<span>[${escapeHtml(tag.trim())}]</span> `;
+        tagHtml += `<span class="tag tag-${escapeHtml(tag.trim().toLowerCase().replace(/\W+/g, "-"))}">${escapeHtml(tag.trim())}</span>`;
     });
-    html += `<article>
+    html += `<article class="feedback-item">
       <h3>${escapeHtml(m.subject)}</h3>
       <p>${escapeHtml(m.message)}</p>
-      <p>${tagHtml}</p>
+      <p class="tags">${tagHtml}</p>
     </article>`;
   });
   byId("feedback-list").innerHTML = html;
@@ -321,10 +275,10 @@ function renderProducts(products) {
           ${makeOptions(allCategories, "packaging_id", "packaging_name", p.packaging_id)}
         </select>
       </td>
-      <td>${escapeHtml(p.stall_id)}</td>
+      <td>#${escapeHtml(p.stall_id)} ${escapeHtml(p.stall_name || "")}</td>
       <td>
         <button type="button" data-action="notify" data-id="${escapeHtml(p.product_id)}">Notify</button>
-        <button type="button" data-action="delete" data-id="${escapeHtml(p.product_id)}">Delete</button>
+        <button type="button" data-action="delete" data-id="${escapeHtml(p.product_id)}" aria-label="Delete product">Delete</button>
       </td>
     </tr>`;
   });

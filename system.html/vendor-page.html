@@ -15,6 +15,7 @@
           <span class="logo-icon" aria-hidden="true"><img src="logo.png" alt="Wasteless logo" style="width: 35px; height: 35px;"></span>
           <strong>WasteLess</strong>
         </div>
+        <p class="sidebar-label">My stall</p>
         <nav class="sidebar-nav" aria-label="Vendor pages">
           <ul>
             <li><a href="#dashboard" class="active">Dashboard</a></li>
@@ -23,6 +24,13 @@
           </ul>
         </nav>
         <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <span class="user-avatar" aria-hidden="true"></span>
+            <div>
+              <strong id="sidebarStallName">Stall</strong>
+              <small id="sidebarStallId"></small>
+            </div>
+          </div>
           <a href="#" class="logout-link">Log Out</a>
         </div>
       </aside>
@@ -31,23 +39,29 @@
         <!-- Header: which stall is logged in -->
         <header class="vendor-header">
           <div class="stall-badge">
-            <span id="stallIdLabel" class="stall-id">Stall ID #0000</span>
-            <h2 id="stall">STALL NAME</h2>
+            <p class="stall-id"><span id="stallIdLabel">Stall ID #0000</span> · <span id="stall">STALL NAME</span></p>
+            <h1 id="pageTitle" class="page-title">Dashboard</h1>
           </div>
 
-          <!-- NEW: Notification bell (top-right in wireframe) -->
-          <div class="notif-wrapper">
-            <button type="button" id="notifBtn" class="notif-btn" aria-label="Notifications" aria-expanded="false">
-              🔔 <span id="notifBadge" class="notif-badge" hidden>0</span>
-            </button>
+          <div class="header-actions">
+            <!-- Shown on the Product Listing page only (data-page) -->
+            <div class="action-buttons" data-page="listing" hidden>
+              <button id="downloadReportBtn" class="btn secondary">Download Report</button>
+              <button id="openAddModalBtn" class="btn primary">Add Product</button>
+            </div>
 
-            <!-- NEW: Notifications panel (Page 5 of the wireframe) -->
-            <div id="notifPanel" class="notif-panel" hidden>
-              <h3 class="notif-title">Notifications</h3>
-              <ul id="notifList" class="notif-list">
-                <!-- Filled by vendor-page.js: one .notif-item per notification from the admin -->
-              </ul>
-              <p id="notifEmpty" class="notif-empty" hidden>No notifications yet.</p>
+            <!-- Notification bell + panel (messages from the admin) -->
+            <div class="notif-wrapper">
+              <button type="button" id="notifBtn" class="notif-btn" aria-label="Notifications" aria-expanded="false">
+                <span id="notifBadge" class="notif-badge" hidden>0</span>
+              </button>
+              <div id="notifPanel" class="notif-panel" hidden>
+                <h3 class="notif-title">Notifications</h3>
+                <ul id="notifList" class="notif-list">
+                  <!-- Filled by vendor-page.js: one .notif-item per notification from the admin -->
+                </ul>
+                <p id="notifEmpty" class="notif-empty" hidden>No notifications yet.</p>
+              </div>
             </div>
           </div>
         </header>
@@ -55,8 +69,6 @@
         <main class="container">
           <!-- ===== PAGE: Dashboard ===== -->
           <div class="page" id="page-dashboard">
-            <h1 class="page-title">Dashboard</h1>
-
             <div class="dash-grid">
               <div class="dash-main">
                 <!-- Packaging graph: the main card. Headline = items sold in the chosen range -->
@@ -161,47 +173,36 @@
           <!-- ===== PAGE: Product Listing ===== -->
           <div class="page" id="page-listing" hidden>
             <section class="card product-section">
-              <div class="section-header">
-                <h1 class="page-title">Product Listing</h1>
-                <div class="action-buttons">
-                  <button id="downloadReportBtn" class="btn secondary">
-                    Download Report
-                  </button>
-                  <button id="openAddModalBtn" class="btn primary">
-                    + Add Product
-                  </button>
-                </div>
-              </div>
-
               <div class="filter-toolbar">
-                <label
-                  >Search
-                  <input id="q" type="search" placeholder="Search products..."
-                /></label>
-                <label
-                  >Category
+                <label class="search-field">
+                  <span class="sr-only">Search</span>
+                  <input id="q" type="search" placeholder="Search products" />
+                </label>
+                <label>
+                  <span class="sr-only">Category</span>
                   <select id="filterCat">
                     <option>Category</option>
                   </select>
                 </label>
                 <button id="refresh" class="btn outline">Refresh</button>
               </div>
+              <p class="table-hint">Changes save as you edit a cell</p>
               <p id="listingMsg" class="listing-msg" role="status"></p>
 
               <div class="table-responsive">
                 <table border="1">
                   <thead>
                     <tr>
-                      <th>Product ID</th>
-                      <th>Product Image</th>
-                      <th>Product Name</th>
-                      <th>Product Description</th>
-                      <th>Packaging Category</th>
+                      <th>ID</th>
+                      <th>Image</th>
+                      <th>Product name</th>
+                      <th>Description</th>
+                      <th>Packaging</th>
                       <th>Price</th>
-                      <th>Stock</th>   <!-- NEW -->
-                      <th>Sold</th>
+                      <th>Stock</th>
+                      <th>Sold (7 days)</th>
                       <th>Category</th>
-                      <th>Action</th>  <!-- Edit removed: rows are edited inline -->
+                      <th><span class="sr-only">Delete</span></th>
                     </tr>
                   </thead>
                   <tbody id="rows">
@@ -220,7 +221,7 @@
                   <td class="cell-image">
                     <button type="button" class="row-img-btn" title="Change image">
                       <img class="row-img" width="60" alt="Product image" />
-                      <span class="row-img-none">Add image</span>
+                      <span class="row-img-none"><span class="sr-only">Add image</span></span>
                     </button>
                     <input type="file" class="row-image-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
                   </td>
@@ -258,10 +259,14 @@
 
                   <!-- Changes save as soon as a cell is changed (like a spreadsheet); only Delete here -->
                   <td class="cell-actions">
-                    <button type="button" class="btn btn-sm row-delete-btn">Delete</button>
+                    <button type="button" class="btn btn-sm row-delete-btn" aria-label="Delete product"></button>
                   </td>
                 </tr>
               </template>
+              <p class="table-note">
+                <span class="low-stock-tag">Low stock</span>
+                Stock − / + changes the stock. Sold + records a sale and takes 1 from stock; − undoes the last sale of the past 7 days.
+              </p>
             </section>
 
             <!-- Add Product pop-up (now ADD only; editing happens in the table) -->
@@ -315,9 +320,10 @@
                       ></textarea>
                     </label>
                   </div>
+                  <div class="form-row-3 full-width">
                   <div class="form-group">
                     <label
-                      >Packaging Category
+                      >Packaging category
                       <select
                         name="packaging_id"
                         id="formPackaging"
@@ -350,18 +356,14 @@
                         required
                     /></label>
                   </div>
-                  <div class="form-group">
-                    <label
-                      >Product Image
-                      <input
-                        type="file"
-                        name="image"
-                        id="imageInput"
-                        accept="image/*"
-                    /></label>
-                    <small class="field-hint"
-                      >JPG, PNG, WEBP or GIF, up to 2 MB</small
-                    >
+                  </div>
+                  <div class="form-group full-width">
+                    <span class="field-label">Product image (optional)</span>
+                    <label class="dropzone">
+                      <input type="file" name="image" id="imageInput" accept="image/*" class="sr-only" />
+                      <strong class="dropzone-title">Choose an image</strong>
+                      <small>JPG, PNG, WEBP or GIF · up to 2 MB</small>
+                    </label>
                   </div>
                   <div class="form-group full-width image-preview-row">
                     <img
@@ -388,12 +390,11 @@
 
           <!-- ===== PAGE: Feedback ===== -->
           <div class="page" id="page-feedback" hidden>
-            <h1 class="page-title">Feedback</h1>
-
             <section class="feedback-grid">
               <div class="card">
-                <h2>New Message to Admin</h2>
+                <h2>New message to admin</h2>
                 <form id="feedbackForm">
+                  <div class="form-row">
                   <div class="form-group">
                     <label
                       >Type
@@ -414,6 +415,7 @@
                         required
                     /></label>
                   </div>
+                  </div>
                   <div class="form-group">
                     <label
                       >Message
@@ -426,10 +428,12 @@
                     </label>
                   </div>
                   <div class="form-group">
-                    <label
-                      >Attach screenshot (optional)
-                      <input type="file" name="attachment" accept="image/*"
-                    /></label>
+                    <span class="field-label">Screenshot (optional)</span>
+                    <label class="dropzone">
+                      <input type="file" name="attachment" accept="image/*" class="sr-only" />
+                      <strong class="dropzone-title">Attach a screenshot</strong>
+                      <small>JPG, PNG, WEBP or GIF · up to 2 MB</small>
+                    </label>
                   </div>
                   <button type="submit" class="btn primary">
                     Send to Admin
@@ -439,7 +443,7 @@
               </div>
 
               <div class="card">
-                <h2>My Submissions</h2>
+                <h2>My submissions</h2>
                 <ul id="subs" class="submission-list"></ul>
               </div>
             </section>

@@ -79,7 +79,11 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 | `class="sidebar-nav"` with links `href="#dashboard"`, `href="#listing"`, `href="#feedback"` | sidebar; the script adds `class="active"` to the current link |
 | `id="page-dashboard"`, `id="page-listing"`, `id="page-feedback"` + `class="page"` | the three pages; only one is shown, the others get `hidden` |
 | `class="logout-link"` | Log Out link |
-| `id="stallIdLabel"`, `id="stall"` | header: "Stall ID #7" and the stall name |
+| `id="stallIdLabel"`, `id="stall"` | header eyebrow: "Stall ID #7" · stall name |
+| `id="pageTitle"` | header title; the script sets it to Dashboard / Product Listing / Feedback |
+| `data-page="listing"` on the header's `.action-buttons` | shown only on that page (Download Report + Add Product live in the header now) |
+| `id="sidebarStallName"`, `id="sidebarStallId"` | stall card at the bottom of the sidebar |
+| `.dropzone` with an `<input type="file">` and a `.dropzone-title` inside | file pickers (Add Product image, Feedback screenshot); the script shows the picked file name in `.dropzone-title` |
 
 **Dashboard**
 
@@ -156,9 +160,11 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 |---|---|
 | `<button data-section="dashboard" data-title="Dashboard">` (and `accounts`, `stalls`, `products`, `categories`, `eco`) | sidebar buttons; `data-section` picks the page, `data-title` is the heading text |
 | `id="section-dashboard"`, `id="section-accounts"`, `id="section-stalls"`, `id="section-products"`, `id="section-categories"`, `id="section-eco"` + `class="page"` | the pages (hidden / shown) |
-| `id="page-title"`, `id="back-btn"` | heading and back button |
+| `id="page-title"`, `id="back-btn"` | heading and back button (the back button is hidden in the new design but the script still needs it) |
+| `id="admin-logout"` | Log Out button at the bottom of the sidebar |
+| `data-only="stalls"` / `"products"` / `"categories"` | header buttons shown only on that section (Add Stall, Add Product + bell, Add Category) |
 
-**Dashboard:** `id="total-stalls"`, `id="total-categories"`, `id="total-products"`, `id="feedback-count"`, `id="feedback-sort"`, `id="feedback-list"`. `id="chart-1"` and `id="chart-2"` are empty spots reserved for graphs.
+**Dashboard:** `id="total-stalls"`, `id="total-categories"`, `id="total-products"`, `id="pending-accounts"` (the 4 stat cards), `id="plastic-by-stall"` + `id="plastic-by-stall-note"` (Plastic by stall bars inside `id="chart-1"`; data from `GET /api/admin/stats`), `id="feedback-count"`, `id="feedback-sort"`, `id="feedback-list"` (Vendor feedback cards).
 
 **Each list page** uses the same pattern, where `X` is `account`, `stall`, `product` or `category`:
 
