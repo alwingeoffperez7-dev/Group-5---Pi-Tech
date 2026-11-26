@@ -1554,3 +1554,215 @@ dialog[id$="-dialog"] form > button[type="submit"] { order: 2; }   /* Save */
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   PRODUCT LISTING TABLE FIX
+   Paste this at the very END of system.css/wasteless.css (it overrides the
+   earlier rules, so order matters). No HTML changes needed.
+   ========================================================================== */
+
+/* Give the listing page more room than the dashboard */
+.container:has(#page-listing:not([hidden])) { max-width: 90rem; }
+
+/* ---- Table fits the card (fixed layout, % column widths) ---- */
+.product-section table {
+  min-width: 0;
+  table-layout: fixed;
+}
+.product-section th,
+.product-section td {
+  padding: var(--space-3) var(--space-2);
+}
+.product-section th {
+  white-space: normal;
+  line-height: var(--leading-tight);
+}
+.product-section td { white-space: normal; }
+.product-section td:nth-child(4) { min-width: 0; }
+
+/* ID | Image | Name | Description | Packaging | Price | Stock | Sold | Category | Action */
+.product-section th:nth-child(1)  { width: 5%; }
+.product-section th:nth-child(2)  { width: 7%; }
+.product-section th:nth-child(3)  { width: 12%; }
+.product-section th:nth-child(4)  { width: 16%; }
+.product-section th:nth-child(5)  { width: 12%; }
+.product-section th:nth-child(6)  { width: 8%; }
+.product-section th:nth-child(7)  { width: 11%; }
+.product-section th:nth-child(8)  { width: 11%; }
+.product-section th:nth-child(9)  { width: 9%; }
+.product-section th:nth-child(10) { width: 9%; }
+
+/* Stock + Sold are centred, like the wireframe */
+.product-section th:nth-child(7),
+.product-section th:nth-child(8),
+.product-section td:nth-child(7),
+.product-section td:nth-child(8) { text-align: center; }
+
+/* Small screens: fall back to sideways scroll instead of squashing */
+@media (max-width: 80em) {
+  .product-section table { min-width: 60rem; }
+}
+
+/* ---- Inline inputs ---- */
+.inline-input {
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+}
+textarea.inline-input {
+  min-height: 3.5rem;
+  padding: var(--space-2);
+  resize: vertical;
+}
+.product-section td select {            /* beats the global "td select" min-width */
+  width: 100%;
+  min-width: 0;
+  padding-right: 1.75rem;
+  background-position: right var(--space-2) center;
+  background-size: 1rem;
+}
+.inline-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.inline-input[type="number"]::-webkit-inner-spin-button,
+.inline-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.row-img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  font-size: 0;
+}
+
+/* ---- Stock / Sold:  [ - ] [ 00 ] [ + ]  (buttons left and right) ---- */
+.qty-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+.qty-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: var(--weight-bold) 1rem / 1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease),
+              border-color var(--motion-fast) var(--ease),
+              color var(--motion-fast) var(--ease);
+}
+.qty-btn:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+}
+.qty-btn:active { transform: translateY(1px); }
+.qty-input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 3.5rem;
+  padding: 0 var(--space-1);
+  text-align: center;
+}
+
+/* ---- Save / Delete stacked in the last column ---- */
+.product-section td.cell-actions { white-space: normal; }
+.product-section td.cell-actions .btn { width: 100%; }
+.product-section td.cell-actions button + button { margin: var(--space-1) 0 0; }
+.row-delete-btn {
+  --btn-fg: var(--color-danger);
+  --btn-fg-hover: var(--color-danger);
+  --btn-border-hover: var(--color-danger);
+}
+
+/* ---- Header + notification bell (these had no styles) ---- */
+.vendor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.notif-wrapper { position: relative; }
+.notif-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.notif-btn:hover { border-color: var(--color-secondary); }
+.notif-badge {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  min-width: 1.1rem;
+  padding: 0 var(--space-1);
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-text-on-dark);
+  font: var(--weight-bold) var(--text-caption) / 1.1rem var(--font-sans);
+  text-align: center;
+}
+.notif-panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 20;
+  width: min(22rem, 90vw);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+}
+.notif-title { margin-bottom: var(--space-2); }
+.notif-list { margin: 0; padding: 0; list-style: none; }
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+.notif-item + .notif-item { border-top: 1px solid var(--color-border); }
+.notif-message { color: var(--color-text-secondary); }
+
+/* ==========================================================================
+   HEADER SQUEEZE FIX: fixed column widths + horizontal scroll
+   (replaces the % widths above; keep this at the very END of the file)
+   ========================================================================== */
+.product-section .table-responsive { overflow-x: auto; }
+.product-section table { min-width: 87rem; }   /* scrolls left/right when the card is narrower */
+.product-section th { white-space: nowrap; padding: var(--space-3) var(--space-4); }
+.product-section td { padding: var(--space-3) var(--space-4); }
+
+.product-section th:nth-child(1)  { width: 6.5rem; }   /* Product ID */
+.product-section th:nth-child(2)  { width: 8rem; }     /* Product Image */
+.product-section th:nth-child(3)  { width: 9rem; }     /* Product Name */
+.product-section th:nth-child(4)  { width: 13rem; }    /* Product Description */
+.product-section th:nth-child(5)  { width: 11.5rem; }  /* Packaging Category */
+.product-section th:nth-child(6)  { width: 5.5rem; }   /* Price */
+.product-section th:nth-child(7)  { width: 9rem; }     /* Stock */
+.product-section th:nth-child(8)  { width: 9rem; }     /* Sold */
+.product-section th:nth-child(9)  { width: 8.5rem; }   /* Category */
+.product-section th:nth-child(10) { width: 7rem; }     /* Action */
