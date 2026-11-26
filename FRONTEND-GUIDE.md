@@ -178,7 +178,7 @@ The tables list what the scripts need. Anything **not** listed is safe to change
 
 Cancel buttons need `data-action="close-dialog"`.
 
-**Notify vendors** (Product Management): `id="notif-btn"` + `id="notif-count"` (bell + unread count), `id="notif-panel"` / `id="notif-list"` / `id="notif-empty"` (sent messages, filled by the script), `<dialog id="notify-dialog">` / `id="notify-form"` with `name="product_id"`, `name="stall_id"` (hidden), `id="notify-stall"`, `id="notify-product"` (read-only) and `name="comments"`. The Stall Management panel `id="notification-list"` shows the same list.
+**Notify vendors** (Product Management): `id="notif-btn"` + `id="notif-count"` (bell + unread count), `id="notif-panel"` / `id="notif-list"` / `id="notif-empty"` (sent messages, filled by the script), `<dialog id="notify-dialog">` / `id="notify-form"` with `name="product_id"`, `name="stall_id"` (hidden), `id="notify-vendor-name"`, `id="notify-product-name"` (filled by the script) and `name="comments"` (`id="notify-comments"`). The Stall Management panel `id="notification-list"` shows the same list.
 
 **Buttons the script creates inside table rows** use `data-action="notify"` (products), `"edit"`, `"delete"`, `"approve"`, `"decline"`, plus `data-id`, and the row dropdown uses `data-action="change-category"`. You can style them with CSS like `button[data-action="delete"] { … }`.
 
