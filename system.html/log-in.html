@@ -4,52 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WasteLess</title>
+    <title>Log in · WasteLess</title>
     <link rel="stylesheet" href="../system.css/wasteless.css">
     <link rel="icon" type="image/png" href="logo.png">
 </head>
-<body>
-    
-    <section>
+<body class="auth">
+    <!-- Left: brand panel -->
+    <aside class="auth-brand">
+        <a class="auth-logo" href="landing.html"><img src="logo.png" alt="" width="44" height="44"><span>WasteLess</span></a>
         <div>
-            
-            <div>
-                <h2>LOG-IN</h2>
-                <hr>
-            </div>
+            <h1>Welcome back. Let's see how this week's plastic looks.</h1>
+            <p>Your stall's packaging graph for the last 7, 14 or 30 days.</p>
+            <p>Eco-Tips the moment your weekly plastic goes over the limit.</p>
+            <p>A Good Work badge when you stay under it.</p>
+        </div>
+        <p class="auth-credit">QCU Cooperative · Group 5 Pi-Tech</p>
+    </aside>
+
+    <!-- Right: the form -->
+    <main class="auth-main">
+        <section class="card auth-card">
+            <h2>Log in</h2>
+            <p class="auth-sub">Use the email and password of your stall, or your admin account.</p>
 
             <form id="loginForm" method="" action="">
                 <div>
-                    <label for="loginEmail">Email Address:</label>
-                    <input type="email" id="loginEmail" name="email" required>
+                    <label for="loginEmail">Email address</label>
+                    <input type="email" id="loginEmail" name="email" placeholder="you@example.com" autocomplete="email" required>
                 </div>
 
                 <div>
-                    <label for="loginPassword">Password:</label>
-                    <input type="password" id="loginPassword" name="password" required>
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" autocomplete="current-password" required>
                 </div>
 
-                <div>
+                <div class="auth-actions">
                     <button type="submit" name="role" value="vendor">Log In as Vendor</button>
                     <button type="submit" name="role" value="admin">Log In as Admin</button>
                 </div>
 
-                <hr>
-
-                <div>
-                    <button type="button" onclick="window.location.href='register.html'">Register</button>
-                </div>
-
-                <div id="loginFeedback"></div>
+                <div id="loginFeedback" role="alert"></div>
             </form>
 
-        </div>
-    </section>
+            <p class="auth-switch">New stall? <a href="register.html">Register here</a></p>
+        </section>
 
-    <footer>
-        <p>&copy; 2026 WasteLess. All rights reserved.</p>
-        <p>This site uses one cookie, only to keep you logged in. <a class="cookie-policy-link" href="cookie-policy.html">Cookie &amp; Privacy Policy</a></p>
-    </footer>
+        <footer>
+            <p>This site uses one cookie, only to keep you logged in. <a class="cookie-policy-link" href="cookie-policy.html">Cookie &amp; Privacy Policy</a></p>
+        </footer>
+    </main>
 
     <script src="../system.js/login.js"></script>
 </body>

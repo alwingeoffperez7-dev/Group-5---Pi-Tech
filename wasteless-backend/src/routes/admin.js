@@ -33,9 +33,24 @@ router.get(
     const [[stats]] = await pool.query(
       `SELECT (SELECT COUNT(*) FROM canteen WHERE status = 'Approved') AS total_stalls,
             (SELECT COUNT(*) FROM packaging_category) AS total_categories,
-            (SELECT COUNT(*) FROM product WHERE is_active = 1) AS total_products`,
+            (SELECT COUNT(*) FROM product WHERE is_active = 1) AS total_products,
+            (SELECT COUNT(*) FROM canteen WHERE status = 'Pending') AS pending_accounts,
+            (SELECT threshold FROM conditions WHERE condition_code = 'high_overall') AS weekly_limit`,
     );
-    res.json(stats);
+    // "Plastic by stall": pieces sold in the last 7 days per approved stall, most first
+    const [byStall] = await pool.query(
+      `SELECT c.canteen_id AS stall_id, c.business_name, COALESCE(SUM(s.quantity_sold), 0) AS pieces
+     FROM canteen c
+     LEFT JOIN product p ON p.canteen_id = c.canteen_id
+     LEFT JOIN sales_record s ON s.product_id = p.product_id AND s.sold_at >= CURDATE() - INTERVAL 6 DAY
+     WHERE c.status = 'Approved'
+     GROUP BY c.canteen_id, c.business_name
+     ORDER BY pieces DESC, c.business_name`,
+    );
+    res.json({
+      ...stats,
+      plastic_by_stall: byStall.map((r) => ({ ...r, pieces: Number(r.pieces) })),
+    });
   }),
 );
 

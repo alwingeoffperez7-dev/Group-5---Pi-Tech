@@ -21,9 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
                const result = await response.json();
 
                if (result.success) {
+                loginFeedback.className = 'ok';
                 loginFeedback.textContent = 'Login successful! Redirecting...';
                 window.location.href = userRole === 'admin' ? '../system.html/admin-page.html' : '../system.html/vendor-page.html';
                } else {
+                loginFeedback.className = '';
                 loginFeedback.textContent = result.message || "Invalid email or password.";
                }
             } catch (error) {

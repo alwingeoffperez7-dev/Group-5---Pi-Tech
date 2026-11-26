@@ -11,8 +11,9 @@
   <body>
     <!-- sidebar -->
     <aside id="sidebar">
-      <div id="logo"><img src="logo.png" alt="Wasteless logo" style="width: 35px; height: 35px;"></div>
-      <nav>
+      <div id="logo"><img src="logo.png" alt="" width="44" height="44"><span>WasteLess</span></div>
+      <p class="sidebar-label">Admin</p>
+      <nav aria-label="Admin pages">
         <button type="button" data-section="dashboard" data-title="Dashboard">Dashboard</button>
         <button type="button" data-section="accounts" data-title="Account Management">Account Management</button>
         <button type="button" data-section="stalls" data-title="Stall Management">Stall Management</button>
@@ -20,45 +21,91 @@
         <button type="button" data-section="categories" data-title="Packaging Category Management">Packaging Category</button>
         <button type="button" data-section="eco" data-title="Eco-Tip Management">Eco-Tips</button>
       </nav>
+      <div id="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" aria-hidden="true"></span>
+          <div>
+            <strong>Coop Admin</strong>
+            <small>QCU Cooperative</small>
+          </div>
+        </div>
+        <button type="button" id="admin-logout" class="logout-link">Log Out</button>
+      </div>
     </aside>
 
     <!-- main -->
     <main>
       <header>
-        <h1 id="page-title">Dashboard</h1>
-        <button type="button" id="back-btn" aria-label="Back">&#8617;</button>
+        <div>
+          <p class="eyebrow">QCU Cooperative · Admin</p>
+          <h1 id="page-title">Dashboard</h1>
+        </div>
+        <div class="header-actions">
+          <button type="button" id="back-btn" aria-label="Back" hidden>&#8617;</button>
+          <!-- Each button shows on its own section only (data-only) -->
+          <button type="button" id="stall-add-button" class="btn primary" data-only="stalls" hidden>Add Stall</button>
+          <button type="button" id="product-add-button" class="btn primary" data-only="products" hidden>Add Product</button>
+          <button type="button" id="category-add-button" class="btn primary" data-only="categories" hidden>Add Category</button>
+          <div class="notif-wrap" data-only="products" hidden>
+            <button
+              type="button"
+              id="notif-btn"
+              aria-label="Notifications"
+              aria-expanded="false"
+              aria-controls="notif-panel"
+            >
+              <span id="notif-count" hidden>0</span>
+            </button>
+
+            <div id="notif-panel" role="dialog" aria-labelledby="notif-title" hidden>
+              <h3 id="notif-title">My Notifications</h3>
+              <ul id="notif-list"></ul>
+              <p id="notif-empty" hidden>No notifications sent yet.</p>
+            </div>
+          </div>
+        </div>
       </header>
 
       <!-- dashboard -->
       <section id="section-dashboard" class="page">
         <div id="stat-cards">
-          <div><span id="total-stalls">0</span> Total Stalls</div>
-          <div><span id="total-categories">0</span> Total Categories</div>
-          <div><span id="total-products">0</span> Total Products</div>
+          <div><span class="stat-label">Total stalls</span><span id="total-stalls">0</span><span class="stat-note">Approved and active</span></div>
+          <div><span class="stat-label">Packaging categories</span><span id="total-categories">0</span><span class="stat-note">Plastic types tracked</span></div>
+          <div><span class="stat-label">Total products</span><span id="total-products">0</span><span class="stat-note">Listed across all stalls</span></div>
+          <div><span class="stat-label">Pending accounts</span><span id="pending-accounts">0</span><span class="stat-note">Waiting for approval</span></div>
         </div>
 
-        <div id="chart-1"></div>
-        <div id="chart-2"></div>
+        <!-- Plastic by stall: pieces sold in the last 7 days vs the weekly limit -->
+        <div id="chart-1">
+          <h2>Plastic by stall</h2>
+          <p class="card-sub" id="plastic-by-stall-note">Pieces sold in the last 7 days</p>
+          <ul id="plastic-by-stall" class="stall-bars"></ul>
+        </div>
 
         <aside id="feedback-panel">
-          <h2>Feedback/Report</h2>
-          <p>Messages Count: <span id="feedback-count">0</span></p>
+          <div class="card-head">
+            <div>
+              <h2>Vendor feedback</h2>
+              <p class="card-sub"><span id="feedback-count">0</span> messages</p>
+            </div>
+            <label><span class="sr-only">Sort</span>
           <select id="feedback-sort">
-            <option value="">Sort by</option>
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
+            </label>
+          </div>
           <div id="feedback-list"></div>
         </aside>
       </section>
 
       <!-- accounts -->
       <section id="section-accounts" class="page" hidden>
-        <input type="search" id="account-search" placeholder="Search" />
+        <input type="search" id="account-search" class="search-input" placeholder="Search" aria-label="Search" />
         <select id="account-filter">
           <option value="">Filter/Category</option>
         </select>
-        <span>Account Count: <span id="account-count">0</span></span>
+        <span class="count-pill"><span id="account-count">0</span> accounts</span>
         <select id="account-sort">
           <option value="">Sort by</option>
           <option value="name_asc">Business Name (A-Z)</option>
@@ -85,11 +132,11 @@
       <section id="section-stalls" class="page" hidden>
         <div id="stall-management-layout">
           <div id="stall-table-panel">
-            <input type="search" id="stall-search" placeholder="Search" />
+            <input type="search" id="stall-search" class="search-input" placeholder="Search" aria-label="Search" />
             <select id="stall-filter">
               <option value="">Filter/Category</option>
             </select>
-            <span>Stall Count: <span id="stall-count">0</span></span>
+            <span class="count-pill"><span id="stall-count">0</span> stalls</span>
             <select id="stall-sort">
               <option value="">Sort by</option>
               <option value="name_asc">Business Name (A-Z)</option>
@@ -97,7 +144,6 @@
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
             </select>
-            <button type="button" id="stall-add-button">+ Add Stall</button>
 
             <table border="1">
               <thead>
@@ -127,11 +173,11 @@
 
       <!-- products -->
       <section id="section-products" class="page" hidden>
-        <input type="search" id="product-search" placeholder="Search" />
+        <input type="search" id="product-search" class="search-input" placeholder="Search" aria-label="Search" />
         <select id="product-filter">
           <option value="">Filter/Category</option>
         </select>
-        <span>Product Count: <span id="product-count">0</span></span>
+        <span class="count-pill"><span id="product-count">0</span> products</span>
         <select id="product-sort">
           <option value="">Sort by</option>
           <option value="name_asc">Product Name (A-Z)</option>
@@ -139,38 +185,15 @@
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
         </select>
-        <button type="button" id="product-add-button">+ Add Product</button>
 
-        <!-- Notification bell: beside + Add Product, opens the notification list -->
-        <div class="notif-wrap">
-          <button
-            type="button"
-            id="notif-btn"
-            aria-label="Notifications"
-            aria-expanded="false"
-            aria-controls="notif-panel"
-          >
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-            </svg>
-            <span id="notif-count" hidden>0</span>
-          </button>
-
-          <div id="notif-panel" role="dialog" aria-labelledby="notif-title" hidden>
-            <h3 id="notif-title">My Notifications</h3>
-            <ul id="notif-list"></ul>
-            <p id="notif-empty" hidden>No notifications sent yet.</p>
-          </div>
-        </div>
 
         <table border="1">
           <thead>
             <tr>
-              <th>Product ID</th>
-              <th>Product Name</th>
-              <th>Packaging Category</th>
-              <th>Stall ID</th>
+              <th>ID</th>
+              <th>Product</th>
+              <th>Packaging category</th>
+              <th>Stall</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -180,11 +203,11 @@
 
       <!-- packaging category -->
       <section id="section-categories" class="page" hidden>
-        <input type="search" id="category-search" placeholder="Search" />
+        <input type="search" id="category-search" class="search-input" placeholder="Search" aria-label="Search" />
         <select id="category-filter">
           <option value="">Filter/Category</option>
         </select>
-        <span>Product Count: <span id="category-count">0</span></span>
+        <span class="count-pill"><span id="category-count">0</span> categories</span>
         <select id="category-sort">
           <option value="">Sort by</option>
           <option value="name_asc">Name (A-Z)</option>
@@ -192,7 +215,6 @@
           <option value="items_desc">Most first</option>
           <option value="items_asc">Fewest first</option>
         </select>
-        <button type="button" id="category-add-button">+ Add Category</button>
 
         <table border="1">
           <thead>
@@ -250,8 +272,10 @@
         <p><label>Contact Person <input type="text" name="contact_person" required /></label></p>
         <p><label>Contact Number <input type="tel" name="contact_number" required /></label></p>
         <p><label>Email <input type="email" name="email" required /></label></p>
-        <button type="submit">Save</button>
-        <button type="button" data-action="close-dialog">Cancel</button>
+        <div class="dialog-actions">
+          <button type="button" data-action="close-dialog" class="btn outline">Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
       </form>
     </dialog>
 
@@ -276,8 +300,10 @@
             <select name="stall_id" id="product-form-stall" required></select>
           </label>
         </p>
-        <button type="submit">Save</button>
-        <button type="button" data-action="close-dialog">Cancel</button>
+        <div class="dialog-actions">
+          <button type="button" data-action="close-dialog" class="btn outline">Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
       </form>
     </dialog>
 
@@ -286,9 +312,11 @@
          automatically) or in a stall row (product name is typed in). -->
     <dialog id="notify-dialog">
       <form id="notify-form">
-        <h2>Notify Vendors</h2>
+        <h2>Notify vendor</h2>
+        <p class="card-sub">They'll see it in their notification bell.</p>
         <input type="hidden" name="product_id" />
         <input type="hidden" name="stall_id" />
+        <div class="form-row">
         <p>
           <label>Stall
             <input type="text" id="notify-vendor-name" readonly placeholder="Stall 000 [Stall Name] (filled automatically)" />
@@ -299,13 +327,17 @@
             <input type="text" name="product_name" id="notify-product-name" placeholder="Product 1 (filled automatically)" required />
           </label>
         </p>
+        </div>
         <p>
           <label>Comments
             <textarea name="comments" id="notify-comments" rows="5" maxlength="500" placeholder="Describe the issue with this product..." required></textarea>
           </label>
+          <small class="field-hint">Max 500 characters</small>
         </p>
-        <button type="submit">Notify</button>
-        <button type="button" data-action="close-dialog">Cancel</button>
+        <div class="dialog-actions">
+          <button type="button" data-action="close-dialog" class="btn outline">Cancel</button>
+          <button type="submit" class="btn primary">Notify</button>
+        </div>
       </form>
     </dialog>
 
@@ -317,8 +349,10 @@
         <p><label>Packaging Name <input type="text" name="packaging_name" required /></label></p>
         <p><label>Description <textarea name="description" rows="4"></textarea></label></p>
         <p><label>Example <input type="text" name="example" placeholder="e.g. Zest-O" /></label></p>
-        <button type="submit">Save</button>
-        <button type="button" data-action="close-dialog">Cancel</button>
+        <div class="dialog-actions">
+          <button type="button" data-action="close-dialog" class="btn outline">Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
       </form>
     </dialog>
 
@@ -334,8 +368,10 @@
           <span id="condition-form-unit"></span>
         </p>
         <p><label>Eco-Tip <textarea name="tip_text" rows="4" maxlength="500" required></textarea></label></p>
-        <button type="submit">Save</button>
-        <button type="button" data-action="close-dialog">Cancel</button>
+        <div class="dialog-actions">
+          <button type="button" data-action="close-dialog" class="btn outline">Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
       </form>
     </dialog>
 
@@ -347,14 +383,13 @@
         <p><label>Packaging Category <input type="text" name="packaging_name" readonly /></label></p>
         <p><label>Negative Effects (one per line) <textarea name="effects" rows="5" maxlength="1000"></textarea></label></p>
         <p><label>Eco-Tip <textarea name="tip_text" rows="4" maxlength="500" required></textarea></label></p>
-        <button type="submit">Save</button>
-        <button type="button" data-action="close-dialog">Cancel</button>
+        <div class="dialog-actions">
+          <button type="button" data-action="close-dialog" class="btn outline">Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
       </form>
     </dialog>
 
-    <footer>
-      <p>&copy; 2026 WasteLess. All rights reserved.</p>
-    </footer>
 
     <script src="/js/api.js"></script>
     <script src="../system.js/admin-page.js"></script>
